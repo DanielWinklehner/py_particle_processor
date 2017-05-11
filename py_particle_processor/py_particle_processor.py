@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')  # nopep8
 gi.require_version('Gdk', '3.0')  # nopep8
-from gi.repository import Gtk, GLib, GObject, Gdk
+# from gi.repository import Gtk, GLib, GObject, Gdk
 from dataset import *
 
 __author__ = "Philip Weigel, Daniel Winklehner"
@@ -39,12 +39,12 @@ class PyParticleProcessor(object):
         self._builder.get_object("plots_alignment").add(self._main_plot_axes)
 
         # --- Create some CellRenderers for the Species TreeView
-        i = 0
+        _i = 0
         for item in ["mass_tvc", "charge_tvc", "current_tvc", "np_tvc", "filename_tvc"]:
-            i += 1
+            _i += 1
             crt = Gtk.CellRendererText()
             self._builder.get_object(item).pack_start(crt, False)
-            self._builder.get_object(item).add_attribute(crt, "text", i)
+            self._builder.get_object(item).add_attribute(crt, "text", _i)
 
         crtog = Gtk.CellRendererToggle()
         self._builder.get_object("toggle_tvc").pack_start(crtog, True)
