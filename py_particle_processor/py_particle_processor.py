@@ -1,8 +1,8 @@
-from dans_pymodules import *
 import gi
 gi.require_version('Gtk', '3.0')  # nopep8
 gi.require_version('Gdk', '3.0')  # nopep8
 from gi.repository import Gtk, GLib, GObject, Gdk
+from dataset import *
 
 __author__ = "Philip Weigel, Daniel Winklehner"
 __doc__ = """A GTK+3 based GUI that allows loading particle data from 
@@ -21,7 +21,7 @@ class PyParticleProcessor(object):
         """
         Initialize the GUI
         """
-        self.debug = debug
+        self._debug = debug
 
         # --- Load the GUI from XML file and initialize connections --- #
         self._builder = Gtk.Builder()
@@ -32,20 +32,73 @@ class PyParticleProcessor(object):
         self._main_window = self._builder.get_object("main_window")
         self._status_bar = self._builder.get_object("main_statusbar")
         self._log_textbuffer = self._builder.get_object("log_texbuffer")
+        self._datasets_ls = self._builder.get_object("species_ls")
+        self._datasets_tv = self._builder.get_object("species_tv")
 
-        self._builder.get_object("plots_alignment").add(MPLCanvasWrapper())
+        self._main_plot_axes = MPLCanvasWrapper(main_window=self._main_window)
+        self._builder.get_object("plots_alignment").add(self._main_plot_axes)
+
+        # --- Create some CellRenderers for the Species TreeView
+        i = 0
+        for item in ["mass_tvc", "charge_tvc", "current_tvc", "np_tvc", "filename_tvc"]:
+            i += 1
+            crt = Gtk.CellRendererText()
+            self._builder.get_object(item).pack_start(crt, False)
+            self._builder.get_object(item).add_attribute(crt, "text", i)
+
+        crtog = Gtk.CellRendererToggle()
+        self._builder.get_object("toggle_tvc").pack_start(crtog, True)
+        self._builder.get_object("toggle_tvc").add_attribute(crtog, "active", 0)
+
+        crtog.connect("toggled", self.cell_toggled, self._datasets_ls, "dat")
+
+        self._datasets = []
 
     def about_program_callback(self, menu_item):
         """
         :param menu_item:
         :return:
         """
-        if self.debug:
+        if self._debug:
             print("About Dialog called by {}".format(menu_item))
 
         dialog = self._builder.get_object("about_dialogbox")
         dialog.run()
         dialog.destroy()
+
+        return 0
+
+    def cell_toggled(self, widget, path, model, mode):
+        """
+        Callback function for toggling one of the checkboxes in the species
+        TreeView. Updates the View and refreshes the plots...
+        """
+        if self._debug:
+            print("cell_toggled was called with widget {} and mode {}".format(widget, mode))
+
+        model[path][0] = not model[path][0]
+
+        # TODO: Update some draw variable -DW
+
+        return 0
+
+    def delete_ds_callback(self, widget):
+        """
+        Callback for Delete Dataset... button
+        :param widget: 
+        :return: 
+        """
+
+        if self._debug:
+            print("delete_ds_callback was called with widget {}".format(widget))
+
+        path, focus = self._datasets_tv.get_cursor()
+        del_iter = self._datasets_ls.get_iter(path)
+
+        self._datasets[path[0]].close()
+        self._datasets.pop(path[0])
+
+        self._datasets_ls.remove(del_iter)
 
         return 0
 
@@ -58,6 +111,9 @@ class PyParticleProcessor(object):
                "notebook_page_changed": self.notebook_page_changed_callback,
                "on_main_statusbar_text_pushed": self.statusbar_changed_callback,
                "about_program_menu_item_activated": self.about_program_callback,
+               "on_load_dataset_activate": self.load_new_ds_callback,
+               "on_add_dataset_activate": self.load_add_ds_callback,
+               "on_delete_dataset_activate": self.delete_ds_callback,
                }
 
         return con
@@ -68,10 +124,85 @@ class PyParticleProcessor(object):
         :return: 0
         """
 
-        if self.debug:
+        if self._debug:
             print("Called initialize() function.")
 
         self._status_bar.push(0, "Program Initialized.")
+
+        return 0
+
+    def load_add_ds_callback(self, widget):
+        """
+        Callback for Add Dataset... button
+        :param widget: 
+        :return: 
+        """
+
+        if self._debug:
+            print("load_add_ds_callback was called with widget {}".format(widget))
+
+        _fd = FileDialog()
+        filename = _fd.get_filename(action="open", parent=self._main_window)
+
+        print(filename)
+
+        if filename is None:
+            return 0
+
+        _new_ds = Dataset(debug=self._debug)
+        _new_ds.load_from_file(filename)
+
+        self._datasets.append(_new_ds)
+
+        # Update the liststore
+        self._datasets_ls.append([False,
+                                  self._datasets[0].get_a(),
+                                  self._datasets[0].get_q(),
+                                  self._datasets[0].get_i(),
+                                  self._datasets[0].get_npart(),
+                                  self._datasets[0].get_filename()]
+                                 )
+
+        if self._debug:
+            print("load_new_ds_callback: Finished loading.")
+
+        return 0
+
+    def load_new_ds_callback(self, widget):
+        """
+        Callback for Load Dataset... button
+        :param widget: 
+        :return: 
+        """
+
+        if self._debug:
+            print("load_new_ds_callback was called with widget {}".format(widget))
+
+        _fd = FileDialog()
+        filename = _fd.get_filename(action="open", parent=self._main_window)
+
+        print(filename)
+
+        if filename is None:
+            return 0
+
+        _new_ds = Dataset(debug=self._debug)
+        _new_ds.load_from_file(filename)
+
+        self._datasets = [_new_ds]
+
+        # Update the liststore (should be called dataset_ls...)
+        self._datasets_ls.clear()
+        self._datasets_ls.append([False,
+                                  self._datasets[0].get_a(),
+                                  self._datasets[0].get_q(),
+                                  self._datasets[0].get_i(),
+                                  self._datasets[0].get_npart(),
+                                  self._datasets[0].get_filename()]
+                                 )
+
+        if self._debug:
+            print("load_new_ds_callback: Finished loading.")
 
         return 0
 
@@ -81,7 +212,7 @@ class PyParticleProcessor(object):
         :return:
         """
 
-        if self.debug:
+        if self._debug:
             print("Called main_quit for {}".format(widget))
 
         self._main_window.destroy()
@@ -99,7 +230,7 @@ class PyParticleProcessor(object):
         :return:
         """
 
-        if self.debug:
+        if self._debug:
             print("Debug: Notebook {} changed page to {} (page_num = {})".format(notebook,
                                                                                  page,
                                                                                  page_num))
@@ -126,7 +257,7 @@ class PyParticleProcessor(object):
         statusbar
         """
 
-        if self.debug:
+        if self._debug:
             print("Called statusbar_changed callback for statusbar {}, ID = {}".format(statusbar, context_id))
 
         _timestr = time.strftime("%d %b, %Y, %H:%M:%S: ", time.localtime())
@@ -137,7 +268,7 @@ class PyParticleProcessor(object):
 
 if __name__ == "__main__":
 
-    mydebug = False
+    mydebug = True
 
     ppp = PyParticleProcessor(debug=mydebug)
     ppp.run()

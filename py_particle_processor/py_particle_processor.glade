@@ -13,10 +13,41 @@
     <property name="page_increment">10</property>
   </object>
   <object class="GtkTextBuffer" id="comment_buffer"/>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-open</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-delete</property>
+  </object>
   <object class="GtkTextBuffer" id="log_texbuffer"/>
+  <object class="GtkListStore" id="species_ls">
+    <columns>
+      <!-- column-name toggle_tvc -->
+      <column type="gboolean"/>
+      <!-- column-name mass_tvc -->
+      <column type="gfloat"/>
+      <!-- column-name charge_tvc -->
+      <column type="gint"/>
+      <!-- column-name current_tvc -->
+      <column type="gfloat"/>
+      <!-- column-name np_tvc -->
+      <column type="gint"/>
+      <!-- column-name filename_tvc -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">MIST-1 Control System</property>
+    <property name="title" translatable="yes">Py Particle Processor</property>
     <signal name="destroy" handler="main_quit" swapped="no"/>
     <child>
       <object class="GtkBox" id="box1">
@@ -39,38 +70,32 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
-                        <property name="label">gtk-new</property>
+                        <property name="label">Load Dataset...</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_load_dataset_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem2">
-                        <property name="label">gtk-open</property>
+                        <property name="label">Add Dataset...</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">image2</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_add_dataset_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem3">
-                        <property name="label">gtk-save</property>
+                        <property name="label">Delete Dataset...</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="imagemenuitem4">
-                        <property name="label">gtk-save-as</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">image3</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_delete_dataset_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -506,21 +531,5 @@ Daniel Winklehner</property>
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="species_ls">
-    <columns>
-      <!-- column-name toggle_tvc -->
-      <column type="gboolean"/>
-      <!-- column-name mass_tvc -->
-      <column type="gfloat"/>
-      <!-- column-name charge_tvc -->
-      <column type="gint"/>
-      <!-- column-name current_tvc -->
-      <column type="gfloat"/>
-      <!-- column-name np_tvc -->
-      <column type="gint"/>
-      <!-- column-name filename_tvc -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>
