@@ -189,7 +189,7 @@ class PyParticleProcessor(object):
 
         _new_ds = Dataset(debug=self._debug)
 
-        if _new_ds.load_from_file(filename) == 0:
+        if _new_ds.load_from_file(filename, driver="OPAL") == 0:
 
             self._datasets = [_new_ds]
 

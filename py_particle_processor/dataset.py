@@ -1,5 +1,5 @@
 from dans_pymodules import *
-import h5py
+# import h5py
 from drivers import *
 
 __author__ = "Daniel Winklehner"
@@ -20,21 +20,23 @@ class ImportExportDriver(object):
     A thin wrapper around the drivers for importing and exporting particle data
     """
     def __init__(self,
-                 driver_name=None):
+                 driver_name=None,
+                 debug=False):
 
         self._driver_name = driver_name
         self._driver = None
+        self._debug = debug
 
         self.load_driver()
 
     def load_driver(self):
-        self._driver = driver_mapping[self._driver_name]['driver']()
+        self._driver = driver_mapping[self._driver_name]['driver'](debug=self._debug)
 
     def get_driver_name(self):
         return self._driver_name
 
-    def import_data(self, data):
-        return self._driver.import_data(data)
+    def import_data(self, filename):
+        return self._driver.import_data(filename)
 
     def export_data(self, data):
         return self._driver.export_data(data)
@@ -45,6 +47,7 @@ class Dataset(object):
     def __init__(self, debug=False):
         self._datasource = None
         self._filename = None
+        self._driver = None
         self._ion = None
         self._nsteps = 0
         self._multispecies = False
@@ -120,45 +123,27 @@ class Dataset(object):
         :param driver: 
         :return: 
         """
+        self._driver = driver
         self._filename = filename
 
         if driver is not None:
-            print("Drivers not yet implemented.")
-            return 1
 
-        if h5py.is_hdf5(filename):
+            new_ied = ImportExportDriver(driver_name=driver)
+            _data = new_ied.import_data(self._filename)
 
-            if self._debug:
-                print("Opening h5 file..."),
+            if _data is not None:
 
-            self._datasource = h5py.File(filename)
-
-            if self._debug:
-                print("Done!")
-
-            if "OPAL_version" in self._datasource.attrs.keys():
-
-                if self._debug:
-                    print("Loading dataset from h5 file in OPAL format.")
-
-                self._nsteps = len(self._datasource.items())
-
-                if self._debug:
-                    print("Found {} steps in the file.".format(self._nsteps))
+                self._datasource = _data["datasource"]
+                self._ion = _data["ion"]
+                self._nsteps = _data["nsteps"]
+                self._current = _data["current"]
+                self._npart = _data["npart"]
 
                 self.set_step_view(0)
 
-                # for key in self._data.attrs.keys():
-                #     print key, self._data.attrs[key]
+                return 0
 
-                # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
-                # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
-                self._ion = IonSpecies("proton", self._data.attrs["ENERGY"])
-                self._current = 0.0  # TODO: Get actual current! -DW
-
-                self._npart = len(self._data.get("x").value)
-
-        return 0
+        return 1
 
     def set_step_view(self, step):
 
