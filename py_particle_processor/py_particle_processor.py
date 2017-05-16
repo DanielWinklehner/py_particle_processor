@@ -150,21 +150,22 @@ class PyParticleProcessor(object):
             return 0
 
         _new_ds = Dataset(debug=self._debug)
-        _new_ds.load_from_file(filename)
 
-        self._datasets.append(_new_ds)
+        if _new_ds.load_from_file(filename) == 0:
 
-        # Update the liststore
-        self._datasets_ls.append([False,
-                                  self._datasets[0].get_a(),
-                                  self._datasets[0].get_q(),
-                                  self._datasets[0].get_i(),
-                                  self._datasets[0].get_npart(),
-                                  self._datasets[0].get_filename()]
-                                 )
+            self._datasets.append(_new_ds)
 
-        if self._debug:
-            print("load_new_ds_callback: Finished loading.")
+            # Update the liststore
+            self._datasets_ls.append([False,
+                                      self._datasets[0].get_a(),
+                                      self._datasets[0].get_q(),
+                                      self._datasets[0].get_i(),
+                                      self._datasets[0].get_npart(),
+                                      self._datasets[0].get_filename()]
+                                     )
+
+            if self._debug:
+                print("load_add_ds_callback: Finished loading.")
 
         return 0
 
@@ -187,22 +188,23 @@ class PyParticleProcessor(object):
             return 0
 
         _new_ds = Dataset(debug=self._debug)
-        _new_ds.load_from_file(filename)
 
-        self._datasets = [_new_ds]
+        if _new_ds.load_from_file(filename) == 0:
 
-        # Update the liststore (should be called dataset_ls...)
-        self._datasets_ls.clear()
-        self._datasets_ls.append([False,
-                                  self._datasets[0].get_a(),
-                                  self._datasets[0].get_q(),
-                                  self._datasets[0].get_i(),
-                                  self._datasets[0].get_npart(),
-                                  self._datasets[0].get_filename()]
-                                 )
+            self._datasets = [_new_ds]
 
-        if self._debug:
-            print("load_new_ds_callback: Finished loading.")
+            # Update the liststore (should be called dataset_ls...)
+            self._datasets_ls.clear()
+            self._datasets_ls.append([False,
+                                      self._datasets[0].get_a(),
+                                      self._datasets[0].get_q(),
+                                      self._datasets[0].get_i(),
+                                      self._datasets[0].get_npart(),
+                                      self._datasets[0].get_filename()]
+                                     )
+
+            if self._debug:
+                print("load_new_ds_callback: Finished loading.")
 
         return 0
 

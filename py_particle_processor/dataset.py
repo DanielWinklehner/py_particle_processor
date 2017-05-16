@@ -1,9 +1,10 @@
 from dans_pymodules import *
 import h5py
+from drivers import *
 
 __author__ = "Daniel Winklehner"
 __doc__ = """A container that holds a single dataset with 
-multiple time steps and multiple ions per time step. If the data
+multiple time steps and multiple particles per time step. If the data
 is too large for memory, it is automatically transferred into 
 a h5 file on disk to be operated on.
 """
@@ -14,7 +15,33 @@ echarge = const.value("elementary charge")
 clight = const.value("speed of light in vacuum")
 
 
+class ImportExportDriver(object):
+    """
+    A thin wrapper around the drivers for importing and exporting particle data
+    """
+    def __init__(self,
+                 driver_name=None):
+
+        self._driver_name = driver_name
+        self._driver = None
+
+        self.load_driver()
+
+    def load_driver(self):
+        self._driver = driver_mapping[self._driver_name]['driver']()
+
+    def get_driver_name(self):
+        return self._driver_name
+
+    def import_data(self, data):
+        return self._driver.import_data(data)
+
+    def export_data(self, data):
+        return self._driver.export_data(data)
+
+
 class Dataset(object):
+
     def __init__(self, debug=False):
         self._datasource = None
         self._filename = None
@@ -88,6 +115,7 @@ class Dataset(object):
         Load a dataset from file. If the file is h5 already, don't load into memory.
         Users can write their own drivers but they have to be compliant with the 
         internal structure of datasets.
+        
         :param filename:
         :param driver: 
         :return: 
