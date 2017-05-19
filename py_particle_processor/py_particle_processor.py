@@ -22,6 +22,7 @@ class PyParticleProcessor(object):
         Initialize the GUI
         """
         self._debug = debug
+        self._colors = MyColors()
 
         # --- Load the GUI from XML file and initialize connections --- #
         self._builder = Gtk.Builder()
@@ -35,8 +36,15 @@ class PyParticleProcessor(object):
         self._datasets_ls = self._builder.get_object("species_ls")
         self._datasets_tv = self._builder.get_object("species_tv")
 
-        self._main_plot_axes = MPLCanvasWrapper(main_window=self._main_window)
-        self._builder.get_object("plots_alignment").add(self._main_plot_axes)
+        self._base_plots_xy = MPLCanvasWrapper(main_window=self._main_window)
+        self._base_plots_xxp = MPLCanvasWrapper(main_window=self._main_window)
+        self._base_plots_yyp = MPLCanvasWrapper(main_window=self._main_window)
+        self._base_plots_phe = MPLCanvasWrapper(main_window=self._main_window)
+
+        self._builder.get_object("alignment2").add(self._base_plots_xxp)
+        self._builder.get_object("alignment3").add(self._base_plots_yyp)
+        self._builder.get_object("alignment4").add(self._base_plots_xy)
+        self._builder.get_object("alignment6").add(self._base_plots_phe)
 
         # --- Create some CellRenderers for the Species TreeView
         _i = 0
@@ -189,7 +197,7 @@ class PyParticleProcessor(object):
 
         _new_ds = Dataset(debug=self._debug)
 
-        if _new_ds.load_from_file(filename, driver="OPAL") == 0:
+        if _new_ds.load_from_file(filename, driver="TraceWin") == 0:
 
             self._datasets = [_new_ds]
 
@@ -205,6 +213,21 @@ class PyParticleProcessor(object):
 
             if self._debug:
                 print("load_new_ds_callback: Finished loading.")
+
+            self._base_plots_xy.clear()
+            self._base_plots_xy.scatter(self._datasets[0].get("x"), self._datasets[0].get("y"),
+                                        c=self._colors[0], s=0.5, edgecolor='')
+            self._base_plots_xy.draw_idle()
+
+            self._base_plots_xxp.clear()
+            self._base_plots_xxp.scatter(self._datasets[0].get("x"), self._datasets[0].get("px"),
+                                         c=self._colors[0], s=0.5, edgecolor='')
+            self._base_plots_xxp.draw_idle()
+
+            self._base_plots_yyp.clear()
+            self._base_plots_yyp.scatter(self._datasets[0].get("y"), self._datasets[0].get("py"),
+                                         c=self._colors[0], s=0.5, edgecolor='')
+            self._base_plots_yyp.draw_idle()
 
         return 0
 

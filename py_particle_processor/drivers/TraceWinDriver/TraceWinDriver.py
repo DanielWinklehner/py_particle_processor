@@ -14,7 +14,7 @@ class ArrayWrapper(object):
         return self._array
 
 
-class TraceWinDriver:
+class TraceWinDriver(object):
 
     def __init__(self, debug=False):
         self._debug = debug
@@ -40,7 +40,7 @@ class TraceWinDriver:
                 data = {}
 
                 npart, mass, energy, frequency, current, charge = \
-                    [float(item) for item in infile.readline.strip().split()]
+                    [float(item) for item in infile.readline().strip().split()]
 
                 header2 = infile.readline()
 
@@ -53,28 +53,38 @@ class TraceWinDriver:
                 data["npart"] = 0
 
                 _distribution = []
-                mydtype = [('x', float), ('xp', float), ('y', float), ('yp', float), ('z', float), ('zp', float)]
+                mydtype = [('x', float), ('xp', float),
+                           ('y', float), ('yp', float),
+                           ('z', float), ('zp', float),
+                           ('ph', float), ('t', float),
+                           ('e', float), ('l', float)]
 
                 for line in infile.readlines():
                     values = line.strip().split()
                     if values[-1] == "0":
                         data["npart"] += 1
-                        _distribution.append(tuple(values[:6]))
+                        _distribution.append(tuple(values))
 
                 _distribution = np.array(_distribution, dtype=mydtype)
-                print _distribution[:5]
 
-                distribution = {'x': ArrayWrapper(_distribution['x']),
-                                'xp': ArrayWrapper(_distribution['xp']),
-                                'y': ArrayWrapper(_distribution['y']),
-                                'yp': ArrayWrapper(_distribution['yp']),
-                                'z': ArrayWrapper(_distribution['z']),
-                                'zp': ArrayWrapper(_distribution['zp'])}
+                gamma = _distribution['e'] / data['ion'].mass_mev() + 1.0
+                beta = np.sqrt(1.0 - gamma**(-2.0))
+
+                distribution = {'x': ArrayWrapper(_distribution['x'] * 0.001),
+                                'px': ArrayWrapper(gamma * beta * np.sin(_distribution['xp'] * 0.001)),
+                                'y': ArrayWrapper(_distribution['y'] * 0.001),
+                                'py': ArrayWrapper(gamma * beta * np.sin(_distribution['yp'] * 0.001)),
+                                'z': ArrayWrapper(_distribution['z'] * 0.001)}
+
+                distribution['pz'] = ArrayWrapper(np.sqrt(beta**2.0 * gamma**2.0
+                                                          - distribution['px'].value**2.0
+                                                          - distribution['py'].value**2.0
+                                                          ))
 
                 # For a single timestep, we just define a Step#0 entry in a dictionary (supports .get())
                 data["datasource"] = {"Step#0": distribution}
 
-                return None
+                return data
 
         except Exception as e:
 
