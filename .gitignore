@@ -96,3 +96,8 @@ ENV/
 .h
 .pro
 .user
+/py_particle_processor_qt/py_particle_processor_qt.pro
+/py_particle_processor_qt/py_particle_processor_qt.pro.user
+/py_particle_processor_qt/mainwindow.h
+/py_particle_processor_qt/main.cpp
+/py_particle_processor_qt/mainwindow.cpp
