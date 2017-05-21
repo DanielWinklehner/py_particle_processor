@@ -90,3 +90,9 @@ ENV/
 
 # pycharm idea folder
 .idea/
+
+# all .cpp and .h files from Qt Builder
+.cpp
+.h
+.pro
+.user
