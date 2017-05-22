@@ -20,6 +20,7 @@ class TraceWinDriver(object):
         self._debug = debug
         self._program_name = "TraceWin"
 
+    @property
     def get_program_name(self):
         return self._program_name
 

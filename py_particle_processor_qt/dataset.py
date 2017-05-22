@@ -72,7 +72,7 @@ class Dataset(object):
             except Exception as e:
 
                 if self._debug:
-                    print("Exception occured during closing of datafile: {}".format(e))
+                    print("Exception occurred during closing of datafile: {}".format(e))
 
                 return 1
 
