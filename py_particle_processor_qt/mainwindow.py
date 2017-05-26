@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.8.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -35,8 +35,12 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.label)
         self.treeWidget = QtWidgets.QTreeWidget(self.layoutWidget)
         self.treeWidget.setAlternatingRowColors(True)
+        self.treeWidget.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.treeWidget.setObjectName("treeWidget")
+        self.treeWidget.header().setVisible(True)
+        self.treeWidget.header().setCascadingSectionResizes(False)
         self.treeWidget.header().setDefaultSectionSize(80)
+        self.treeWidget.header().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.treeWidget)
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
         self.layoutWidget1.setObjectName("layoutWidget1")
@@ -96,7 +100,9 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 948, 26))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 948, 25))
+        self.menuBar.setDefaultUp(False)
+        self.menuBar.setNativeMenuBar(False)
         self.menuBar.setObjectName("menuBar")
         self.menu_File = QtWidgets.QMenu(self.menuBar)
         self.menu_File.setObjectName("menu_File")
@@ -134,11 +140,13 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Datasets"))
         self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Plot"))
-        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "Mass"))
-        self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Charge"))
-        self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Current"))
-        self.treeWidget.headerItem().setText(4, _translate("MainWindow", "# Particles"))
-        self.treeWidget.headerItem().setText(5, _translate("MainWindow", "Filename"))
+        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "View Step"))
+        self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Mass"))
+        self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Charge"))
+        self.treeWidget.headerItem().setText(4, _translate("MainWindow", "Current"))
+        self.treeWidget.headerItem().setText(5, _translate("MainWindow", "# Particles"))
+        self.treeWidget.headerItem().setText(6, _translate("MainWindow", "# Steps"))
+        self.treeWidget.headerItem().setText(7, _translate("MainWindow", "Filename"))
         self.label_2.setText(_translate("MainWindow", "Comments"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))

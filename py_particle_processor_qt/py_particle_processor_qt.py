@@ -38,6 +38,8 @@ class PyParticleProcessor(object):
         self._status_bar = self._mainWindowGUI.statusBar
         self._log_textbuffer = self._mainWindowGUI.textEdit_2
         self._treeview = self._mainWindowGUI.treeWidget
+        self._menubar = self._mainWindowGUI.menuBar
+        self._menubar.setNativeMenuBar(False)  # This is needed to make the menu bar actually appear -PW
 
         # Connections:
         self._mainWindowGUI.actionQuit.triggered.connect(self.main_quit)
@@ -47,7 +49,7 @@ class PyParticleProcessor(object):
         self._treeview.itemClicked.connect(self.treeview_clicked)
 
         self._datasets = []
-        self._last_path = None
+        self._last_path = ""
 
     def about_program_callback(self, menu_item):
         """
@@ -120,10 +122,14 @@ class PyParticleProcessor(object):
                         filetypes_text += " *{}".format(extension)
                 filetypes_text += ")"
 
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+
         filename, filetype = QFileDialog.getOpenFileName(self._mainWindow,
-                                                         "Import dataset...",
-                                                         self._last_path,
-                                                         filetypes_text)
+                                                         caption="Import dataset...",
+                                                         directory=self._last_path,
+                                                         filter=filetypes_text,
+                                                         options=options)
 
         if filename == "":
             return None, None
@@ -155,7 +161,7 @@ class PyParticleProcessor(object):
         if self._debug:
             print("load_add_ds_callback was called with widget {}".format(widget))
 
-        filename, driver = self.get_filename(action='open')
+        filename, driver = self.get_filename(action="open")
 
         if filename is None:
             return 1
@@ -170,13 +176,15 @@ class PyParticleProcessor(object):
             new_item = QtGui.QTreeWidgetItem(self._treeview)
 
             new_item.setText(0, "")
-            new_item.setText(1, "{}".format(self._datasets[-1].get_a()))
-            new_item.setText(2, "{}".format(self._datasets[-1].get_q()))
-            new_item.setText(3, "{}".format(self._datasets[-1].get_i()))
-            new_item.setText(4, "{}".format(self._datasets[-1].get_npart()))
-            new_item.setText(5, self._datasets[-1].get_filename())
+            new_item.setText(1, "0")
+            new_item.setText(2, "{}".format(self._datasets[-1].get_a()))
+            new_item.setText(3, "{}".format(self._datasets[-1].get_q()))
+            new_item.setText(4, "{}".format(self._datasets[-1].get_i()))
+            new_item.setText(5, "{}".format(self._datasets[-1].get_npart()))
+            new_item.setText(6, "{}".format(self._datasets[-1].get_nsteps()))
+            new_item.setText(7, self._datasets[-1].get_filename())
 
-            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
             new_item.setCheckState(0, QtCore.Qt.Unchecked)
 
             if self._debug:
@@ -210,13 +218,15 @@ class PyParticleProcessor(object):
             new_item = QtGui.QTreeWidgetItem(self._treeview)
 
             new_item.setText(0, "")
-            new_item.setText(1, "{}".format(self._datasets[0].get_a()))
-            new_item.setText(2, "{}".format(self._datasets[0].get_q()))
-            new_item.setText(3, "{}".format(self._datasets[0].get_i()))
-            new_item.setText(4, "{}".format(self._datasets[0].get_npart()))
-            new_item.setText(5, self._datasets[0].get_filename())
+            new_item.setText(1, "0")
+            new_item.setText(2, "{}".format(self._datasets[0].get_a()))
+            new_item.setText(3, "{}".format(self._datasets[0].get_q()))
+            new_item.setText(4, "{}".format(self._datasets[0].get_i()))
+            new_item.setText(5, "{}".format(self._datasets[0].get_npart()))
+            new_item.setText(6, "{}".format(self._datasets[0].get_nsteps()))
+            new_item.setText(7, self._datasets[0].get_filename())
 
-            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
             new_item.setCheckState(0, QtCore.Qt.Unchecked)
 
         return 0
@@ -255,6 +265,7 @@ class PyParticleProcessor(object):
         (re)draw the plots that are checked
         :return: 
         """
+
         if self._debug:
             print("redraw_plots called")
 
@@ -269,26 +280,41 @@ class PyParticleProcessor(object):
 
         print("Views cleared")
 
-        for dataset in self._datasets:
+        for i, dataset in enumerate(self._datasets):
+
+            this_item = self._treeview.topLevelItem(i)
+
+            try:
+                step = int(this_item.text(1))
+            except ValueError:
+                print("redraw_plots: Requested step is not an integer!")
+                step = 0
+                this_item.setText(1, str(step))
+
+            try:
+                dataset.set_step_view(step)
+            except Exception as e:
+                print("redraw_plots: Exception happened when trying to set step view to: '{}'!".format(step))
+                print(e)
 
             if dataset.get_draw():
-
-                xy_scatter = pg.ScatterPlotItem(x=dataset.get("x"), y=self._datasets[0].get("y"),
-                                                pen='w', brush='b', size=1.0)
+                # TODO: Don't make the color dependant on i
+                xy_scatter = pg.ScatterPlotItem(x=dataset.get("x"), y=dataset.get("y"),
+                                                pen=pg.mkPen(color=self._colors[i]), brush='b', size=1.0)
 
                 self._mainWindowGUI.graphicsView_1.addItem(xy_scatter)
                 self._mainWindowGUI.graphicsView_1.setTitle("XY")
                 self._mainWindowGUI.graphicsView_1.repaint()
 
                 xxp_scatter = pg.ScatterPlotItem(x=dataset.get("x"), y=dataset.get("px"),
-                                                 pen='w', brush='b', size=1.0, pxMode=True)
+                                                 pen=pg.mkPen(self._colors[i]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_2.addItem(xxp_scatter)
                 self._mainWindowGUI.graphicsView_2.setTitle("XXP")
                 self._mainWindowGUI.graphicsView_2.repaint()
 
                 yyp_scatter = pg.ScatterPlotItem(x=dataset.get("y"), y=dataset.get("py"),
-                                                 pen='w', brush='b', size=1.0, pxMode=True)
+                                                 pen=pg.mkPen(self._colors[i]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_3.addItem(yyp_scatter)
                 self._mainWindowGUI.graphicsView_3.setTitle("YYP")
@@ -340,6 +366,7 @@ class PyParticleProcessor(object):
 
         if column == 0:
             checkstate = (item.checkState(0) == QtCore.Qt.Checked)
+
             index = self._treeview.indexFromItem(item).row()
             if self._datasets[index].get_draw() != checkstate:
                 self._datasets[index].set_draw(checkstate)

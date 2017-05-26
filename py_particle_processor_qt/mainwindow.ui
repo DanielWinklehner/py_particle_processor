@@ -38,12 +38,29 @@
            <property name="alternatingRowColors">
             <bool>true</bool>
            </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::NoSelection</enum>
+           </property>
+           <attribute name="headerVisible">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="headerCascadingSectionResizes">
+            <bool>false</bool>
+           </attribute>
            <attribute name="headerDefaultSectionSize">
             <number>80</number>
+           </attribute>
+           <attribute name="headerStretchLastSection">
+            <bool>true</bool>
            </attribute>
            <column>
             <property name="text">
              <string>Plot</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>View Step</string>
             </property>
            </column>
            <column>
@@ -64,6 +81,11 @@
            <column>
             <property name="text">
              <string># Particles</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string># Steps</string>
             </property>
            </column>
            <column>
@@ -166,8 +188,14 @@
      <x>0</x>
      <y>0</y>
      <width>948</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
+   </property>
+   <property name="defaultUp">
+    <bool>false</bool>
+   </property>
+   <property name="nativeMenuBar">
+    <bool>false</bool>
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">

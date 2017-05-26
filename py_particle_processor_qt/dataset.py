@@ -109,6 +109,9 @@ class Dataset(object):
     def get_a(self):
         return self._ion.a()
 
+    def get_driver(self):
+        return self._driver
+
     def get_filename(self):
         return self._filename
 
@@ -117,6 +120,9 @@ class Dataset(object):
 
     def get_npart(self):
         return self._npart
+
+    def get_nsteps(self):
+        return self._nsteps
 
     def get_q(self):
         return self._ion.q()
@@ -150,6 +156,7 @@ class Dataset(object):
                 self._npart = _data["npart"]
 
                 self.set_step_view(0)
+                # self.set_step_view(self._nsteps - 1)
 
                 return 0
 

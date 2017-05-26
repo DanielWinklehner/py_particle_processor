@@ -2,11 +2,36 @@ from dans_pymodules import IonSpecies, echarge
 import numpy as np
 
 
+class ArrayWrapper(object):
+
+    def __init__(self, array_like):
+        self._array = np.array(array_like)
+
+    def __get__(self):
+        return self
+
+    def __getitem__(self, key):
+        return self._array[key]
+
+    def __setitem__(self, key, item):
+        self._array[key] = item
+
+    def __len__(self):
+        return len(self._array)
+
+    @property
+    def value(self):
+        return self._array
+
+    def append(self, value):
+        self._array = np.append(self._array, value)
+
+
 class COMSOLDriver(object):
     def __init__(self, debug=False):
 
         # TODO: We should come up with a "standardized" output file format in COMSOL for importing here.
-        # TODO: Currently using: (TIME [s], X [cm], Y [cm], Z [cm], VX [m/s], VY [m/s], VZ [m/s], E [J])
+        # TODO: Currently using: (TIME [s], X [m], Y [m], Z [m], VX [m/s], VY [m/s], VZ [m/s], E [MeV])
         # TODO: These units can be changed if needed. -PW
 
         self._debug = debug
@@ -50,6 +75,7 @@ class COMSOLDriver(object):
                     _id = int(raw_values.pop(0))  # Particle ID number
 
                     # TODO: Check what the values are for particles that terminate early -PW
+                    # TODO: Update: it can be changed in COMSOL, currently it stays in place
                     num_iter = int(len(raw_values) / _n)  # Number of steps the particle existed for
 
                     for i in range(num_iter):
@@ -65,14 +91,15 @@ class COMSOLDriver(object):
                             datasource[step_str] = dict()
 
                             for key in key_list:
-                                datasource[step_str][key] = np.array([])
+                                datasource[step_str][key] = ArrayWrapper([])
 
                         values = raw_values[(1 + i * _n):(_n + i * _n)]
 
-                        values[0:3] = [0.01 * r for r in values[0:3]]  # Convert position from [cm] to [m]
+                        values[0:3] = [r for r in values[0:3]]
                         # TODO: Does COMSOL take relativity into account when calculating velocities? -PW
+                        # TODO: Update: there is a setting in COMSOL that takes it into account -PW
                         values[3:6] = [m * v for v in values[3:6]]  # Convert velocity to momentum
-                        values[6] = 1.0e-6 * (values[6] / echarge)  # Convert energy from [J] to [MeV]
+                        # values[6] = 1.0e-6 * (values[6] / echarge)  # Convert energy from [J] to [MeV]
 
                         # This will try to add the values for the specified particle id, but there may not be
                         # enough indices appended to the list to access the [id - 1] element
@@ -94,7 +121,7 @@ class COMSOLDriver(object):
 
                                 for key in key_list:
                                     # Append a 0.0 for each key
-                                    datasource[step_str][key] = np.append(datasource[step_str][key], [0.0])
+                                    datasource[step_str][key].append([0.0])
 
                             # Now that the index exists, add the values
                             for idx, key in enumerate(key_list):
