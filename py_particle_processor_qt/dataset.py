@@ -1,5 +1,6 @@
 # from dans_pymodules import IonSpecies
 # import h5py
+from dans_pymodules import MyColors
 from scipy import constants as const
 from drivers import *
 
@@ -14,6 +15,8 @@ a h5 file on disk to be operated on.
 amu = const.value("atomic mass constant energy equivalent in MeV")
 echarge = const.value("elementary charge")
 clight = const.value("speed of light in vacuum")
+
+colors = MyColors()
 
 
 class ImportExportDriver(object):
@@ -105,6 +108,29 @@ class Dataset(object):
             return 1
 
         return self._data.get(key).value
+
+    def get_particle(self, id, get_color=False):
+        particle = {"x": [], "y": [], "z": []}
+        max_step = self.get_nsteps()
+        color = None
+        for step in range(max_step):
+            self.set_step_view(step)
+            for key in ["x", "y", "z"]:
+                dat = self._data.get(key)[id]
+                if np.isnan(dat) or dat == 0.0:
+                    if get_color == "step":
+                        factor = float(step) / float(max_step)
+                        color = ((1 - factor) * 255.0, factor * 255.0, 0.0)
+                    elif get_color == "random":
+                        color = colors[id]
+                    return particle, color
+                else:
+                    particle[key].append(dat)
+        if get_color == "step":
+            color = (0.0, 255.0, 0.0)
+        elif get_color == "random":
+            color = colors[id]
+        return particle, color
 
     def get_a(self):
         return self._ion.a()

@@ -1,11 +1,9 @@
 from dataset import *
 from mainwindow import *
 from dans_pymodules import MyColors
-import sys
 import time
 from PyQt5.QtWidgets import qApp, QFileDialog
-from PyQt5 import QtGui
-from PyQt5 import QtCore
+from PyQt5 import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 
@@ -29,7 +27,9 @@ class PyParticleProcessor(object):
         self._colors = MyColors()
 
         # --- Load the GUI from XML file and initialize connections --- #
+        print("Before")
         self._app = QtGui.QApplication([])
+        print("After")
         self._mainWindow = QtGui.QMainWindow()
         self._mainWindowGUI = Ui_MainWindow()
         self._mainWindowGUI.setupUi(self._mainWindow)
@@ -275,8 +275,10 @@ class PyParticleProcessor(object):
             self._mainWindowGUI.graphicsView_2.removeItem(data_item)
         for data_item in self._mainWindowGUI.graphicsView_3.listDataItems():
             self._mainWindowGUI.graphicsView_3.removeItem(data_item)
-        # for data_item in self._mainWindowGUI.graphicsView_4.listDataItems():
-        #     self._mainWindowGUI.graphicsView_4.removeItem(data_item)
+
+        # TODO: Using the removeItem(data_item) method does not work properly, this is a workaround
+        self._mainWindowGUI.graphicsView_4.items = []
+        self._mainWindowGUI.graphicsView_4.update()
 
         print("Views cleared")
 
@@ -320,18 +322,51 @@ class PyParticleProcessor(object):
                 self._mainWindowGUI.graphicsView_3.setTitle("YYP")
                 self._mainWindowGUI.graphicsView_3.repaint()
 
+                # print(xyz.shape)
+
                 # xyz = np.array([dataset.get("x"),
                 #                 dataset.get("y"),
                 #                 dataset.get("z")]).T
-                #
-                # # print(xyz.shape)
-                #
-                # xyz_scatter = pg.opengl.GLScatterPlotItem(pos=xyz, size=1.0, pxMode=True)
-                #
+                # xyz_scatter = pg.opengl.GLScatterPlotItem(pos=xyz, size=1, pxMode=True)
+                # self._mainWindowGUI.graphicsView_4.show()
                 # self._mainWindowGUI.graphicsView_4.addItem(xyz_scatter)
                 # g = pg.opengl.GLGridItem()
                 # self._mainWindowGUI.graphicsView_4.addItem(g)
-                # self._mainWindowGUI.graphicsView_4.opts['distance'] = 0.05
+                # self._mainWindowGUI.graphicsView_4.opts['distance'] = 0.01
+
+                _grid = True
+
+                for id in range(dataset.get_npart()):
+                    particle, _c = dataset.get_particle(id, get_color="random")
+                    pts = np.array([particle.get("x"), particle.get("y"), particle.get("z")]).T
+                    plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
+                                                   antialias=True)
+
+                    self._mainWindowGUI.graphicsView_4.addItem(plt)
+
+                if _grid:
+                    gx = pg.opengl.GLGridItem()
+                    gx.rotate(90, 0, 1, 0)
+                    gx.translate(0.0, 0.0, 0.0)
+                    gx.setSize(x=0.2, y=0.2, z=0.2)
+                    gx.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                    gy = pg.opengl.GLGridItem()
+                    gy.rotate(90, 1, 0, 0)
+                    gy.translate(0.0, 0.0, 0.0)
+                    gy.setSize(x=0.2, y=0.2, z=0.2)
+                    gy.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                    gz = pg.opengl.GLGridItem()
+                    gz.translate(0.0, 0.0, 0.0)
+                    gz.setSize(x=0.2, y=0.2, z=1.0)
+                    gz.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                    self._mainWindowGUI.graphicsView_4.addItem(gx)
+                    self._mainWindowGUI.graphicsView_4.addItem(gy)
+                    self._mainWindowGUI.graphicsView_4.addItem(gz)
+
+                self._mainWindowGUI.graphicsView_4.opts["distance"] = 3e-1  # Seems to be a good value for now
 
     def run(self):
         """
