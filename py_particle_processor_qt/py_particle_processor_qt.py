@@ -27,9 +27,7 @@ class PyParticleProcessor(object):
         self._colors = MyColors()
 
         # --- Load the GUI from XML file and initialize connections --- #
-        print("Before")
         self._app = QtGui.QApplication([])
-        print("After")
         self._mainWindow = QtGui.QMainWindow()
         self._mainWindowGUI = Ui_MainWindow()
         self._mainWindowGUI.setupUi(self._mainWindow)
