@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>948</width>
+    <width>1161</width>
     <height>654</height>
    </rect>
   </property>
@@ -55,7 +55,7 @@
            </attribute>
            <column>
             <property name="text">
-             <string>Plot</string>
+             <string>Selected</string>
             </property>
            </column>
            <column>
@@ -174,12 +174,22 @@
    </layout>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextBesideIcon</enum>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionImport_New"/>
+   <addaction name="actionImport_Add"/>
+   <addaction name="actionUnload_Selected"/>
+   <addaction name="actionProperties"/>
+   <addaction name="actionPlot"/>
+   <addaction name="actionExport_For"/>
+   <addaction name="actionQuit"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QMenuBar" name="menuBar">
@@ -187,7 +197,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>948</width>
+     <width>1161</width>
      <height>25</height>
     </rect>
    </property>
@@ -218,21 +228,51 @@
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionImport_New">
+   <property name="icon">
+    <iconset theme="document-new"/>
+   </property>
    <property name="text">
     <string>Import New...</string>
    </property>
+   <property name="iconText">
+    <string>New</string>
+   </property>
+   <property name="toolTip">
+    <string>New</string>
+   </property>
   </action>
   <action name="actionImport_Add">
+   <property name="icon">
+    <iconset theme="add"/>
+   </property>
    <property name="text">
     <string>Import Add...</string>
    </property>
+   <property name="iconText">
+    <string>Add</string>
+   </property>
+   <property name="toolTip">
+    <string>Add</string>
+   </property>
   </action>
   <action name="actionExport_For">
+   <property name="icon">
+    <iconset theme="go-right"/>
+   </property>
    <property name="text">
     <string>Export For...</string>
    </property>
+   <property name="iconText">
+    <string>Export</string>
+   </property>
+   <property name="toolTip">
+    <string>Export</string>
+   </property>
   </action>
   <action name="actionQuit">
+   <property name="icon">
+    <iconset theme="exit"/>
+   </property>
    <property name="text">
     <string>Quit</string>
    </property>
@@ -243,8 +283,36 @@
    </property>
   </action>
   <action name="actionUnload_Selected">
+   <property name="icon">
+    <iconset theme="remove"/>
+   </property>
    <property name="text">
-    <string>Unload Selected</string>
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Unload</string>
+   </property>
+  </action>
+  <action name="actionProperties">
+   <property name="icon">
+    <iconset theme="applications-system"/>
+   </property>
+   <property name="text">
+    <string>Properties</string>
+   </property>
+   <property name="toolTip">
+    <string>Properties</string>
+   </property>
+  </action>
+  <action name="actionPlot">
+   <property name="icon">
+    <iconset theme="emblem-photos"/>
+   </property>
+   <property name="text">
+    <string>Plot</string>
+   </property>
+   <property name="toolTip">
+    <string>Plot</string>
    </property>
   </action>
  </widget>

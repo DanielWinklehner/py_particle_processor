@@ -1,9 +1,10 @@
 from dataset import *
 from mainwindow import *
+from properties import *
 from dans_pymodules import MyColors
-import time
 from PyQt5.QtWidgets import qApp, QFileDialog
 from PyQt5 import QtGui, QtCore
+import time
 import pyqtgraph as pg
 import numpy as np
 
@@ -25,9 +26,12 @@ class PyParticleProcessor(object):
         """
         self._debug = debug
         self._colors = MyColors()
+        self._datasets = []
+        self._selections = []
+        self._last_path = ""
+        self._pm = None  # Used to keep the property manager in scope
 
         # --- Load the GUI from XML file and initialize connections --- #
-        self._app = QtGui.QApplication([])
         self._mainWindow = QtGui.QMainWindow()
         self._mainWindowGUI = Ui_MainWindow()
         self._mainWindowGUI.setupUi(self._mainWindow)
@@ -39,15 +43,14 @@ class PyParticleProcessor(object):
         self._menubar = self._mainWindowGUI.menuBar
         self._menubar.setNativeMenuBar(False)  # This is needed to make the menu bar actually appear -PW
 
-        # Connections:
+        # --- Connections --- #
         self._mainWindowGUI.actionQuit.triggered.connect(self.main_quit)
         self._mainWindowGUI.actionImport_New.triggered.connect(self.load_new_ds_callback)
         self._mainWindowGUI.actionImport_Add.triggered.connect(self.load_add_ds_callback)
         self._mainWindowGUI.actionUnload_Selected.triggered.connect(self.delete_ds_callback)
+        self._mainWindowGUI.actionPlot.triggered.connect(self.plot_callback)
+        self._mainWindowGUI.actionProperties.triggered.connect(self.properties_callback)
         self._treeview.itemClicked.connect(self.treeview_clicked)
-
-        self._datasets = []
-        self._last_path = ""
 
     def about_program_callback(self, menu_item):
         """
@@ -55,7 +58,7 @@ class PyParticleProcessor(object):
         :return:
         """
         if self._debug:
-            print("About Dialog called by {}".format(menu_item))
+            print("DEBUG: About Dialog called by {}".format(menu_item))
 
         return 0
 
@@ -65,7 +68,7 @@ class PyParticleProcessor(object):
         TreeView. Updates the View and refreshes the plots...
         """
         if self._debug:
-            print("cell_toggled was called with widget {} and mode {}".format(widget, mode))
+            print("DEBUG: cell_toggled was called with widget {} and mode {}".format(widget, mode))
 
         model[path][0] = not model[path][0]
 
@@ -81,19 +84,25 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("delete_ds_callback was called")
+            print("DEBUG: delete_ds_callback was called")
 
         redraw_flag = False
-        row_indices = []
+        row_indices = range(self._treeview.topLevelItemCount())
+        indices_to_remove = []
+        items_to_remove = []
         root = self._treeview.invisibleRootItem()
-        for item in self._treeview.selectedItems():
+        for i in row_indices:
+            item = self._treeview.topLevelItem(i)
             if item.checkState(0) == QtCore.Qt.Checked:
                 redraw_flag = True
-            row_indices.append(self._treeview.indexFromItem(item).row())
-            (item.parent() or root).removeChild(item)
+                indices_to_remove.append(i)
+                items_to_remove.append(item)
 
-        for index in sorted(row_indices, reverse=True):
-            del self._datasets[index]
+        for j in indices_to_remove:
+            del self._datasets[j]
+
+        for item in items_to_remove:
+            (item.parent() or root).removeChild(item)
 
         if redraw_flag:
             self.redraw_plots()
@@ -104,7 +113,7 @@ class PyParticleProcessor(object):
 
         first_flag1 = True
         filetypes_text = ""
-        for key in driver_mapping.keys():
+        for key in sorted(driver_mapping.keys()):
             if len(driver_mapping[key]["extensions"]) > 0:
                 if first_flag1:
                     filetypes_text += "{} Files (".format(key)
@@ -143,7 +152,7 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("Called initialize() function.")
+            print("DEBUG: Called initialize() function.")
 
         self._status_bar.showMessage("Program Initialized.")
 
@@ -157,7 +166,7 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("load_add_ds_callback was called with widget {}".format(widget))
+            print("DEBUG: load_add_ds_callback was called with widget {}".format(widget))
 
         filename, driver = self.get_filename(action="open")
 
@@ -182,11 +191,11 @@ class PyParticleProcessor(object):
             new_item.setText(6, "{}".format(self._datasets[-1].get_nsteps()))
             new_item.setText(7, self._datasets[-1].get_filename())
 
-            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable)
+            new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
             new_item.setCheckState(0, QtCore.Qt.Unchecked)
 
             if self._debug:
-                print("load_add_ds_callback: Finished loading.")
+                print("DEBUG: load_add_ds_callback: Finished loading.")
 
         return 0
 
@@ -198,7 +207,7 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("load_new_ds_callback was called")
+            print("DEBUG: load_new_ds_callback was called")
 
         filename, driver = self.get_filename(action='open')
 
@@ -236,7 +245,7 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("Called main_quit")
+            print("DEBUG: Called main_quit")
 
         self._mainWindow.destroy()
         qApp.quit()
@@ -253,19 +262,38 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("Debug: Notebook {} changed page to {} (page_num = {})".format(notebook,
+            print("DEBUG: Notebook {} changed page to {} (page_num = {})".format(notebook,
                                                                                  page,
                                                                                  page_num))
         return 0
 
-    def redraw_plots(self):
+    def plot_callback(self):
+        self.redraw_plots()
+
+    def properties_callback(self):
+
+        if self._debug:
+            "DEBUG: properties_callback called"
+
+        if len(self._selections) == 0:
+            print("No dataset was selected!")
+            return 1
+        elif len(self._selections) > 1:
+            print("You cannot select more than one dataset!")
+
+        item = self._datasets[self._selections[0]]
+
+        self._pm = PropertyManager(settings=item.get_plot_settings(), debug=True)
+        self._pm.run()
+
+    def clear_plots(self):
         """
-        (re)draw the plots that are checked
+        Clear the plot windows
         :return: 
         """
 
         if self._debug:
-            print("redraw_plots called")
+            print("DEBUG: clear_plots called")
 
         for data_item in self._mainWindowGUI.graphicsView_1.listDataItems():
             self._mainWindowGUI.graphicsView_1.removeItem(data_item)
@@ -280,9 +308,27 @@ class PyParticleProcessor(object):
 
         print("Views cleared")
 
-        for i, dataset in enumerate(self._datasets):
+        return 0
 
-            this_item = self._treeview.topLevelItem(i)
+    def redraw_plots(self):
+        """
+        (re)draw the plots that are checked
+        :return: 
+        """
+
+        if self._debug:
+            print("DEBUG: redraw_plots called")
+
+        self.clear_plots()
+
+        if len(self._selections) == 0:
+            print("No datasets selected to plot!")
+            return 1
+
+        for idx in sorted(self._selections):
+
+            dataset = self._datasets[idx]
+            this_item = self._treeview.topLevelItem(idx)
 
             try:
                 step = int(this_item.text(1))
@@ -297,74 +343,69 @@ class PyParticleProcessor(object):
                 print("redraw_plots: Exception happened when trying to set step view to: '{}'!".format(step))
                 print(e)
 
-            if dataset.get_draw():
-                # TODO: Don't make the color dependant on i
+            if dataset.get_selected():
+
+                if self._debug:
+                    print("DEBUG: Displaying Dataset#{}".format(idx))
+
                 xy_scatter = pg.ScatterPlotItem(x=dataset.get("x"), y=dataset.get("y"),
-                                                pen=pg.mkPen(color=self._colors[i]), brush='b', size=1.0)
+                                                pen=pg.mkPen(color=self._colors[idx]), brush='b', size=1.0)
 
                 self._mainWindowGUI.graphicsView_1.addItem(xy_scatter)
                 self._mainWindowGUI.graphicsView_1.setTitle("XY")
                 self._mainWindowGUI.graphicsView_1.repaint()
 
                 xxp_scatter = pg.ScatterPlotItem(x=dataset.get("x"), y=dataset.get("px"),
-                                                 pen=pg.mkPen(self._colors[i]), brush='b', size=1.0, pxMode=True)
+                                                 pen=pg.mkPen(self._colors[idx]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_2.addItem(xxp_scatter)
                 self._mainWindowGUI.graphicsView_2.setTitle("XXP")
                 self._mainWindowGUI.graphicsView_2.repaint()
 
                 yyp_scatter = pg.ScatterPlotItem(x=dataset.get("y"), y=dataset.get("py"),
-                                                 pen=pg.mkPen(self._colors[i]), brush='b', size=1.0, pxMode=True)
+                                                 pen=pg.mkPen(self._colors[idx]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_3.addItem(yyp_scatter)
                 self._mainWindowGUI.graphicsView_3.setTitle("YYP")
                 self._mainWindowGUI.graphicsView_3.repaint()
 
-                # print(xyz.shape)
+                if dataset.get_nsteps() > 1:  # Only do a 3d display for data with more than one step
 
-                # xyz = np.array([dataset.get("x"),
-                #                 dataset.get("y"),
-                #                 dataset.get("z")]).T
-                # xyz_scatter = pg.opengl.GLScatterPlotItem(pos=xyz, size=1, pxMode=True)
-                # self._mainWindowGUI.graphicsView_4.show()
-                # self._mainWindowGUI.graphicsView_4.addItem(xyz_scatter)
-                # g = pg.opengl.GLGridItem()
-                # self._mainWindowGUI.graphicsView_4.addItem(g)
-                # self._mainWindowGUI.graphicsView_4.opts['distance'] = 0.01
+                    _grid = True  # Always display the grids for now
 
-                _grid = True
+                    for id in range(dataset.get_npart()):
+                        particle, _c = dataset.get_particle(id, get_color="random")
+                        pts = np.array([particle.get("x"), particle.get("y"), particle.get("z")]).T
+                        plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
+                                                       antialias=True)
 
-                for id in range(dataset.get_npart()):
-                    particle, _c = dataset.get_particle(id, get_color="random")
-                    pts = np.array([particle.get("x"), particle.get("y"), particle.get("z")]).T
-                    plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
-                                                   antialias=True)
+                        self._mainWindowGUI.graphicsView_4.addItem(plt)
 
-                    self._mainWindowGUI.graphicsView_4.addItem(plt)
+                    if _grid:
+                        gx = pg.opengl.GLGridItem()
+                        gx.rotate(90, 0, 1, 0)
+                        gx.translate(0.0, 0.0, 0.0)
+                        gx.setSize(x=0.2, y=0.2, z=0.2)
+                        gx.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                if _grid:
-                    gx = pg.opengl.GLGridItem()
-                    gx.rotate(90, 0, 1, 0)
-                    gx.translate(0.0, 0.0, 0.0)
-                    gx.setSize(x=0.2, y=0.2, z=0.2)
-                    gx.setSpacing(x=0.01, y=0.01, z=0.01)
+                        gy = pg.opengl.GLGridItem()
+                        gy.rotate(90, 1, 0, 0)
+                        gy.translate(0.0, 0.0, 0.0)
+                        gy.setSize(x=0.2, y=0.2, z=0.2)
+                        gy.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                    gy = pg.opengl.GLGridItem()
-                    gy.rotate(90, 1, 0, 0)
-                    gy.translate(0.0, 0.0, 0.0)
-                    gy.setSize(x=0.2, y=0.2, z=0.2)
-                    gy.setSpacing(x=0.01, y=0.01, z=0.01)
+                        gz = pg.opengl.GLGridItem()
+                        gz.translate(0.0, 0.0, 0.0)
+                        gz.setSize(x=0.2, y=0.2, z=1.0)
+                        gz.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                    gz = pg.opengl.GLGridItem()
-                    gz.translate(0.0, 0.0, 0.0)
-                    gz.setSize(x=0.2, y=0.2, z=1.0)
-                    gz.setSpacing(x=0.01, y=0.01, z=0.01)
+                        self._mainWindowGUI.graphicsView_4.addItem(gx)
+                        self._mainWindowGUI.graphicsView_4.addItem(gy)
+                        self._mainWindowGUI.graphicsView_4.addItem(gz)
 
-                    self._mainWindowGUI.graphicsView_4.addItem(gx)
-                    self._mainWindowGUI.graphicsView_4.addItem(gy)
-                    self._mainWindowGUI.graphicsView_4.addItem(gz)
+                    self._mainWindowGUI.graphicsView_4.opts["distance"] = 3e-1  # Seems to be a good value for now
 
-                self._mainWindowGUI.graphicsView_4.opts["distance"] = 3e-1  # Seems to be a good value for now
+        return 0
 
     def run(self):
         """
@@ -375,7 +416,8 @@ class PyParticleProcessor(object):
 
         # --- Show the GUI --- #
         self._mainWindow.show()
-        return self._app.exec_()
+
+        return 0
 
     def statusbar_changed_callback(self, statusbar, context_id, text):
         """
@@ -399,14 +441,18 @@ class PyParticleProcessor(object):
 
         if column == 0:
             checkstate = (item.checkState(0) == QtCore.Qt.Checked)
-
             index = self._treeview.indexFromItem(item).row()
-            if self._datasets[index].get_draw() != checkstate:
-                self._datasets[index].set_draw(checkstate)
-                self.redraw_plots()
+            if self._datasets[index].get_selected() != checkstate:
+                self._datasets[index].set_selected(checkstate)
+
+            if checkstate is True and index not in self._selections:
+                self._selections.append(index)
+            elif checkstate is False and index in self._selections:
+                self._selections.remove(index)
+
 
 if __name__ == "__main__":
-    mydebug = True
-
-    ppp = PyParticleProcessor(debug=mydebug)
+    application = QtGui.QApplication([])
+    ppp = PyParticleProcessor(debug=True)
     ppp.run()
+    application.exec_()

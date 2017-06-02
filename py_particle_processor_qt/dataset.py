@@ -50,15 +50,19 @@ class Dataset(object):
 
     def __init__(self, debug=False):
         self._draw = False
+        self._selected = False
+
         self._datasource = None
         self._filename = None
         self._driver = None
-        self._ion = None
-        self._nsteps = 0
-        self._multispecies = False
         self._debug = debug
         self._data = None
+        self._plot_settings = {}
+
+        self._ion = None
+        self._multispecies = False
         self._current = 0.0
+        self._nsteps = 0
         self._npart = 0  # TODO: For now this is the number of particles at step 0. -DW
 
     def close(self):
@@ -86,6 +90,35 @@ class Dataset(object):
 
     def set_draw(self, draw):
         self._draw = draw
+
+    def get_selected(self):
+        return self._selected
+
+    def set_selected(self, selected):
+        self._selected = selected
+
+    def get_plot_settings(self, translated=False):
+        """
+        Gets the plot settings used in propertieswindow.
+        Translated means using "x", "y", ... instead of 0, 1, 2, ...
+        :param translated: 
+        :return: 
+        """
+        if translated is False:
+            return self._plot_settings
+        else:
+            t_plot_settings = {}
+            en_val = [False, None, True]
+            combo_val = ["x", "y", "z", "px", "py", "pz"]
+            for k, v in self._plot_settings.items():
+                if "_en" in k:
+                    t_plot_settings[k] = en_val[v]
+                else:
+                    t_plot_settings[k] = combo_val[v]
+            return t_plot_settings
+
+    def set_plot_settings(self, plot_settings):
+        self._plot_settings = plot_settings
 
     def get(self, key):
         """
@@ -116,7 +149,7 @@ class Dataset(object):
         for step in range(max_step):
             self.set_step_view(step)
             for key in ["x", "y", "z"]:
-                dat = self._data.get(key)[id]
+                dat = self._data.get(key).value[id]
                 if np.isnan(dat) or dat == 0.0:
                     if get_color == "step":
                         factor = float(step) / float(max_step)
