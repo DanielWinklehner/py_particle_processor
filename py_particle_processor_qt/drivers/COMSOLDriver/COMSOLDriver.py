@@ -1,31 +1,6 @@
+from ..arraywrapper import ArrayWrapper
 from dans_pymodules import IonSpecies, echarge
 import numpy as np
-
-
-class ArrayWrapper(object):
-
-    def __init__(self, array_like):
-        self._array = np.array(array_like)
-
-    def __get__(self):
-        return self
-
-    def __getitem__(self, key):
-        return self._array[key]
-
-    def __setitem__(self, key, item):
-        self._array[key] = item
-
-    def __len__(self):
-        return len(self._array)
-
-    @property
-    def value(self):
-        return self._array
-
-    def append(self, value):
-        self._array = np.append(self._array, value)
-
 
 class COMSOLDriver(object):
     def __init__(self, debug=False):
@@ -73,9 +48,6 @@ class COMSOLDriver(object):
 
                     raw_values = [float(item) for item in line.strip().split()]  # Data straight from the text file
                     _id = int(raw_values.pop(0))  # Particle ID number
-
-                    # TODO: Check what the values are for particles that terminate early -PW
-                    # TODO: Update: it can be changed in COMSOL, currently it stays in place
                     num_iter = int(len(raw_values) / _n)  # Number of steps the particle existed for
 
                     for i in range(num_iter):
@@ -96,8 +68,6 @@ class COMSOLDriver(object):
                         values = raw_values[(1 + i * _n):(_n + i * _n)]
 
                         values[0:3] = [r for r in values[0:3]]
-                        # TODO: Does COMSOL take relativity into account when calculating velocities? -PW
-                        # TODO: Update: there is a setting in COMSOL that takes it into account -PW
                         values[3:6] = [m * v for v in values[3:6]]  # Convert velocity to momentum
                         # values[6] = 1.0e-6 * (values[6] / echarge)  # Convert energy from [J] to [MeV]
 
@@ -159,6 +129,6 @@ class COMSOLDriver(object):
 
 
 if __name__ == '__main__':
-    fn = '/home/philip/work/COMSOL/test_data_set.txt'
+    fn = "/home/philip/work/COMSOL/test_data_set.txt"
     A = COMSOLDriver(debug=True).import_data(fn)
     print(A["ion"])

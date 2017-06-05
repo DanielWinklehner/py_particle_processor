@@ -1,6 +1,7 @@
-import h5py
+from ..arraywrapper import ArrayWrapper
 from dans_pymodules import IonSpecies
-
+import h5py
+import numpy as np
 
 class OPALDriver:
 
@@ -48,6 +49,45 @@ class OPALDriver:
                 data["npart"] = len(_data.get("x").value)
 
                 return data
+
+        elif ".dat" in filename:
+
+            if self._debug:
+                print("Opening OPAL .dat file...")
+
+            data = {}
+
+            with open(filename, 'rb') as infile:
+                data["npart"] = int(infile.readline().rstrip().lstrip())
+                data["nsteps"] = 1
+
+                _distribution = []
+                mydtype = [('x', float), ('xp', float),
+                           ('y', float), ('yp', float),
+                           ('z', float), ('zp', float)]
+
+                for line in infile.readlines():
+                    values = line.strip().split()
+                    _distribution.append(tuple(values))
+
+                _distribution = np.array(_distribution, dtype=mydtype)
+
+                distribution = {'x': ArrayWrapper(_distribution['x']),
+                                'px': ArrayWrapper(_distribution['xp']),
+                                'y': ArrayWrapper(_distribution['y']),
+                                'py': ArrayWrapper(_distribution['yp']),
+                                'z': ArrayWrapper(_distribution['z']),
+                                'pz': ArrayWrapper(_distribution['zp'])}
+
+                # For a single timestep, we just define a Step#0 entry in a dictionary (supports .get())
+                data["datasource"] = {"Step#0": distribution}
+
+                # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
+                # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
+                data["ion"] = IonSpecies("proton", 0.07)  # TODO: Need a good way to get the energy -PW
+                data["current"] = 0.0
+
+            return data
 
         return None
 

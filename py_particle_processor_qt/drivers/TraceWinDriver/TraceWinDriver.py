@@ -1,17 +1,7 @@
 # import h5py
+from ..arraywrapper import ArrayWrapper
 from dans_pymodules import IonSpecies
 import numpy as np
-
-
-class ArrayWrapper(object):
-
-    def __init__(self, array_like):
-
-        self._array = np.array(array_like)
-
-    @property
-    def value(self):
-        return self._array
 
 
 class TraceWinDriver(object):

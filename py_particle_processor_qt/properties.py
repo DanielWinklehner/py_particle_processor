@@ -34,7 +34,7 @@ class PropertyManager(object):
             print("DEBUG: apply_callback called")
 
         self.apply_settings()
-        self._parent.set_plot_settings(item_id=self._item_id, plot_settings=self.get_settings())
+        self._parent.apply_plot_settings(item_id=self._item_id, plot_settings=self.get_settings())
         self._propWindow.close()
 
         return 0

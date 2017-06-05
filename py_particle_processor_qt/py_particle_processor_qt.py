@@ -70,14 +70,14 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def apply_plot_settings(self, item_id, settings):
-        self._datasets[item_id].set_plot_settings(settings)
+    def apply_plot_settings(self, item_id, plot_settings):
+        self._datasets[item_id].set_plot_settings(plot_settings)
 
         return 0
 
     @staticmethod  # For now... -PW
     def analyze_callback():
-        # TODO: Create a new analysis tool for beam parameters - PW
+        # TODO: Create a new analysis tool for beam parameters -PW
         print("Not implemented yet!")
 
         return 0
@@ -514,12 +514,6 @@ class PyParticleProcessor(object):
         else:
             print("Status message is not a string!")
             return 1
-
-        return 0
-
-    def set_plot_settings(self, item_id, plot_settings):
-        self._datasets[item_id].set_plot_settings(plot_settings)
-        self._treeview.topLevelItem(item_id).setText(1, str(plot_settings["step"]))
 
         return 0
 
