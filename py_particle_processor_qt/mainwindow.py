@@ -36,10 +36,12 @@ class Ui_MainWindow(object):
         self.treeWidget = QtWidgets.QTreeWidget(self.layoutWidget)
         self.treeWidget.setAlternatingRowColors(True)
         self.treeWidget.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.treeWidget.setTextElideMode(QtCore.Qt.ElideRight)
         self.treeWidget.setObjectName("treeWidget")
         self.treeWidget.header().setVisible(True)
         self.treeWidget.header().setCascadingSectionResizes(False)
         self.treeWidget.header().setDefaultSectionSize(80)
+        self.treeWidget.header().setMinimumSectionSize(1)
         self.treeWidget.header().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.treeWidget)
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
@@ -140,10 +142,15 @@ class Ui_MainWindow(object):
         icon = QtGui.QIcon.fromTheme("emblem-photos")
         self.actionPlot.setIcon(icon)
         self.actionPlot.setObjectName("actionPlot")
+        self.actionAnalyze = QtWidgets.QAction(MainWindow)
+        icon = QtGui.QIcon.fromTheme("applications-accessories")
+        self.actionAnalyze.setIcon(icon)
+        self.actionAnalyze.setObjectName("actionAnalyze")
         self.mainToolBar.addAction(self.actionImport_New)
         self.mainToolBar.addAction(self.actionImport_Add)
         self.mainToolBar.addAction(self.actionUnload_Selected)
         self.mainToolBar.addAction(self.actionProperties)
+        self.mainToolBar.addAction(self.actionAnalyze)
         self.mainToolBar.addAction(self.actionPlot)
         self.mainToolBar.addAction(self.actionExport_For)
         self.mainToolBar.addAction(self.actionQuit)
@@ -163,10 +170,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PyParticleProcessor"))
         self.label.setText(_translate("MainWindow", "Datasets"))
         self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Selected"))
-        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "View Step"))
+        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "Step"))
         self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Mass"))
         self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Charge"))
         self.treeWidget.headerItem().setText(4, _translate("MainWindow", "Current"))
@@ -195,6 +202,8 @@ class Ui_MainWindow(object):
         self.actionProperties.setToolTip(_translate("MainWindow", "Properties"))
         self.actionPlot.setText(_translate("MainWindow", "Plot"))
         self.actionPlot.setToolTip(_translate("MainWindow", "Plot"))
+        self.actionAnalyze.setText(_translate("MainWindow", "Analyze"))
+        self.actionAnalyze.setToolTip(_translate("MainWindow", "Analyze"))
 
 from pyqtgraph import PlotWidget
 from pyqtgraph.opengl import GLViewWidget

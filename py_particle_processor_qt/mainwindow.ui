@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>PyParticleProcessor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -41,6 +41,9 @@
            <property name="selectionMode">
             <enum>QAbstractItemView::NoSelection</enum>
            </property>
+           <property name="textElideMode">
+            <enum>Qt::ElideRight</enum>
+           </property>
            <attribute name="headerVisible">
             <bool>true</bool>
            </attribute>
@@ -49,6 +52,9 @@
            </attribute>
            <attribute name="headerDefaultSectionSize">
             <number>80</number>
+           </attribute>
+           <attribute name="headerMinimumSectionSize">
+            <number>1</number>
            </attribute>
            <attribute name="headerStretchLastSection">
             <bool>true</bool>
@@ -60,7 +66,7 @@
            </column>
            <column>
             <property name="text">
-             <string>View Step</string>
+             <string>Step</string>
             </property>
            </column>
            <column>
@@ -187,6 +193,7 @@
    <addaction name="actionImport_Add"/>
    <addaction name="actionUnload_Selected"/>
    <addaction name="actionProperties"/>
+   <addaction name="actionAnalyze"/>
    <addaction name="actionPlot"/>
    <addaction name="actionExport_For"/>
    <addaction name="actionQuit"/>
@@ -229,7 +236,8 @@
   </widget>
   <action name="actionImport_New">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Import New...</string>
@@ -243,7 +251,8 @@
   </action>
   <action name="actionImport_Add">
    <property name="icon">
-    <iconset theme="add"/>
+    <iconset theme="add">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Import Add...</string>
@@ -257,7 +266,8 @@
   </action>
   <action name="actionExport_For">
    <property name="icon">
-    <iconset theme="go-right"/>
+    <iconset theme="go-right">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Export For...</string>
@@ -271,7 +281,8 @@
   </action>
   <action name="actionQuit">
    <property name="icon">
-    <iconset theme="exit"/>
+    <iconset theme="exit">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Quit</string>
@@ -284,7 +295,8 @@
   </action>
   <action name="actionUnload_Selected">
    <property name="icon">
-    <iconset theme="remove"/>
+    <iconset theme="remove">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Remove</string>
@@ -295,7 +307,8 @@
   </action>
   <action name="actionProperties">
    <property name="icon">
-    <iconset theme="applications-system"/>
+    <iconset theme="applications-system">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Properties</string>
@@ -306,13 +319,26 @@
   </action>
   <action name="actionPlot">
    <property name="icon">
-    <iconset theme="emblem-photos"/>
+    <iconset theme="emblem-photos">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Plot</string>
    </property>
    <property name="toolTip">
     <string>Plot</string>
+   </property>
+  </action>
+  <action name="actionAnalyze">
+   <property name="icon">
+    <iconset theme="applications-accessories">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Analyze</string>
+   </property>
+   <property name="toolTip">
+    <string>Analyze</string>
    </property>
   </action>
  </widget>

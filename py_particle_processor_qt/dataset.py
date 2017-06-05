@@ -23,6 +23,7 @@ class ImportExportDriver(object):
     """
     A thin wrapper around the drivers for importing and exporting particle data
     """
+
     def __init__(self,
                  driver_name=None,
                  debug=False):
@@ -113,6 +114,8 @@ class Dataset(object):
             for k, v in self._plot_settings.items():
                 if "_en" in k:
                     t_plot_settings[k] = en_val[v]
+                elif "step" in k:
+                    t_plot_settings[k] = v
                 else:
                     t_plot_settings[k] = combo_val[v]
             return t_plot_settings
@@ -142,27 +145,27 @@ class Dataset(object):
 
         return self._data.get(key).value
 
-    def get_particle(self, id, get_color=False):
+    def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}
         max_step = self.get_nsteps()
         color = None
         for step in range(max_step):
             self.set_step_view(step)
             for key in ["x", "y", "z"]:
-                dat = self._data.get(key).value[id]
+                dat = self._data.get(key).value[particle_id]
                 if np.isnan(dat) or dat == 0.0:
                     if get_color == "step":
                         factor = float(step) / float(max_step)
                         color = ((1 - factor) * 255.0, factor * 255.0, 0.0)
                     elif get_color == "random":
-                        color = colors[id]
+                        color = colors[particle_id]
                     return particle, color
                 else:
                     particle[key].append(dat)
-        if get_color == "step":
+        if get_color == "step":  # TODO: Temporary
             color = (0.0, 255.0, 0.0)
         elif get_color == "random":
-            color = colors[id]
+            color = colors[particle_id]
         return particle, color
 
     def get_a(self):

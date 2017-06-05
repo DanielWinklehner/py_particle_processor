@@ -1,56 +1,51 @@
 from propertieswindow import Ui_PropertiesWindow
-from PyQt5.QtWidgets import qApp, QFileDialog
-from PyQt5 import QtGui, QtCore
-import pyqtgraph as pg
+from PyQt5 import QtGui
+
+# TODO: A better new window handling system would be nice -PW
 
 
 class PropertyManager(object):
-    def __init__(self, settings, debug=False):
-        self._settings = settings
+
+    def __init__(self, parent, item_id, debug=False):
+        self._item_id = item_id
+        self._settings = parent.get_dataset(item_id).get_plot_settings()
         self._debug = debug
+        self._parent = parent
 
         if self._debug:
             print("DEBUG: Initializing PropertyManager instance")
 
-        self._propWindow= QtGui.QMainWindow()
+        self._propWindow = QtGui.QMainWindow()
         self._propWindowGUI = Ui_PropertiesWindow()
         self._propWindowGUI.setupUi(self._propWindow)
 
         if len(self._settings) > 0:
             self.populate_settings()
         else:
-            self.retrieve_settings()
+            self.apply_settings()
 
         self._propWindowGUI.apply_button.clicked.connect(self.apply_callback)
         self._propWindowGUI.cancel_button.clicked.connect(self.cancel_callback)
+        self._propWindowGUI.dataset_label.setText("DATASET #{}".format(str(self._item_id)))
 
-    def populate_settings(self):
+    def apply_callback(self):
 
         if self._debug:
-            print("DEBUG: populate_settings called")
+            print("DEBUG: apply_callback called")
 
-        # Top Left:
-        self._propWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
-        self._propWindowGUI.tl_combo_a.setCurrentIndex(self._settings["tl_a"])
-        self._propWindowGUI.tl_combo_b.setCurrentIndex(self._settings["tl_b"])
+        self.apply_settings()
+        self._parent.set_plot_settings(item_id=self._item_id, plot_settings=self.get_settings())
+        self._propWindow.close()
 
-        # Top Right:
-        self._propWindowGUI.tr_enabled.setCheckState(self._settings["tr_en"])
-        self._propWindowGUI.tr_combo_a.setCurrentIndex(self._settings["tr_a"])
-        self._propWindowGUI.tr_combo_b.setCurrentIndex(self._settings["tr_b"])
+        return 0
 
-        # Bottom Left:
-        self._propWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
-        self._propWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
-        self._propWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
-
-        # 3D Plot:
-        self._propWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
-
-    def retrieve_settings(self):
+    def apply_settings(self):
 
         if self._debug:
             print("DEBUG: retrieve_settings called")
+
+        # Step:
+        self._settings["step"] = self._propWindowGUI.step_input.value()
 
         # Top Left:
         self._settings["tl_en"] = self._propWindowGUI.tl_enabled.checkState()
@@ -70,22 +65,6 @@ class PropertyManager(object):
         # 3D Plot:
         self._settings["3d_en"] = self._propWindowGUI.three_d_enabled.checkState()
 
-    def get_settings(self):
-        return self._settings
-
-    def apply_callback(self):
-
-        if self._debug:
-            print("DEBUG: apply_callback called")
-
-        self.retrieve_settings()
-        self._propWindow.close()
-
-        if self._debug:
-            print("DEBUG: Closing Plot Properties Window")
-
-        return 0
-
     def cancel_callback(self):
 
         if self._debug:
@@ -93,21 +72,47 @@ class PropertyManager(object):
 
         self._propWindow.close()
 
-        if self._debug:
-            print("DEBUG: Closing Plot Properties Window")
-
         return 0
+
+    def get_settings(self):
+        return self._settings
+
+    def populate_settings(self):
+
+        if self._debug:
+            print("DEBUG: populate_settings called")
+
+        # Step:
+        self._propWindowGUI.step_input.setValue(self._settings["step"])
+
+        # Top Left:
+        self._propWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
+        self._propWindowGUI.tl_combo_a.setCurrentIndex(self._settings["tl_a"])
+        self._propWindowGUI.tl_combo_b.setCurrentIndex(self._settings["tl_b"])
+
+        # Top Right:
+        self._propWindowGUI.tr_enabled.setCheckState(self._settings["tr_en"])
+        self._propWindowGUI.tr_combo_a.setCurrentIndex(self._settings["tr_a"])
+        self._propWindowGUI.tr_combo_b.setCurrentIndex(self._settings["tr_b"])
+
+        # Bottom Left:
+        self._propWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
+        self._propWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
+        self._propWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
+
+        # 3D Plot:
+        self._propWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
     def run(self):
 
         if self._debug:
             print("DEBUG: Running PropertyManager")
 
+        # --- Calculate the positions to center the window --- #
+        screen_size = self._parent.screen_size()
+        _x = 0.5 * (screen_size.width() - self._propWindow.width())
+        _y = 0.5 * (screen_size.height() - self._propWindow.height())
+
         # --- Show the GUI --- #
         self._propWindow.show()
-
-if __name__ == "__main__":
-    app = QtGui.QApplication([])
-    pm = PropertyManager(settings={}, debug=True)
-    print(pm.run())
-    app.exec_()
+        self._propWindow.move(_x, _y)
