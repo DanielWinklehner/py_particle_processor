@@ -23,6 +23,7 @@ class ImportExportDriver(object):
     """
     A thin wrapper around the drivers for importing and exporting particle data
     """
+
     def __init__(self,
                  driver_name=None,
                  debug=False):
@@ -50,15 +51,19 @@ class Dataset(object):
 
     def __init__(self, debug=False):
         self._draw = False
+        self._selected = False
+
         self._datasource = None
         self._filename = None
         self._driver = None
-        self._ion = None
-        self._nsteps = 0
-        self._multispecies = False
         self._debug = debug
         self._data = None
+        self._plot_settings = {}
+
+        self._ion = None
+        self._multispecies = False
         self._current = 0.0
+        self._nsteps = 0
         self._npart = 0  # TODO: For now this is the number of particles at step 0. -DW
 
     def close(self):
@@ -87,6 +92,37 @@ class Dataset(object):
     def set_draw(self, draw):
         self._draw = draw
 
+    def get_selected(self):
+        return self._selected
+
+    def set_selected(self, selected):
+        self._selected = selected
+
+    def get_plot_settings(self, translated=False):
+        """
+        Gets the plot settings used in propertieswindow.
+        Translated means using "x", "y", ... instead of 0, 1, 2, ...
+        :param translated: 
+        :return: 
+        """
+        if translated is False:
+            return self._plot_settings
+        else:
+            t_plot_settings = {}
+            en_val = [False, None, True]
+            combo_val = ["x", "y", "z", "px", "py", "pz"]
+            for k, v in self._plot_settings.items():
+                if "_en" in k:
+                    t_plot_settings[k] = en_val[v]
+                elif "step" in k:
+                    t_plot_settings[k] = v
+                else:
+                    t_plot_settings[k] = combo_val[v]
+            return t_plot_settings
+
+    def set_plot_settings(self, plot_settings):
+        self._plot_settings = plot_settings
+
     def get(self, key):
         """
         Returns the values for the currently set step and given key ("x", "y", "z", "px", "py", "pz")
@@ -109,27 +145,27 @@ class Dataset(object):
 
         return self._data.get(key).value
 
-    def get_particle(self, id, get_color=False):
+    def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}
         max_step = self.get_nsteps()
         color = None
         for step in range(max_step):
             self.set_step_view(step)
             for key in ["x", "y", "z"]:
-                dat = self._data.get(key)[id]
+                dat = self._data.get(key).value[particle_id]
                 if np.isnan(dat) or dat == 0.0:
                     if get_color == "step":
                         factor = float(step) / float(max_step)
                         color = ((1 - factor) * 255.0, factor * 255.0, 0.0)
                     elif get_color == "random":
-                        color = colors[id]
+                        color = colors[particle_id]
                     return particle, color
                 else:
                     particle[key].append(dat)
-        if get_color == "step":
+        if get_color == "step":  # TODO: Temporary
             color = (0.0, 255.0, 0.0)
         elif get_color == "random":
-            color = colors[id]
+            color = colors[particle_id]
         return particle, color
 
     def get_a(self):
