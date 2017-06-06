@@ -1,6 +1,6 @@
-from py_particle_processor_qt.dataset import *
-from py_particle_processor_qt.mainwindow import *
-from py_particle_processor_qt.properties import *
+from dataset import *
+from mainwindow import *
+from properties import *
 from dans_pymodules import MyColors
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import qApp, QFileDialog
@@ -17,8 +17,6 @@ various simulation codes and exporting them for various other simulation codes.
 amu = const.value("atomic mass constant energy equivalent in MeV")
 echarge = const.value("elementary charge")
 clight = const.value("speed of light in vacuum")
-
-# TODO: Tree structure for multiple datasets from one file -PW
 
 
 class DataFile(object):
@@ -48,7 +46,6 @@ class DataFile(object):
         for i in range(number_of_datasets):
             _ds = Dataset(debug=self._debug)
             _ds.load_from_file(filename=self._filename, driver=self._driver)
-            # TODO: Missing parameters?
             self._datasets.append(_ds)
         return 0
 
@@ -98,9 +95,10 @@ class PyParticleProcessor(object):
 
     def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
 
-        # TODO: Fix the changing step number for datasets -PW
-
         self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
+        top_level_item = self._treeview.topLevelItem(datafile_id)
+        this_item = top_level_item.child(dataset_id)
+        this_item.setText(2, "{}".format(plot_settings["step"]))  # Change step value in the tree widget
 
         return 0
 
@@ -159,8 +157,6 @@ class PyParticleProcessor(object):
 
     def callback_export(self):
 
-        # TODO: Fix!
-
         if self._debug:
             "DEBUG: export_callback called"
 
@@ -196,8 +192,11 @@ class PyParticleProcessor(object):
             return 1
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
-        self._datafiles.append(new_df)
+
         if new_df.load() == 0:
+
+            self._datafiles.append(new_df)
+            df_i = len(self._datafiles) - 1  # Load add, so it's the last id
 
             # Create the top level item for the file
             top_level_item = QtGui.QTreeWidgetItem(self._treeview)
@@ -211,25 +210,15 @@ class PyParticleProcessor(object):
             # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
-            for i in range(number_of_datasets):
-
-                dataset = new_df.get_dataset(i)
+            for ds_i in range(number_of_datasets):
 
                 child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setText(0, "")
-                child_item.setText(1, "Dataset #{}".format(i))  # TODO: Dataset naming, maybe use ion name? -PW
-                child_item.setText(2, "0")  # Step
-                child_item.setText(3, "{}".format(dataset.get_a()))  # Mass
-                child_item.setText(4, "{}".format(dataset.get_q()))  # Charge
-                child_item.setText(5, "{}".format(dataset.get_i()))  # Current
-                child_item.setText(6, "{}".format(dataset.get_npart()))  # Number of particles
-                child_item.setText(7, "{}".format(dataset.get_nsteps()))  # Number of steps
-
                 child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
+                self.update_tree_item(df_i, ds_i)
 
-                self.open_property_manager(datafile_id=len(self._datafiles) - 1,
-                                           dataset_id=i,
+                self.open_property_manager(datafile_id=df_i,
+                                           dataset_id=ds_i,
                                            debug=self._debug)
 
             top_level_item.setExpanded(True)
@@ -248,8 +237,6 @@ class PyParticleProcessor(object):
         :return: 
         """
 
-        # TODO: Fix!
-
         if self._debug:
             print("DEBUG: load_new_ds_callback was called")
 
@@ -259,11 +246,11 @@ class PyParticleProcessor(object):
             return 1
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
-        self._datafiles.append(new_df)
 
         if new_df.load() == 0:
 
             self._datafiles = [new_df]
+            df_i = 0  # Load new, so the id is zero
 
             self._treeview.clear()
 
@@ -279,25 +266,15 @@ class PyParticleProcessor(object):
             # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
-            for i in range(number_of_datasets):
-
-                dataset = new_df.get_dataset(i)
+            for ds_i in range(number_of_datasets):
 
                 child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setText(0, "")
-                child_item.setText(1, "Dataset #{}".format(i))  # TODO: Dataset naming, maybe use ion name? -PW
-                child_item.setText(2, "0")  # Step
-                child_item.setText(3, "{}".format(dataset.get_a()))  # Mass
-                child_item.setText(4, "{}".format(dataset.get_q()))  # Charge
-                child_item.setText(5, "{}".format(dataset.get_i()))  # Current
-                child_item.setText(6, "{}".format(dataset.get_npart()))  # Number of particles
-                child_item.setText(7, "{}".format(dataset.get_nsteps()))  # Number of steps
-
                 child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
+                self.update_tree_item(df_i, ds_i)
 
-                self.open_property_manager(datafile_id=len(self._datafiles) - 1,
-                                           dataset_id=i,
+                self.open_property_manager(datafile_id=df_i,
+                                           dataset_id=ds_i,
                                            debug=self._debug)
 
             top_level_item.setExpanded(True)
@@ -326,8 +303,6 @@ class PyParticleProcessor(object):
         self.redraw_plots()
 
     def callback_properties(self):
-
-        # TODO: Fix!
 
         if self._debug:
             "DEBUG: properties_callback called"
@@ -392,7 +367,7 @@ class PyParticleProcessor(object):
         for data_item in self._mainWindowGUI.graphicsView_3.listDataItems():
             self._mainWindowGUI.graphicsView_3.removeItem(data_item)
 
-        # TODO: Using the removeItem(data_item) method does not work properly, this is a workaround -PW
+        # Using the removeItem(data_item) method does not work properly, this is a workaround -PW
         self._mainWindowGUI.graphicsView_4.items = []
         self._mainWindowGUI.graphicsView_4.update()
 
@@ -507,6 +482,9 @@ class PyParticleProcessor(object):
             self.send_status("No datasets selected to plot!")
             return 1
 
+        # TODO: A better way to color the scatter plots
+        c_i = 0  # Just an index for coloring
+
         for selection_string in sorted(self._selections):
 
             df_i, ds_i = self.get_selection(selection_string)
@@ -528,7 +506,7 @@ class PyParticleProcessor(object):
                 # This shouldn't happen anymore, but if it does it sets the step to zero -PW
                 settings["step"] = 0
                 self._datafiles[df_i].get_dataset(ds_i).set_plot_settings(settings)
-                this_item.setText(1, str(settings["step"]))
+                this_item.setText(2, str(settings["step"]))
 
             try:
                 dataset.set_step_view(step)
@@ -555,7 +533,7 @@ class PyParticleProcessor(object):
 
                 tl_scatter = pg.ScatterPlotItem(x=dataset.get(top_left_data[0]),
                                                 y=dataset.get(top_left_data[1]),
-                                                pen=pg.mkPen(self._colors[ds_i]), brush='b', size=1.0, pxMode=True)
+                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_1.addItem(tl_scatter)
                 self._mainWindowGUI.graphicsView_1.setTitle(top_left_title)
@@ -569,7 +547,7 @@ class PyParticleProcessor(object):
 
                 tr_scatter = pg.ScatterPlotItem(x=dataset.get(top_right_data[0]),
                                                 y=dataset.get(top_right_data[1]),
-                                                pen=pg.mkPen(self._colors[ds_i]), brush='b', size=1.0, pxMode=True)
+                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_2.addItem(tr_scatter)
                 self._mainWindowGUI.graphicsView_2.setTitle(top_right_title)
@@ -583,7 +561,7 @@ class PyParticleProcessor(object):
 
                 bl_scatter = pg.ScatterPlotItem(x=dataset.get(bottom_left_data[0]),
                                                 y=dataset.get(bottom_left_data[1]),
-                                                pen=pg.mkPen(self._colors[ds_i]), brush='b', size=1.0, pxMode=True)
+                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
 
                 self._mainWindowGUI.graphicsView_3.addItem(bl_scatter)
                 self._mainWindowGUI.graphicsView_3.setTitle(bottom_left_title)
@@ -630,6 +608,8 @@ class PyParticleProcessor(object):
                     self._mainWindowGUI.graphicsView_4.addItem(gz)
 
                 self._mainWindowGUI.graphicsView_4.opts["distance"] = 3e-1  # Seems to be a good value for now
+
+            c_i += 1  # Increment the color index
 
         self.send_status("Plotting complete!")
 
@@ -687,9 +667,24 @@ class PyParticleProcessor(object):
                 self._selections.remove(selection_string)
 
         return 0
-#
-#
-# if __name__ == "__main__":
-#
-#     ppp = PyParticleProcessor(debug=True)
-#     ppp.run()
+
+    def update_tree_item(self, datafile_id, dataset_id):
+
+        dataset = self._datafiles[datafile_id].get_dataset(dataset_id)
+        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)
+
+        child_item.setText(0, "")
+        child_item.setText(1, "Dataset #{}".format(dataset_id))  # TODO: Dataset naming, maybe use ion name? -PW
+        child_item.setText(2, "0")  # Step
+        child_item.setText(3, "{}".format(dataset.get_a()))  # Mass
+        child_item.setText(4, "{}".format(dataset.get_q()))  # Charge
+        child_item.setText(5, "{}".format(dataset.get_i()))  # Current
+        child_item.setText(6, "{}".format(dataset.get_npart()))  # Number of particles
+        child_item.setText(7, "{}".format(dataset.get_nsteps()))  # Number of steps
+
+        child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+
+if __name__ == "__main__":
+
+    ppp = PyParticleProcessor(debug=True)
+    ppp.run()

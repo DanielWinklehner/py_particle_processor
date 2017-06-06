@@ -27,7 +27,7 @@ class PropertyManager(object):
 
         self._propWindowGUI.apply_button.clicked.connect(self.apply_callback)
         self._propWindowGUI.cancel_button.clicked.connect(self.cancel_callback)
-        self._propWindowGUI.dataset_label.setText("DATASET {}-{}".format(self._datafile_id, self._dataset_id))
+        self._propWindowGUI.dataset_label.setText("DATASET #{}-{}".format(self._datafile_id, self._dataset_id))
 
     def apply_callback(self):
 
