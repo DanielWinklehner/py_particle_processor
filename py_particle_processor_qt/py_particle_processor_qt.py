@@ -18,8 +18,6 @@ amu = const.value("atomic mass constant energy equivalent in MeV")
 echarge = const.value("elementary charge")
 clight = const.value("speed of light in vacuum")
 
-# TODO: Tree structure for multiple datasets from one file -PW
-
 
 class DataFile(object):
     """
@@ -48,7 +46,6 @@ class DataFile(object):
         for i in range(number_of_datasets):
             _ds = Dataset(debug=self._debug)
             _ds.load_from_file(filename=self._filename, driver=self._driver)
-            # TODO: Missing parameters?
             self._datasets.append(_ds)
         return 0
 
@@ -97,8 +94,6 @@ class PyParticleProcessor(object):
             self._treeview.resizeColumnToContents(i)
 
     def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
-
-        # TODO: Fix the changing step number for datasets -PW
 
         self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
         top_level_item = self._treeview.topLevelItem(datafile_id)
@@ -161,8 +156,6 @@ class PyParticleProcessor(object):
         return 0
 
     def callback_export(self):
-
-        # TODO: Fix!
 
         if self._debug:
             "DEBUG: export_callback called"
@@ -244,8 +237,6 @@ class PyParticleProcessor(object):
         :return: 
         """
 
-        # TODO: Fix!
-
         if self._debug:
             print("DEBUG: load_new_ds_callback was called")
 
@@ -313,8 +304,6 @@ class PyParticleProcessor(object):
 
     def callback_properties(self):
 
-        # TODO: Fix!
-
         if self._debug:
             "DEBUG: properties_callback called"
 
@@ -378,7 +367,7 @@ class PyParticleProcessor(object):
         for data_item in self._mainWindowGUI.graphicsView_3.listDataItems():
             self._mainWindowGUI.graphicsView_3.removeItem(data_item)
 
-        # TODO: Using the removeItem(data_item) method does not work properly, this is a workaround -PW
+        # Using the removeItem(data_item) method does not work properly, this is a workaround -PW
         self._mainWindowGUI.graphicsView_4.items = []
         self._mainWindowGUI.graphicsView_4.update()
 

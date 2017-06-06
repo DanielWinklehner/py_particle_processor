@@ -3,13 +3,12 @@ import os
 
 # TODO: WIP -PW
 
+
 class AbstractDriver(ABC):
     def __init__(self):
         self._program_name = None
         self._debug = None
 
-    @property
-    @abstractmethod
     def get_program_name(self):
         return self._program_name
 
@@ -21,7 +20,8 @@ class AbstractDriver(ABC):
     def export_data(self, *args, **kwargs):
         pass
 
-    # Source: http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
+    # Source: http://fa.bianp.net/blog/2013/
+    # different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
     @staticmethod
     def _memory_usage_ps():
         import subprocess
