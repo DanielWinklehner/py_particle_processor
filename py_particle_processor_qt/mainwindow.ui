@@ -6,12 +6,17 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1161</width>
+    <width>994</width>
     <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PyParticleProcessor</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(65, 65, 65);
+alternate-background-color: rgb(130, 130, 130);
+color: rgb(255, 255, 255);</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -123,6 +128,9 @@
         <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 0, 0);</string>
+        </property>
         <attribute name="title">
          <string>Tab 1</string>
         </attribute>
@@ -204,8 +212,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1161</width>
-     <height>25</height>
+     <width>994</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="defaultUp">

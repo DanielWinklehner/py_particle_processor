@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.8.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1161, 654)
+        MainWindow.resize(994, 654)
+        MainWindow.setStyleSheet("background-color: rgb(65, 65, 65);\n"
+"alternate-background-color: rgb(130, 130, 130);\n"
+"color: rgb(255, 255, 255);")
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralWidget)
@@ -59,6 +62,7 @@ class Ui_MainWindow(object):
         self.tabWidget = QtWidgets.QTabWidget(self.splitter_2)
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtWidgets.QWidget()
+        self.tab.setStyleSheet("background-color: rgb(0, 0, 0);")
         self.tab.setObjectName("tab")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.tab)
         self.gridLayout_4.setContentsMargins(11, 11, 11, 11)
@@ -103,7 +107,7 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1161, 25))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 21))
         self.menuBar.setDefaultUp(False)
         self.menuBar.setNativeMenuBar(False)
         self.menuBar.setObjectName("menuBar")

@@ -26,6 +26,7 @@ class PyParticleProcessor(object):
         Initialize the GUI
         """
         self._app = QtGui.QApplication([])  # Initialize the application
+        self._app.setStyle('Fusion')
 
         self._debug = debug
         self._colors = MyColors()
