@@ -1,6 +1,6 @@
-from .OPALDriver import *
-from .TraceWinDriver import *
-from .COMSOLDriver import *
+from py_particle_processor_qt.drivers.OPALDriver import *
+from py_particle_processor_qt.drivers.TraceWinDriver import *
+from py_particle_processor_qt.drivers.COMSOLDriver import *
 
 """
 The driver mapping contains the information needed for the ImportExportDriver class to wrap around the drivers
