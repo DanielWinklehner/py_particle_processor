@@ -1,11 +1,14 @@
 from ..arraywrapper import ArrayWrapper
+from ..abstractdriver import AbstractDriver
 from dans_pymodules import IonSpecies
 import h5py
 import numpy as np
 
-class OPALDriver:
+
+class OPALDriver(AbstractDriver):
 
     def __init__(self, debug=False):
+        super(OPALDriver, self).__init__()
         self._debug = debug
         self._program_name = "OPAL"
 
@@ -91,11 +94,16 @@ class OPALDriver:
 
         return None
 
-    def export_data(self, data):
+    def export_data(self, data, filename):
 
         if self._debug:
-            print("Exporting data for program: {}".format(self._program_name))
+            print("Exporting data for  program: {}".format(self._program_name))
 
-        print("Export not yet implemented :(")
+        # TODO: The data needs to get shoved into the h5 format!
+        # TODO: -> Create h5 file
+        # TODO: -> Populate the attributes and initial "folders"
+        # TODO: -> Dump the data into the right positions
+
+        outfile = h5py.File(filename)
 
         return data

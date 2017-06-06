@@ -1,12 +1,13 @@
-# import h5py
 from ..arraywrapper import ArrayWrapper
+from ..abstractdriver import AbstractDriver
 from dans_pymodules import IonSpecies
 import numpy as np
 
 
-class TraceWinDriver(object):
+class TraceWinDriver(AbstractDriver):
 
     def __init__(self, debug=False):
+        super(TraceWinDriver, self).__init__()
         self._debug = debug
         self._program_name = "TraceWin"
 

@@ -6,9 +6,10 @@ from PyQt5 import QtGui
 
 class PropertyManager(object):
 
-    def __init__(self, parent, item_id, debug=False):
-        self._item_id = item_id
-        self._settings = parent.get_dataset(item_id).get_plot_settings()
+    def __init__(self, parent, datafile_id, dataset_id, debug=False):
+        self._datafile_id = datafile_id
+        self._dataset_id = dataset_id
+        self._settings = parent.find_dataset(self._datafile_id, self._dataset_id).get_plot_settings()
         self._debug = debug
         self._parent = parent
 
@@ -26,7 +27,7 @@ class PropertyManager(object):
 
         self._propWindowGUI.apply_button.clicked.connect(self.apply_callback)
         self._propWindowGUI.cancel_button.clicked.connect(self.cancel_callback)
-        self._propWindowGUI.dataset_label.setText("DATASET #{}".format(str(self._item_id)))
+        self._propWindowGUI.dataset_label.setText("DATASET {}-{}".format(self._datafile_id, self._dataset_id))
 
     def apply_callback(self):
 
@@ -34,7 +35,9 @@ class PropertyManager(object):
             print("DEBUG: apply_callback called")
 
         self.apply_settings()
-        self._parent.apply_plot_settings(item_id=self._item_id, plot_settings=self.get_settings())
+        self._parent.apply_plot_settings(datafile_id=self._datafile_id,
+                                         dataset_id=self._dataset_id,
+                                         plot_settings=self.get_settings())
         self._propWindow.close()
 
         return 0

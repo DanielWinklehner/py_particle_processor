@@ -86,6 +86,11 @@ class Dataset(object):
 
         return 0
 
+    def export_to_file(self, filename, driver):
+        if driver is not None:
+            new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
+            new_ied.export_data(data=self._data)
+
     def get_draw(self):
         return self._draw
 
@@ -153,7 +158,7 @@ class Dataset(object):
             self.set_step_view(step)
             for key in ["x", "y", "z"]:
                 dat = self._data.get(key).value[particle_id]
-                if np.isnan(dat) or dat == 0.0:
+                if np.isnan(dat) or dat == 0.0:  # TODO: This
                     if get_color == "step":
                         factor = float(step) / float(max_step)
                         color = ((1 - factor) * 255.0, factor * 255.0, 0.0)

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.8.2
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -107,7 +107,7 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 21))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 25))
         self.menuBar.setDefaultUp(False)
         self.menuBar.setNativeMenuBar(False)
         self.menuBar.setObjectName("menuBar")
@@ -177,13 +177,13 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "PyParticleProcessor"))
         self.label.setText(_translate("MainWindow", "Datasets"))
         self.treeWidget.headerItem().setText(0, _translate("MainWindow", "Selected"))
-        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "Step"))
-        self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Mass"))
-        self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Charge"))
-        self.treeWidget.headerItem().setText(4, _translate("MainWindow", "Current"))
-        self.treeWidget.headerItem().setText(5, _translate("MainWindow", "# Particles"))
-        self.treeWidget.headerItem().setText(6, _translate("MainWindow", "# Steps"))
-        self.treeWidget.headerItem().setText(7, _translate("MainWindow", "Filename"))
+        self.treeWidget.headerItem().setText(1, _translate("MainWindow", "Name"))
+        self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Step"))
+        self.treeWidget.headerItem().setText(3, _translate("MainWindow", "Mass"))
+        self.treeWidget.headerItem().setText(4, _translate("MainWindow", "Charge"))
+        self.treeWidget.headerItem().setText(5, _translate("MainWindow", "Current"))
+        self.treeWidget.headerItem().setText(6, _translate("MainWindow", "# Particles"))
+        self.treeWidget.headerItem().setText(7, _translate("MainWindow", "# Steps"))
         self.label_2.setText(_translate("MainWindow", "Comments"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))

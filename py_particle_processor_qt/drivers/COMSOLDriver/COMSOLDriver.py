@@ -1,10 +1,11 @@
 from ..arraywrapper import ArrayWrapper
+from ..abstractdriver import AbstractDriver
 from dans_pymodules import IonSpecies, echarge
 import numpy as np
 
-class COMSOLDriver(object):
+class COMSOLDriver(AbstractDriver):
     def __init__(self, debug=False):
-
+        super(COMSOLDriver, self).__init__()
         # TODO: We should come up with a "standardized" output file format in COMSOL for importing here.
         # TODO: Currently using: (TIME [s], X [m], Y [m], Z [m], VX [m/s], VY [m/s], VZ [m/s], E [MeV])
         # TODO: These units can be changed if needed. -PW

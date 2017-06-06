@@ -71,6 +71,11 @@ color: rgb(255, 255, 255);</string>
            </column>
            <column>
             <property name="text">
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
              <string>Step</string>
             </property>
            </column>
@@ -97,11 +102,6 @@ color: rgb(255, 255, 255);</string>
            <column>
             <property name="text">
              <string># Steps</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Filename</string>
             </property>
            </column>
           </widget>
@@ -213,7 +213,7 @@ color: rgb(255, 255, 255);</string>
      <x>0</x>
      <y>0</y>
      <width>994</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="defaultUp">
