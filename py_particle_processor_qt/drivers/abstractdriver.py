@@ -3,13 +3,12 @@ import os
 
 # TODO: WIP -PW
 
+
 class AbstractDriver(ABC):
     def __init__(self):
         self._program_name = None
         self._debug = None
 
-    @property
-    @abstractmethod
     def get_program_name(self):
         return self._program_name
 
@@ -21,14 +20,15 @@ class AbstractDriver(ABC):
     def export_data(self, *args, **kwargs):
         pass
 
-    # Source: http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
+    # Source: http://fa.bianp.net/blog/2013/
+    # different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
     @staticmethod
     def _memory_usage_ps():
         import subprocess
         out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
-                               stdout=subprocess.PIPE).communicate()[0].split("\n")
+                               stdout=subprocess.PIPE).communicate()[0].split('\n'.encode())
         vsz_index = out[0].split().index("RSS")
-        mem = float(out[1].split()[vsz_index]) / 1024
+        mem = float(out[1].split()[vsz_index]) / 1024.0
         return mem  # Output in bytes
 
     # Source: https://stackoverflow.com/questions/2104080/how-to-check-file-size-in-python

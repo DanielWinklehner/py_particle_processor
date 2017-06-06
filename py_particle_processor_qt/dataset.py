@@ -2,7 +2,7 @@
 # import h5py
 from dans_pymodules import MyColors
 from scipy import constants as const
-from drivers import *
+from py_particle_processor_qt.drivers import *
 
 __author__ = "Daniel Winklehner"
 __doc__ = """A container that holds a single dataset with 

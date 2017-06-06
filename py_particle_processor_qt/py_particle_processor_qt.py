@@ -1,6 +1,6 @@
-from dataset import *
-from mainwindow import *
-from properties import *
+from py_particle_processor_qt.dataset import *
+from py_particle_processor_qt.mainwindow import *
+from py_particle_processor_qt.properties import *
 from dans_pymodules import MyColors
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import qApp, QFileDialog
@@ -687,9 +687,9 @@ class PyParticleProcessor(object):
                 self._selections.remove(selection_string)
 
         return 0
-
-
-if __name__ == "__main__":
-
-    ppp = PyParticleProcessor(debug=True)
-    ppp.run()
+#
+#
+# if __name__ == "__main__":
+#
+#     ppp = PyParticleProcessor(debug=True)
+#     ppp.run()

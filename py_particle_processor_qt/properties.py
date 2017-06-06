@@ -1,4 +1,4 @@
-from propertieswindow import Ui_PropertiesWindow
+from py_particle_processor_qt.propertieswindow import Ui_PropertiesWindow
 from PyQt5 import QtGui
 
 # TODO: A better new window handling system would be nice -PW
