@@ -101,10 +101,12 @@ class OPALDriver(AbstractDriver):
 
         if ".h5" in filename:
 
+            # TODO: OPAL might demand more of the attributes... -PW
+
             if self._debug:
                 print("Exporting data for program: {}...".format(self._program_name))
 
-            outfile = h5py.File(filename, "w")
+            outfile = h5py.File(filename, "w")  # The file dialog will make sure they want to overwrite -PW
 
             m = [dataset.get_ion().mass_mev() for _ in range(npart)]
             q = [dataset.get_ion().q() for _ in range(npart)]
@@ -139,6 +141,7 @@ class OPALDriver(AbstractDriver):
             else:
                 step = 0
 
+            # The file dialog will make sure they want to overwrite -PW
             with open(filename, "w") as outfile:
                 data = datasource["Step#{}".format(step)]
                 outfile.write(str(npart) + "\n")

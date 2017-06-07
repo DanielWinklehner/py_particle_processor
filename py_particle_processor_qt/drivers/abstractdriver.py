@@ -26,7 +26,7 @@ class AbstractDriver(ABC):
     def _memory_usage_ps():
         import subprocess
         out = subprocess.Popen(['ps', 'v', '-p', str(os.getpid())],
-                               stdout=subprocess.PIPE).communicate()[0].split('\n'.encode())
+                               stdout=subprocess.PIPE).communicate()[0].split("\n")
         vsz_index = out[0].split().index("RSS")
         mem = float(out[1].split()[vsz_index]) / 1024.0
         return mem  # Output in bytes

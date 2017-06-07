@@ -1,6 +1,6 @@
 from ..arraywrapper import ArrayWrapper
 from ..abstractdriver import AbstractDriver
-from dans_pymodules import IonSpecies, echarge
+from dans_pymodules import IonSpecies
 import numpy as np
 
 
@@ -30,15 +30,11 @@ class COMSOLDriver(AbstractDriver):
             data = {}
 
             # TODO: Need a better way to find the mass and ion species -PW
-            ion = IonSpecies("proton", 1.0)
-            m = ion.mass_kg()
-            ion_mev = ion.mass_mev()
+            ion_mass_mev = IonSpecies("proton", 1.0).mass_mev()
 
             with open(filename, 'rb') as infile:
 
                 # TODO: We may be able to save overall beam parameters into a separate file, but not the header -PW
-                # Number of header lines to remove
-                _rm = 8
 
                 # Line 1: Model (COMSOL File Name)
                 # Line 2: COMSOL Version
@@ -74,7 +70,7 @@ class COMSOLDriver(AbstractDriver):
 
                     values = raw_values[(1 + step * _n):(_n + step * _n)]
 
-                    gamma = values[6] / ion_mev + 1.0
+                    gamma = values[6] / ion_mass_mev + 1.0
                     beta = np.sqrt(1.0 - np.power(gamma, -2.0))
                     v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
@@ -95,7 +91,7 @@ class COMSOLDriver(AbstractDriver):
                         step_str = "Step#{}".format(step)
                         values = raw_values[(1 + step * _n):(_n + step * _n)]
 
-                        gamma = values[6] / ion_mev + 1.0
+                        gamma = values[6] / ion_mass_mev + 1.0
                         beta = np.sqrt(1.0 - gamma ** (-2.0))
                         v_tot = np.sqrt(values[3]**2.0 + values[4]**2.0 + values[5]**2)
 
@@ -125,6 +121,8 @@ class COMSOLDriver(AbstractDriver):
         return None
 
     def export_data(self, data):
+
+        # TODO
 
         if self._debug:
             print("Exporting data for program: {}".format(self._program_name))

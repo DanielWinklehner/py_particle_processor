@@ -2,3 +2,4 @@ numpy
 scipy
 pyqtgraph
 PyQt5
+h5py
