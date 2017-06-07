@@ -12,7 +12,6 @@ class OPALDriver(AbstractDriver):
         self._debug = debug
         self._program_name = "OPAL"
 
-    @property
     def get_program_name(self):
         return self._program_name
 
@@ -26,7 +25,7 @@ class OPALDriver(AbstractDriver):
             if self._debug:
                 print("Opening h5 file..."),
 
-            _datasource = h5py.File(filename)
+            _datasource = h5py.File(filename, "r")
 
             if self._debug:
                 print("Done!")
@@ -60,7 +59,7 @@ class OPALDriver(AbstractDriver):
 
             data = {}
 
-            with open(filename, 'rb') as infile:
+            with open(filename, "rb") as infile:
                 data["npart"] = int(infile.readline().rstrip().lstrip())
                 data["nsteps"] = 1
 
@@ -94,16 +93,70 @@ class OPALDriver(AbstractDriver):
 
         return None
 
-    def export_data(self, data, filename):
+    def export_data(self, dataset, filename):
 
-        if self._debug:
-            print("Exporting data for  program: {}".format(self._program_name))
+        datasource = dataset.get_datasource()
+        nsteps = dataset.get_nsteps()
+        npart = dataset.get_npart()
 
-        # TODO: The data needs to get shoved into the h5 format!
-        # TODO: -> Create h5 file
-        # TODO: -> Populate the attributes and initial "folders"
-        # TODO: -> Dump the data into the right positions
+        if ".h5" in filename:
 
-        outfile = h5py.File(filename)
+            if self._debug:
+                print("Exporting data for program: {}...".format(self._program_name))
 
-        return data
+            outfile = h5py.File(filename, "w")
+
+            m = [dataset.get_ion().mass_mev() for _ in range(npart)]
+            q = [dataset.get_ion().q() for _ in range(npart)]
+            id_list = [i for i in range(npart)]
+
+            for step in range(nsteps):
+                step_str = "Step#{}".format(step)
+                step_grp = outfile.create_group(step_str)
+                for key in ["x", "y", "z", "px", "py", "pz"]:
+                    step_grp.create_dataset(key, data=datasource[step_str][key])
+                step_grp.create_dataset("id", data=id_list)
+                step_grp.create_dataset("mass", data=m)
+                step_grp.create_dataset("q", data=q)
+                step_grp.attrs.__setitem__("ENERGY", dataset.get_ion().energy_mev())
+
+            outfile.attrs.__setitem__("OPAL_version", b"OPAL 1.09.0")
+            outfile.close()
+
+            if self._debug:
+                print("Export successful!")
+
+            return 0
+
+        elif ".dat" in filename:
+
+            if self._debug:
+                print("Exporting data for program: {}...".format(self._program_name))
+
+            if nsteps > 1:
+                print("The .dat format only supports one step! Using the selected step...")
+                step = dataset.get_current_step()
+            else:
+                step = 0
+
+            with open(filename, "w") as outfile:
+                data = datasource["Step#{}".format(step)]
+                outfile.write(str(npart) + "\n")
+                for particle in range(npart):
+                    outfile.write(str(data["x"][particle]) + "  " +
+                                  str(data["px"][particle]) + "  " +
+                                  str(data["y"][particle]) + "  " +
+                                  str(data["py"][particle]) + "  " +
+                                  str(data["z"][particle]) + "  " +
+                                  str(data["pz"][particle]) + "\n")
+
+            if self._debug:
+                print("Export successful!")
+
+            return 0
+
+        else:
+
+            print("Something went wrong when exporting to: {}".format(self._program_name))
+
+            return 1

@@ -43,8 +43,8 @@ class ImportExportDriver(object):
     def import_data(self, filename):
         return self._driver.import_data(filename)
 
-    def export_data(self, data):
-        return self._driver.export_data(data)
+    def export_data(self, dataset, filename):
+        return self._driver.export_data(dataset=dataset, filename=filename)
 
 
 class Dataset(object):
@@ -64,6 +64,7 @@ class Dataset(object):
         self._multispecies = False
         self._current = 0.0
         self._nsteps = 0
+        self._current_step = 0
         self._npart = 0  # TODO: For now this is the number of particles at step 0. -DW
 
     def close(self):
@@ -89,7 +90,7 @@ class Dataset(object):
     def export_to_file(self, filename, driver):
         if driver is not None:
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
-            new_ied.export_data(data=self._data)
+            new_ied.export_data(dataset=self, filename=filename)
 
     def get_draw(self):
         return self._draw
@@ -176,6 +177,12 @@ class Dataset(object):
     def get_a(self):
         return self._ion.a()
 
+    def get_current_step(self):
+        return self._current_step
+
+    def get_datasource(self):
+        return self._datasource
+
     def get_driver(self):
         return self._driver
 
@@ -241,6 +248,7 @@ class Dataset(object):
 
             return 1
 
+        self._current_step = step
         self._data = self._datasource.get("Step#{}".format(step))
 
         return 0

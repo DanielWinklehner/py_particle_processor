@@ -3,6 +3,7 @@ from ..abstractdriver import AbstractDriver
 from dans_pymodules import IonSpecies, echarge
 import numpy as np
 
+
 class COMSOLDriver(AbstractDriver):
     def __init__(self, debug=False):
         super(COMSOLDriver, self).__init__()
@@ -13,7 +14,6 @@ class COMSOLDriver(AbstractDriver):
         self._debug = debug
         self._program_name = "COMSOL"
 
-    @property
     def get_program_name(self):
         return self._program_name
 
