@@ -185,6 +185,9 @@ class Dataset(object):
     def get_i(self):
         return self._current
 
+    def get_ion(self):
+        return self._ion
+
     def get_npart(self):
         return self._npart
 

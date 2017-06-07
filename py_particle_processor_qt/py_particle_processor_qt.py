@@ -131,11 +131,13 @@ class PyParticleProcessor(object):
         :return: 
         """
 
-        # TODO: Handle removing a top level item vs. not a top level item
-        # TODO: This probably doesn't work right now -PW
-
         if self._debug:
             print("DEBUG: delete_ds_callback was called")
+
+        if len(self._selections) < 1:
+            msg = "You must select something to remove."
+            print(msg)
+            self.send_status(msg)
 
         redraw_flag = False
         df_indices = []
@@ -153,6 +155,8 @@ class PyParticleProcessor(object):
             else:
                 ds_indices.append((df_i, ds_i))
                 ds_items.append(self._treeview.topLevelItem(df_i).child(ds_i))
+
+        self._selections = []
 
         # Remove the datasets first to avoid problems
         for df_i, ds_i in ds_indices:
@@ -179,12 +183,14 @@ class PyParticleProcessor(object):
             "DEBUG: export_callback called"
 
         if len(self._selections) == 0:
-            print("No dataset was selected!")
-            self.send_status("No dataset was selected!")
+            msg = "No dataset was selected!"
+            print(msg)
+            self.send_status(msg)
             return 1
         elif len(self._selections) > 1:
-            print("You cannot select more than one dataset!")
-            self.send_status("You cannot select more than one dataset!")
+            msg = "You cannot select more than one dataset!"
+            print(msg)
+            self.send_status(msg)
             return 1
 
         filename, driver = self.get_filename(action='save')
@@ -208,6 +214,8 @@ class PyParticleProcessor(object):
 
         if filename is None:
             return 1
+
+        self.send_status("Loading file with driver: {}".format(driver))
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
@@ -244,8 +252,7 @@ class PyParticleProcessor(object):
             for i in range(self._treeview.columnCount()):
                 self._treeview.resizeColumnToContents(i)
 
-            if self._debug:
-                print("DEBUG: load_add_ds_callback: Finished loading.")
+            self.send_status("File loaded successfully!")
 
         return 0
 
@@ -262,6 +269,8 @@ class PyParticleProcessor(object):
 
         if filename is None:
             return 1
+
+        self.send_status("Loading file with driver: {}...".format(driver))
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
@@ -300,6 +309,8 @@ class PyParticleProcessor(object):
             for i in range(self._treeview.columnCount()):
                 self._treeview.resizeColumnToContents(i)
 
+            self.send_status("File loaded successfully!")
+
         return 0
 
     def callback_notebook_page_changed(self, notebook, page, page_num):
@@ -326,12 +337,14 @@ class PyParticleProcessor(object):
             "DEBUG: properties_callback called"
 
         if len(self._selections) == 0:
-            print("No dataset was selected!")
-            self.send_status("No dataset was selected!")
+            msg = "No dataset was selected!"
+            print(msg)
+            self.send_status(msg)
             return 1
         elif len(self._selections) > 1:
-            print("You cannot select more than one dataset!")
-            self.send_status("You cannot select more than one dataset!")
+            msg = "You cannot select more than one dataset!"
+            print(msg)
+            self.send_status(msg)
             return 1
 
         df_i, ds_i = self.get_selection(self._selections[0])
@@ -496,8 +509,9 @@ class PyParticleProcessor(object):
         self.clear_plots()
 
         if len(self._selections) == 0:
-            print("No datasets selected to plot!")
-            self.send_status("No datasets selected to plot!")
+            msg = "Nothing is selected to plot!"
+            print(msg)
+            self.send_status(msg)
             return 1
 
         # TODO: A better way to color the scatter plots
@@ -507,9 +521,10 @@ class PyParticleProcessor(object):
 
             df_i, ds_i = self.get_selection(selection_string)
 
-            # TODO: Do this properly
-            if ds_i is None:
-                print("Only select datasets!")
+            if ds_i is None:  # Meaning that a datafile was selected, not a dataset -PW
+                msg = "You cannot plot a datafile, select a dataset within it."
+                print(msg)
+                self.send_status(msg)
                 return 1
 
             dataset = self._datafiles[df_i].get_dataset(ds_i)
@@ -539,8 +554,9 @@ class PyParticleProcessor(object):
 
             if plot_settings["tl_en"] | plot_settings["tr_en"] | \
                plot_settings["bl_en"] | plot_settings["3d_en"] is False:
-                print("No plots for Dataset#{}-{} were enabled".format(df_i, ds_i))
-                self.send_status("No plots for Dataset#{}-{} were enabled".format(df_i, ds_i))
+                msg = "No plots for Dataset#{}-{} were enabled".format(df_i, ds_i)
+                print(msg)
+                self.send_status(msg)
                 return 1
 
             # TOP LEFT PLOT:
@@ -603,6 +619,7 @@ class PyParticleProcessor(object):
                 if _grid:
 
                     # TODO: Make the grid size dynamic -PW
+                    # TODO: The maximum and minimum values might be useful to get during import -PW
 
                     gx = pg.opengl.GLGridItem()
                     gx.rotate(90, 0, 1, 0)
@@ -691,8 +708,9 @@ class PyParticleProcessor(object):
         dataset = self._datafiles[datafile_id].get_dataset(dataset_id)
         child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)
 
+        # TODO: Dataset naming, maybe use ion name? -PW
         child_item.setText(0, "")
-        child_item.setText(1, "Dataset #{}".format(dataset_id))  # TODO: Dataset naming, maybe use ion name? -PW
+        child_item.setText(1, "{}".format(dataset.get_ion().name()))
         child_item.setText(2, "0")  # Step
         child_item.setText(3, "{}".format(dataset.get_a()))  # Mass
         child_item.setText(4, "{}".format(dataset.get_q()))  # Charge

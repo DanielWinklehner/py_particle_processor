@@ -59,21 +59,19 @@ class COMSOLDriver(AbstractDriver):
                 _n = 8  # Length of the n-tuples to unpack from the values list
                 key_list = ["x", "y", "z", "px", "py", "pz", "E"]  # Things we want to save
 
-                # TODO: Maybe use the first line to create the values for the rest of the file?
                 firstline = infile.readline()
                 raw_values = [float(item) for item in firstline.strip().split()]
                 nsteps = int(len(raw_values) / _n)  # Number of steps
-
-                for step in range(nsteps):
-                    step_str = "Step#{}".format(step)
-                    datasource[step_str] = {}
-                    for key in key_list:
-                        datasource[step_str][key] = ArrayWrapper(np.zeros(npart))
 
                 # Fill in the values for the first line now
                 _id = int(raw_values.pop(0))
                 for step in range(nsteps):
                     step_str = "Step#{}".format(step)
+                    datasource[step_str] = {}
+
+                    for key in key_list:
+                        datasource[step_str][key] = ArrayWrapper(np.zeros(npart))
+
                     values = raw_values[(1 + step * _n):(_n + step * _n)]
 
                     gamma = values[6] / ion_mev + 1.0
