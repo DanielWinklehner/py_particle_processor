@@ -51,6 +51,10 @@ class DataFile(object):
             self._datasets.append(_ds)
         return 0
 
+    def remove_dataset(self, index):
+        del self._datasets[index]
+        return 0
+
 
 class PyParticleProcessor(object):
 
@@ -134,22 +138,34 @@ class PyParticleProcessor(object):
             print("DEBUG: delete_ds_callback was called")
 
         redraw_flag = False
-        row_indices = range(self._treeview.topLevelItemCount())
-        indices_to_remove = []
-        items_to_remove = []
+        df_indices = []
+        df_items = []
+        ds_indices = []
+        ds_items = []
         root = self._treeview.invisibleRootItem()
-        for i in row_indices:
-            item = self._treeview.topLevelItem(i)
-            if item.checkState(0) == QtCore.Qt.Checked:
-                redraw_flag = True
-                indices_to_remove.append(i)
-                items_to_remove.append(item)
 
-        for j in indices_to_remove:
-            del self._datafiles[j]
-            del self._selections[j]
+        for selection in self._selections:
+            redraw_flag = True
+            df_i, ds_i = self.get_selection(selection)
+            if ds_i is None:
+                df_indices.append(df_i)
+                df_items.append(self._treeview.topLevelItem(df_i))
+            else:
+                ds_indices.append((df_i, ds_i))
+                ds_items.append(self._treeview.topLevelItem(df_i).child(ds_i))
 
-        for item in items_to_remove:
+        # Remove the datasets first to avoid problems
+        for df_i, ds_i in ds_indices:
+            self._datafiles[df_i].remove_dataset(ds_i)
+
+        for item in ds_items:
+            (item.parent() or root).removeChild(item)
+
+        # Then remove the datafiles
+        for df_i in df_indices:
+            del self._datafiles[df_i]
+
+        for item in df_items:
             (item.parent() or root).removeChild(item)
 
         if redraw_flag:
