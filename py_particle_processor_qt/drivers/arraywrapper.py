@@ -4,7 +4,10 @@ import numpy as np
 class ArrayWrapper(object):
 
     def __init__(self, array_like):
-        self._array = np.array(array_like)
+        if type(array_like) is not np.array:
+            self._array = np.array(array_like)
+        else:
+            self._array = array_like
 
     def __get__(self):
         return self

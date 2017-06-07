@@ -32,6 +32,7 @@ class COMSOLDriver(AbstractDriver):
             # TODO: Need a better way to find the mass and ion species -PW
             ion = IonSpecies("proton", 1.0)
             m = ion.mass_kg()
+            ion_mev = ion.mass_mev()
 
             with open(filename, 'rb') as infile:
 
@@ -39,64 +40,77 @@ class COMSOLDriver(AbstractDriver):
                 # Number of header lines to remove
                 _rm = 8
 
-                for _ in range(_rm):
+                # Line 1: Model (COMSOL File Name)
+                # Line 2: COMSOL Version
+                # Line 3: Date
+                # Line 4: Dimension
+                for _ in range(4):
+                    infile.readline()
+
+                # Line 5: Nodes (Number of particles, in our case)
+                npart = int(infile.readline().split()[-1])
+
+                # Line 6: Expressions
+                # Line 7: Descriptions
+                # Line 8: Properties
+                for _ in range(3):
                     infile.readline()
 
                 _n = 8  # Length of the n-tuples to unpack from the values list
                 key_list = ["x", "y", "z", "px", "py", "pz", "E"]  # Things we want to save
 
+                # TODO: Maybe use the first line to create the values for the rest of the file?
+                firstline = infile.readline()
+                raw_values = [float(item) for item in firstline.strip().split()]
+                nsteps = int(len(raw_values) / _n)  # Number of steps
+
+                for step in range(nsteps):
+                    step_str = "Step#{}".format(step)
+                    datasource[step_str] = {}
+                    for key in key_list:
+                        datasource[step_str][key] = ArrayWrapper(np.zeros(npart))
+
+                # Fill in the values for the first line now
+                _id = int(raw_values.pop(0))
+                for step in range(nsteps):
+                    step_str = "Step#{}".format(step)
+                    values = raw_values[(1 + step * _n):(_n + step * _n)]
+
+                    gamma = values[6] / ion_mev + 1.0
+                    beta = np.sqrt(1.0 - np.power(gamma, -2.0))
+                    v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
+
+                    values[0:3] = [0.01 * r for r in values[0:3]]
+                    # TODO: Transform momentum into units of beta*gamma
+                    print(values[3])
+                    print(values[3]/v_tot)
+                    print(gamma*values[3]/v_tot)
+                    print(beta*gamma*values[3]/v_tot)
+                    values[3:6] = [beta * gamma * v / v_tot for v in values[3:6]]  # Convert velocity to momentum
+
+                    for idx, key in enumerate(key_list):
+                        datasource[step_str][key][_id - 1] = values[idx]
+
+                # Now for every other line
                 for line in infile.readlines():
 
                     raw_values = [float(item) for item in line.strip().split()]  # Data straight from the text file
                     _id = int(raw_values.pop(0))  # Particle ID number
-                    num_iter = int(len(raw_values) / _n)  # Number of steps the particle existed for
+                    nsteps = int(len(raw_values) / _n)  # Number of steps the particle existed for
 
-                    for i in range(num_iter):
+                    for step in range(nsteps):
+                        step_str = "Step#{}".format(step)
+                        values = raw_values[(1 + step * _n):(_n + step * _n)]
 
-                        step_str = "Step#{}".format(i)
+                        gamma = values[6] / ion_mev + 1.0
+                        beta = np.sqrt(1.0 - gamma ** (-2.0))
+                        v_tot = np.sqrt(values[3]**2.0 + values[4]**2.0 + values[5]**2)
 
-                        try:
+                        values[0:3] = [0.01 * r for r in values[0:3]]
+                        values[3:6] = [beta * gamma * v / v_tot for v in values[3:6]]  # Convert velocity to momentum
 
-                            datasource[step_str]
-
-                        except KeyError:
-
-                            datasource[step_str] = dict()
-
-                            for key in key_list:
-                                datasource[step_str][key] = ArrayWrapper([])
-
-                        values = raw_values[(1 + i * _n):(_n + i * _n)]
-
-                        values[0:3] = [r for r in values[0:3]]
-                        values[3:6] = [m * v for v in values[3:6]]  # Convert velocity to momentum
-                        # values[6] = 1.0e-6 * (values[6] / echarge)  # Convert energy from [J] to [MeV]
-
-                        # This will try to add the values for the specified particle id, but there may not be
-                        # enough indices appended to the list to access the [id - 1] element
-                        #
-                        # Since the file reads the IDs in order, this can be simplified since we would just need to
-                        # append a new value every time, but this is a more general approach that doesn't require that.
-                        try:
-
-                            # Try adding the values
-                            for idx, key in enumerate(key_list):
-                                datasource[step_str][key][_id - 1] = values[idx]
-
-                        except IndexError:
-
-                            # Get the number of entries that need to be added
-                            length = _id - len(datasource[step_str]["x"])
-
-                            for _ in range(length):
-
-                                for key in key_list:
-                                    # Append a 0.0 for each key
-                                    datasource[step_str][key].append([0.0])
-
-                            # Now that the index exists, add the values
-                            for idx, key in enumerate(key_list):
-                                datasource[step_str][key][_id - 1] = values[idx]
+                        for idx, key in enumerate(key_list):
+                            datasource[step_str][key][_id - 1] = values[idx]
 
                 data["datasource"] = datasource
                 data["ion"] = IonSpecies("proton", datasource["Step#0"]["E"][0])
@@ -106,8 +120,6 @@ class COMSOLDriver(AbstractDriver):
 
                 if self._debug:
                     print("Found {} steps in the file.".format(data["nsteps"]))
-
-                if self._debug:
                     print("Found {} particles in the file.".format(data["npart"]))
 
                 return data

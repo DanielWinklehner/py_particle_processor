@@ -23,6 +23,8 @@ class DataFile(object):
     """
     This object will contain a list of datasets and some attributes for easier handling.
     """
+    __slots__ = ("_filename", "_driver", "_debug", "_datasets", "_selected")
+
     def __init__(self, filename, driver, debug=False):
         self._filename = filename
         self._driver = driver
