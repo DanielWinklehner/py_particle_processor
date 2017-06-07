@@ -80,12 +80,7 @@ class COMSOLDriver(AbstractDriver):
                     beta = np.sqrt(1.0 - np.power(gamma, -2.0))
                     v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
-                    values[0:3] = [0.01 * r for r in values[0:3]]
-                    # TODO: Transform momentum into units of beta*gamma
-                    print(values[3])
-                    print(values[3]/v_tot)
-                    print(gamma*values[3]/v_tot)
-                    print(beta*gamma*values[3]/v_tot)
+                    values[0:3] = [r for r in values[0:3]]
                     values[3:6] = [beta * gamma * v / v_tot for v in values[3:6]]  # Convert velocity to momentum
 
                     for idx, key in enumerate(key_list):
@@ -106,7 +101,7 @@ class COMSOLDriver(AbstractDriver):
                         beta = np.sqrt(1.0 - gamma ** (-2.0))
                         v_tot = np.sqrt(values[3]**2.0 + values[4]**2.0 + values[5]**2)
 
-                        values[0:3] = [0.01 * r for r in values[0:3]]
+                        values[0:3] = [r for r in values[0:3]]
                         values[3:6] = [beta * gamma * v / v_tot for v in values[3:6]]  # Convert velocity to momentum
 
                         for idx, key in enumerate(key_list):
