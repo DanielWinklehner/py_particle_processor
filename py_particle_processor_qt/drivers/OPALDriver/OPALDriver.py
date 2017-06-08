@@ -103,8 +103,6 @@ class OPALDriver(AbstractDriver):
 
         if ".h5" in filename:
 
-            # TODO: OPAL might demand more of the attributes... -PW
-
             if self._debug:
                 print("Exporting data for program: {}...".format(self._program_name))
 

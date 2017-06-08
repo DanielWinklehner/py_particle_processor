@@ -92,7 +92,7 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionQuit.triggered.connect(self.main_quit)
         self._mainWindowGUI.actionImport_New.triggered.connect(self.callback_load_new_ds)
         self._mainWindowGUI.actionImport_Add.triggered.connect(self.callback_load_add_ds)
-        self._mainWindowGUI.actionUnload_Selected.triggered.connect(self.callback_delete_ds)
+        self._mainWindowGUI.actionRemove.triggered.connect(self.callback_delete_ds)
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
@@ -107,13 +107,17 @@ class PyParticleProcessor(object):
         self._property_list = ["steps", "particles", "mass", "energy", "charge", "current"]
         self._units_list = [None, None, "amu", "MeV", "e", "A"]
         self._properties_table.setRowCount(len(self._property_list))
+
         for idx, item in enumerate(self._property_list):
+
             p_string = item.title()
             if self._units_list[idx] is not None:  # Add the unit if it's not none
                 p_string += " (" + self._units_list[idx] + ")"
+
             p = QtGui.QTableWidgetItem(p_string)
             p.setFlags(QtCore.Qt.NoItemFlags)
             self._properties_table.setItem(idx, 0, p)
+
             v = QtGui.QTableWidgetItem("")
             v.setFlags(QtCore.Qt.NoItemFlags)
             self._properties_table.setItem(idx, 1, v)
@@ -138,9 +142,10 @@ class PyParticleProcessor(object):
         return 0
 
     def callback_analyze(self):
-        # TODO: Create a new analysis tool for beam parameters -PW
+
         print("Not implemented yet!")
-        self.clear_properties_table()
+
+        return 0
 
     def populate_properties_table(self, df_i, ds_i):
 
@@ -217,6 +222,8 @@ class PyParticleProcessor(object):
         :return: 
         """
 
+        # TODO: Sometimes there's a problem with deleting the full datafile item, I'm not sure what causes it -PW
+
         if self._debug:
             print("DEBUG: delete_ds_callback was called")
 
@@ -224,6 +231,8 @@ class PyParticleProcessor(object):
             msg = "You must select something to remove."
             print(msg)
             self.send_status(msg)
+
+        # TODO: Make this more efficient -PW
 
         redraw_flag = False
         df_indices = []
@@ -438,7 +447,6 @@ class PyParticleProcessor(object):
             msg = "Showing properties of the last selected dataset."
             print(msg)
             self.send_status(msg)
-            return 1
 
         df_i, ds_i = self.get_selection(self._selections[-1])
 
@@ -812,7 +820,6 @@ class PyParticleProcessor(object):
         dataset = self._datafiles[df_i].get_dataset(ds_i)
         child_item = self._treeview.topLevelItem(df_i).child(ds_i)
 
-        # TODO: Dataset naming, maybe use ion name? -PW
         child_item.setText(0, "")
         child_item.setText(1, "{}-{}".format(df_i, ds_i))
         child_item.setText(2, "{}".format(dataset.get_ion().name()))

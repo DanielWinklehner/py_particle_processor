@@ -1,9 +1,6 @@
 from py_particle_processor_qt.plot_properties_window import Ui_PlotPropertiesWindow
 from PyQt5 import QtGui
 
-# TODO: Rename the files -PW
-# TODO: A better new window handling system would be nice -PW
-
 
 class PlotPropertiesManager(object):
 

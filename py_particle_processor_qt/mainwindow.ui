@@ -20,12 +20,27 @@ color: rgb(255, 255, 255);</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
+    <property name="topMargin">
+     <number>2</number>
+    </property>
     <item row="0" column="0">
      <widget class="QSplitter" name="splitter_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QSplitter" name="splitter">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -90,6 +105,12 @@ color: rgb(255, 255, 255);</string>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="QLabel" name="properties_label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
             <string>Properties</string>
            </property>
@@ -185,6 +206,18 @@ color: rgb(255, 255, 255);</string>
    </layout>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>16</width>
+     <height>16</height>
+    </size>
+   </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextBesideIcon</enum>
    </property>
@@ -196,7 +229,7 @@ color: rgb(255, 255, 255);</string>
    </attribute>
    <addaction name="actionImport_New"/>
    <addaction name="actionImport_Add"/>
-   <addaction name="actionUnload_Selected"/>
+   <addaction name="actionRemove"/>
    <addaction name="actionPlot"/>
    <addaction name="actionAnalyze"/>
    <addaction name="actionExport_For"/>
@@ -219,12 +252,15 @@ color: rgb(255, 255, 255);</string>
     <bool>true</bool>
    </property>
    <widget class="QMenu" name="menu_File">
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
     <property name="title">
      <string>File</string>
     </property>
     <addaction name="actionImport_New"/>
     <addaction name="actionImport_Add"/>
-    <addaction name="actionUnload_Selected"/>
+    <addaction name="actionRemove"/>
     <addaction name="actionExport_For"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -252,6 +288,12 @@ color: rgb(255, 255, 255);</string>
    <property name="toolTip">
     <string>New...</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+   <property name="priority">
+    <enum>QAction::NormalPriority</enum>
+   </property>
   </action>
   <action name="actionImport_Add">
    <property name="icon">
@@ -274,7 +316,7 @@ color: rgb(255, 255, 255);</string>
      <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>Export For...</string>
+    <string>Export...</string>
    </property>
    <property name="iconText">
     <string>Export...</string>
@@ -297,7 +339,7 @@ color: rgb(255, 255, 255);</string>
     <string>About</string>
    </property>
   </action>
-  <action name="actionUnload_Selected">
+  <action name="actionRemove">
    <property name="icon">
     <iconset theme="remove">
      <normaloff>.</normaloff>.</iconset>
@@ -306,7 +348,7 @@ color: rgb(255, 255, 255);</string>
     <string>Remove</string>
    </property>
    <property name="toolTip">
-    <string>Unload</string>
+    <string>Remove</string>
    </property>
   </action>
   <action name="actionPlot">

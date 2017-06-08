@@ -68,9 +68,9 @@ class Dataset(object):
                             "steps": 0,
                             "curstep": None,
                             "charge": None,
-                            "particles": None}  # TODO: For now this is the number of particles at step 0. -DW
+                            "particles": None}
 
-        self._native_properties = {}  # TODO: WIP
+        self._native_properties = {}
 
     def close(self):
         """
@@ -170,11 +170,14 @@ class Dataset(object):
         particle = {"x": [], "y": [], "z": []}
         max_step = self.get_nsteps()
         color = None
+
         for step in range(max_step):
             self.set_step_view(step)
+
             for key in ["x", "y", "z"]:
                 dat = self._data.get(key).value[particle_id]
-                if np.isnan(dat) or dat == 0.0:  # TODO: This
+
+                if np.isnan(dat) or dat == 0.0:  # TODO: A better way to figure out when a particle terminates
                     if get_color == "step":
                         factor = float(step) / float(max_step)
                         color = ((1 - factor) * 255.0, factor * 255.0, 0.0)
@@ -183,10 +186,12 @@ class Dataset(object):
                     return particle, color
                 else:
                     particle[key].append(dat)
-        if get_color == "step":  # TODO: Temporary
+
+        if get_color == "step":
             color = (0.0, 255.0, 0.0)
         elif get_color == "random":
             color = colors[particle_id]
+
         return particle, color
 
     # noinspection PyUnresolvedReferences

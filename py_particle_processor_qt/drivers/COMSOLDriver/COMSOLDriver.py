@@ -7,9 +7,7 @@ import numpy as np
 class COMSOLDriver(AbstractDriver):
     def __init__(self, debug=False):
         super(COMSOLDriver, self).__init__()
-        # TODO: We should come up with a "standardized" output file format in COMSOL for importing here.
         # TODO: Currently using: (TIME [s], X [m], Y [m], Z [m], VX [m/s], VY [m/s], VZ [m/s], E [MeV])
-        # TODO: These units can be changed if needed. -PW
 
         self._debug = debug
         self._program_name = "COMSOL"
