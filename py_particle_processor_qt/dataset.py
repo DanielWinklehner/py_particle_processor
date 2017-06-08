@@ -60,12 +60,17 @@ class Dataset(object):
         self._data = None
         self._plot_settings = {}
 
-        self._ion = None
-        self._multispecies = False
-        self._current = 0.0
-        self._nsteps = 0
-        self._current_step = 0
-        self._npart = 0  # TODO: For now this is the number of particles at step 0. -DW
+        self._properties = {"ion": None,
+                            "multispecies": None,
+                            "current": None,
+                            "mass": None,
+                            "energy": None,
+                            "steps": 0,
+                            "curstep": None,
+                            "charge": None,
+                            "particles": None}  # TODO: For now this is the number of particles at step 0. -DW
+
+        self._native_properties = {}  # TODO: WIP
 
     def close(self):
         """
@@ -92,11 +97,21 @@ class Dataset(object):
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
             new_ied.export_data(dataset=self, filename=filename)
 
-    def get_draw(self):
-        return self._draw
+    def get_property(self, key):
+        return self._properties[key]
 
-    def set_draw(self, draw):
-        self._draw = draw
+    def set_property(self, key, value):
+        self._properties[key] = value
+        return 0
+
+    def is_native_property(self, key):
+        try:
+            return self._native_properties[key] == self._properties[key]
+        except KeyError:
+            return False
+
+    def properties(self):
+        return self._properties
 
     def get_selected(self):
         return self._selected
@@ -174,11 +189,15 @@ class Dataset(object):
             color = colors[particle_id]
         return particle, color
 
+    # noinspection PyUnresolvedReferences
     def get_a(self):
-        return self._ion.a()
+        if type(self._properties) is IonSpecies:
+            return self._properties["ion"].a()
+        else:
+            return None
 
     def get_current_step(self):
-        return self._current_step
+        return self._properties["curstep"]
 
     def get_datasource(self):
         return self._datasource
@@ -190,19 +209,23 @@ class Dataset(object):
         return self._filename
 
     def get_i(self):
-        return self._current
+        return self._properties["current"]
 
     def get_ion(self):
-        return self._ion
+        return self._properties["ion"]
 
     def get_npart(self):
-        return self._npart
+        return self._properties["particles"]
 
     def get_nsteps(self):
-        return self._nsteps
+        return self._properties["steps"]
 
+    # noinspection PyUnresolvedReferences
     def get_q(self):
-        return self._ion.q()
+        if type(self._properties) is IonSpecies:
+            return self._properties["ion"].q()
+        else:
+            return None
 
     def load_from_file(self, filename, driver=None):
         """
@@ -227,11 +250,12 @@ class Dataset(object):
             if _data is not None:
 
                 self._datasource = _data["datasource"]
-                self._ion = _data["ion"]
-                self._nsteps = _data["nsteps"]
-                self._current = _data["current"]
-                self._npart = _data["npart"]
 
+                for k in _data.keys():
+                    print(k)
+                    self._properties[k] = _data[k]
+                    self._native_properties[k] = _data[k]
+                print(self._properties["ion"])
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 
@@ -241,14 +265,15 @@ class Dataset(object):
 
     def set_step_view(self, step):
 
-        if step > self._nsteps:
+        if step > self._properties["steps"]:
 
             if self._debug:
-                print("set_step_view: Requested step {} exceeded max steps of {}!".format(step, self._nsteps))
+                print("set_step_view: Requested step {} exceeded max steps of {}!".format(step,
+                                                                                          self._properties["steps"]))
 
             return 1
 
-        self._current_step = step
+        self._properties["curstep"] = step
         self._data = self._datasource.get("Step#{}".format(step))
 
         return 0

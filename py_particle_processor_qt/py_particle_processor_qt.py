@@ -32,7 +32,6 @@ class DataFile(object):
         self._datasets = []
         self._selected = []  # Probably temporary
 
-    @property
     def filename(self):
         return self._filename
 
@@ -81,6 +80,11 @@ class PyParticleProcessor(object):
         self._status_bar = self._mainWindowGUI.statusBar
         self._log_textbuffer = self._mainWindowGUI.textEdit_2
         self._treeview = self._mainWindowGUI.treeWidget
+        self._properties_table = self._mainWindowGUI.properties_table
+        self._properties_label = self._mainWindowGUI.properties_label
+        self._properties_table.setHorizontalHeaderLabels(["Property", "Value"])
+        self._properties_table.__setattr__("dfds", (None, None))  # Used to find the shown dataset
+        self._properties_label.setText("Properties")
         self._menubar = self._mainWindowGUI.menuBar
         self._menubar.setNativeMenuBar(False)  # This is needed to make the menu bar actually appear -PW
 
@@ -93,18 +97,34 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
+        self._properties_table.cellChanged.connect(self.callback_cell_changed)
         self._treeview.itemClicked.connect(self.treeview_clicked)
 
         # --- Resize the columns in the treeview --- #
         for i in range(self._treeview.columnCount()):
             self._treeview.resizeColumnToContents(i)
 
+        # --- Initial population of the properties table --- #
+        self._property_list = ["steps", "particles", "mass", "energy", "charge", "current"]
+        self._units_list = [None, None, "amu", "MeV", "e", "A"]
+        self._properties_table.setRowCount(len(self._property_list))
+        for idx, item in enumerate(self._property_list):
+            p_string = item.title()
+            if self._units_list[idx] is not None:  # Add the unit if it's not none
+                p_string += " (" + self._units_list[idx] + ")"
+            p = QtGui.QTableWidgetItem(p_string)
+            p.setFlags(QtCore.Qt.NoItemFlags)
+            self._properties_table.setItem(idx, 0, p)
+            v = QtGui.QTableWidgetItem("")
+            v.setFlags(QtCore.Qt.NoItemFlags)
+            self._properties_table.setItem(idx, 1, v)
+
     def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
 
         self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
         top_level_item = self._treeview.topLevelItem(datafile_id)
         this_item = top_level_item.child(dataset_id)
-        this_item.setText(2, "{}".format(plot_settings["step"]))  # Change step value in the tree widget
+        # this_item.setText(2, "{}".format(plot_settings["step"]))  # Change step value in the tree widget
 
         return 0
 
@@ -118,12 +138,79 @@ class PyParticleProcessor(object):
 
         return 0
 
-    @staticmethod  # For now... -PW
-    def callback_analyze():
+    def callback_analyze(self):
         # TODO: Create a new analysis tool for beam parameters -PW
         print("Not implemented yet!")
+        self.clear_properties_table()
+
+    def populate_properties_table(self, df_i, ds_i):
+
+        if ds_i is None:
+            # TODO: Datafile properties
+            print("Datafile properties are not implemented yet!")
+            return 1
+        else:
+            ds = self.find_dataset(df_i, ds_i)
+            self._properties_table.dfds = (df_i, ds_i)
+            self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
+            for idx, item in enumerate(self._property_list):
+                if ds.get_property(item) is not None:
+                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())
+                    if ds.is_native_property(item):
+                        v.setFlags(QtCore.Qt.ItemIsEnabled)
+                    else:
+                        v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+                    self._properties_table.setItem(idx, 1, v)
+                else:
+                    v = QtGui.QTableWidgetItem("Property not found")
+                    v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
+                    v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+                    self._properties_table.setItem(idx, 1, v)
 
         return 0
+
+    def clear_properties_table(self):
+        self._properties_table.setCurrentItem(None)
+        self._properties_table.dfds = (None, None)
+        self._properties_label.setText("Properties")
+        for idx in range(len(self._property_list)):
+            v = QtGui.QTableWidgetItem("")
+            v.setFlags(QtCore.Qt.NoItemFlags)
+            self._properties_table.setItem(idx, 1, v)
+
+    def callback_cell_changed(self):
+        # Used for checking changed values in the property table
+        v = self._properties_table.currentItem()
+
+        # Filter out some of the other calls
+        if v is None or v.text == "":
+            return 0
+
+        df_i, ds_i = self._properties_table.dfds
+
+        if (df_i, ds_i) == (None, None):
+            return 0
+
+        ds = self.find_dataset(df_i, ds_i)
+        idx = self._properties_table.currentRow()
+
+        try:
+            value = float(v.text())
+            v.setText(str(value))  # Just a precaution
+
+            # We also need to update the particle's properties
+            ds.set_property(self._property_list[idx], value)
+
+            # Only change the text color if it worked
+            v.setForeground(QtGui.QBrush(QtGui.QColor("#FFFFFF")))
+
+            return 0
+
+        except ValueError:
+            ds.set_property(self._property_list[idx], None)
+            v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
+
+            return 1
 
     def callback_delete_ds(self):
         """
@@ -228,9 +315,10 @@ class PyParticleProcessor(object):
             top_level_item = QtGui.QTreeWidgetItem(self._treeview)
 
             top_level_item.setText(0, "")  # Selection
-            top_level_item.setText(1, self._datafiles[-1].filename)  # Name
+            top_level_item.setText(1, "{}".format(df_i))
+            top_level_item.setText(2, self._datafiles[-1].filename())  # Name
 
-            top_level_item.setFlags(top_level_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
             top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
 
             # TODO: Find the number of datasets somehow -PW
@@ -239,7 +327,7 @@ class PyParticleProcessor(object):
             for ds_i in range(number_of_datasets):
 
                 child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
 
@@ -285,9 +373,10 @@ class PyParticleProcessor(object):
             top_level_item = QtGui.QTreeWidgetItem(self._treeview)
 
             top_level_item.setText(0, "")  # Selection
-            top_level_item.setText(1, self._datafiles[0].filename)  # Name
+            top_level_item.setText(1, "{}".format(df_i))
+            top_level_item.setText(2, self._datafiles[0].filename())  # Name
 
-            top_level_item.setFlags(top_level_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
             top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
 
             # TODO: Find the number of datasets somehow -PW
@@ -296,7 +385,7 @@ class PyParticleProcessor(object):
             for ds_i in range(number_of_datasets):
 
                 child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
 
@@ -456,13 +545,13 @@ class PyParticleProcessor(object):
 
     @staticmethod
     def get_selection(selection_string):
-        if "#" in selection_string:  # "#(item)"
-            datafile_index = int(selection_string.lstrip("#"))
-            return datafile_index, None
-        elif "%" in selection_string:  # "%(parent)/child"
-            indices = selection_string.lstrip("%").split("/")
+        if "-" in selection_string:  # "#(item)"
+            indices = selection_string.split("-")
             datafile_index, dataset_index = int(indices[0]), int(indices[1])
             return datafile_index, dataset_index
+        else:
+            datafile_index = int(selection_string)
+            return datafile_index, None
 
     def initialize(self):
         """
@@ -536,10 +625,7 @@ class PyParticleProcessor(object):
                 step = int(settings["step"])
             except ValueError:
                 print("redraw_plots: Requested step is not an integer!")
-                # This shouldn't happen anymore, but if it does it sets the step to zero -PW
-                settings["step"] = 0
-                self._datafiles[df_i].get_dataset(ds_i).set_plot_settings(settings)
-                this_item.setText(2, str(settings["step"]))
+                return 1
 
             try:
                 dataset.set_step_view(step)
@@ -691,32 +777,35 @@ class PyParticleProcessor(object):
             index = self._treeview.indexFromItem(item).row()
 
             if item.parent() is None:
-                selection_string = "#{}".format(index)  # "#" Identifier for a datafile object
+                selection_string = "{}".format(index)
             else:
                 parent_index = self._treeview.indexFromItem(item.parent()).row()
-                selection_string = "%{}/{}".format(parent_index, index)  # "%" Identifier for dataset object
+                selection_string = "{}-{}".format(parent_index, index)
 
             if checkstate is True and selection_string not in self._selections:
                 self._selections.append(selection_string)
+                df_i, ds_i = self.get_selection(selection_string)
+                self.clear_properties_table()
+                self.populate_properties_table(df_i, ds_i)
             elif checkstate is False and selection_string in self._selections:
                 self._selections.remove(selection_string)
+                self.clear_properties_table()
+                if len(self._selections) > 0:
+                    df_i, ds_i = self.get_selection(self._selections[-1])
+                    self.clear_properties_table()
+                    self.populate_properties_table(df_i, ds_i)
 
         return 0
 
-    def update_tree_item(self, datafile_id, dataset_id):
+    def update_tree_item(self, df_i, ds_i):
 
-        dataset = self._datafiles[datafile_id].get_dataset(dataset_id)
-        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)
+        dataset = self._datafiles[df_i].get_dataset(ds_i)
+        child_item = self._treeview.topLevelItem(df_i).child(ds_i)
 
         # TODO: Dataset naming, maybe use ion name? -PW
         child_item.setText(0, "")
-        child_item.setText(1, "{}".format(dataset.get_ion().name()))
-        child_item.setText(2, "0")  # Step
-        child_item.setText(3, "{}".format(dataset.get_a()))  # Mass
-        child_item.setText(4, "{}".format(dataset.get_q()))  # Charge
-        child_item.setText(5, "{}".format(dataset.get_i()))  # Current
-        child_item.setText(6, "{}".format(dataset.get_npart()))  # Number of particles
-        child_item.setText(7, "{}".format(dataset.get_nsteps()))  # Number of steps
+        child_item.setText(1, "{}-{}".format(df_i, ds_i))
+        child_item.setText(2, "{}".format(dataset.get_ion().name()))
 
         child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
 #

@@ -103,13 +103,15 @@ class COMSOLDriver(AbstractDriver):
 
                 data["datasource"] = datasource
                 data["ion"] = IonSpecies("proton", datasource["Step#0"]["E"][0])
-                data["nsteps"] = len(datasource.keys())
+                data["mass"] = data["ion"].a()
+                data["charge"] = data["ion"].q()
+                data["steps"] = len(datasource.keys())
                 data["current"] = 0.0
-                data["npart"] = len(datasource["Step#0"]["x"])
+                data["particles"] = len(datasource["Step#0"]["x"])
 
                 if self._debug:
-                    print("Found {} steps in the file.".format(data["nsteps"]))
-                    print("Found {} particles in the file.".format(data["npart"]))
+                    print("Found {} steps in the file.".format(data["steps"]))
+                    print("Found {} particles in the file.".format(data["particles"]))
 
                 return data
 

@@ -38,10 +38,12 @@ class TraceWinDriver(AbstractDriver):
                 if self._debug:
                     print(header2)
 
-                data["nsteps"] = 1
+                data["steps"] = 1
                 data["ion"] = IonSpecies('H2_1+', energy)  # TODO: Actual ion species! -DW
+                data["mass"] = data["ion"].a()
+                data["charge"] = data["ion"].q()
                 data["current"] = current  # (A)
-                data["npart"] = 0
+                data["particles"] = 0
 
                 _distribution = []
                 mydtype = [('x', float), ('xp', float),
@@ -53,12 +55,12 @@ class TraceWinDriver(AbstractDriver):
                 for line in infile.readlines():
                     values = line.strip().split()
                     if int(values[-1]) == 0:
-                        data["npart"] += 1
+                        data["particles"] += 1
                         _distribution.append(tuple(values))
 
                 _distribution = np.array(_distribution, dtype=mydtype)
 
-                gamma = _distribution['e'] / data['ion'].mass_mev() + 1.0
+                gamma = _distribution['e'] / data["ion"].mass_mev() + 1.0
                 beta = np.sqrt(1.0 - gamma**(-2.0))
 
                 distribution = {'x': ArrayWrapper(_distribution['x'] * 0.001),
