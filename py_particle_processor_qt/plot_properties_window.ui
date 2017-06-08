@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PropertiesWindow</class>
- <widget class="QMainWindow" name="PropertiesWindow">
+ <class>PlotPropertiesWindow</class>
+ <widget class="QMainWindow" name="PlotPropertiesWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
-    <height>220</height>
+    <width>377</width>
+    <height>251</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -31,8 +31,8 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>311</width>
-      <height>219</height>
+      <width>374</width>
+      <height>247</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -48,7 +48,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>DATASET #XXX</string>
+        <string>Plot Settings (X-X)</string>
        </property>
       </widget>
      </item>
@@ -70,15 +70,98 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="2" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QLabel" name="tr_label">
+       <item row="3" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QCheckBox" name="bl_enabled">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="text">
-          <string>Top Right:</string>
+          <string>Enabled</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="3" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QCheckBox" name="bl_enabled">
+       <item row="1" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QComboBox" name="tl_combo_a">
+         <item>
+          <property name="text">
+           <string>X</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Y</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Z</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PX</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PY</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PZ</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="3" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QComboBox" name="bl_combo_a">
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <item>
+          <property name="text">
+           <string>X</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Y</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Z</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PX</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PY</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PZ</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QCheckBox" name="tl_enabled">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
@@ -100,15 +183,25 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QLabel" name="tr_label">
+         <property name="text">
+          <string>Top Right:</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="step_label">
          <property name="text">
           <string>Step #:</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QComboBox" name="tl_combo_a">
+       <item row="2" column="3" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QComboBox" name="tr_combo_b">
+         <property name="currentIndex">
+          <number>3</number>
+         </property>
          <item>
           <property name="text">
            <string>X</string>
@@ -191,67 +284,8 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="3" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QComboBox" name="tr_combo_b">
-         <property name="currentIndex">
-          <number>3</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>X</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Y</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Z</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PX</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PY</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PZ</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="1" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QCheckBox" name="tl_enabled">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="text">
-          <string>Enabled</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QComboBox" name="bl_combo_a">
-         <property name="currentIndex">
-          <number>1</number>
-         </property>
+       <item row="2" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QComboBox" name="tr_combo_a">
          <item>
           <property name="text">
            <string>X</string>
@@ -328,40 +362,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QComboBox" name="tr_combo_a">
-         <item>
-          <property name="text">
-           <string>X</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Y</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Z</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PX</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PY</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>PZ</string>
-          </property>
-         </item>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QSpinBox" name="step_input">
          <property name="minimum">
@@ -395,6 +395,23 @@
          </property>
         </widget>
        </item>
+       <item row="5" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QLabel" name="redraw_label">
+         <property name="text">
+          <string>Redraw On Selection: </string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QCheckBox" name="redraw_enabled">
+         <property name="text">
+          <string>Enabled</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -415,6 +432,13 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QPushButton" name="redraw_button">
+         <property name="text">
+          <string>Redraw Plots</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -440,14 +464,15 @@
          <property name="text">
           <string>Apply</string>
          </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
       </layout>
      </item>
     </layout>
    </widget>
-   <zorder>verticalLayoutWidget</zorder>
-   <zorder>verticalSpacer_2</zorder>
   </widget>
  </widget>
  <resources/>

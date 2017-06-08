@@ -197,9 +197,8 @@ color: rgb(255, 255, 255);</string>
    <addaction name="actionImport_New"/>
    <addaction name="actionImport_Add"/>
    <addaction name="actionUnload_Selected"/>
-   <addaction name="actionProperties"/>
-   <addaction name="actionAnalyze"/>
    <addaction name="actionPlot"/>
+   <addaction name="actionAnalyze"/>
    <addaction name="actionExport_For"/>
    <addaction name="actionQuit"/>
   </widget>
@@ -310,28 +309,19 @@ color: rgb(255, 255, 255);</string>
     <string>Unload</string>
    </property>
   </action>
-  <action name="actionProperties">
-   <property name="icon">
-    <iconset theme="applications-system">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
-   <property name="text">
-    <string>Properties</string>
-   </property>
-   <property name="toolTip">
-    <string>Properties</string>
-   </property>
-  </action>
   <action name="actionPlot">
    <property name="icon">
     <iconset theme="emblem-photos">
      <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>Plot</string>
+    <string>Plot...</string>
+   </property>
+   <property name="iconText">
+    <string>Plot...</string>
    </property>
    <property name="toolTip">
-    <string>Plot</string>
+    <string>Plot...</string>
    </property>
   </action>
   <action name="actionAnalyze">

@@ -1,10 +1,11 @@
-from py_particle_processor_qt.propertieswindow import Ui_PropertiesWindow
+from py_particle_processor_qt.plot_properties_window import Ui_PlotPropertiesWindow
 from PyQt5 import QtGui
 
+# TODO: Rename the files -PW
 # TODO: A better new window handling system would be nice -PW
 
 
-class PropertyManager(object):
+class PlotPropertiesManager(object):
 
     def __init__(self, parent, datafile_id, dataset_id, debug=False):
         self._datafile_id = datafile_id
@@ -17,7 +18,7 @@ class PropertyManager(object):
             print("DEBUG: Initializing PropertyManager instance")
 
         self._propWindow = QtGui.QMainWindow()
-        self._propWindowGUI = Ui_PropertiesWindow()
+        self._propWindowGUI = Ui_PlotPropertiesWindow()
         self._propWindowGUI.setupUi(self._propWindow)
 
         if len(self._settings) > 0:
@@ -25,14 +26,16 @@ class PropertyManager(object):
         else:
             self.apply_settings()
 
-        self._propWindowGUI.apply_button.clicked.connect(self.apply_callback)
-        self._propWindowGUI.cancel_button.clicked.connect(self.cancel_callback)
-        self._propWindowGUI.dataset_label.setText("DATASET #{}-{}".format(self._datafile_id, self._dataset_id))
+        self._propWindowGUI.apply_button.clicked.connect(self.callback_apply)
+        self._propWindowGUI.cancel_button.clicked.connect(self.callback_cancel)
+        self._propWindowGUI.redraw_button.clicked.connect(self.callback_redraw)
+        self._propWindowGUI.dataset_label.setText("Plot Settings (Datafile {}, Dataset{})"
+                                                  .format(self._datafile_id, self._dataset_id))
 
-    def apply_callback(self):
+    def callback_apply(self):
 
         if self._debug:
-            print("DEBUG: apply_callback called")
+            print("DEBUG: callback_apply called")
 
         self.apply_settings()
         self._parent.apply_plot_settings(datafile_id=self._datafile_id,
@@ -68,10 +71,13 @@ class PropertyManager(object):
         # 3D Plot:
         self._settings["3d_en"] = self._propWindowGUI.three_d_enabled.checkState()
 
-    def cancel_callback(self):
+        # Redraw:
+        self._settings["redraw_en"] = self._propWindowGUI.redraw_enabled.checkState()
+
+    def callback_cancel(self):
 
         if self._debug:
-            print("DEBUG: cancel_callback called")
+            print("DEBUG: callback_cancel called")
 
         self._propWindow.close()
 
@@ -106,10 +112,20 @@ class PropertyManager(object):
         # 3D Plot:
         self._propWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
+        # Redraw:
+        self._propWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
+
+    def callback_redraw(self):
+        self.apply_settings()
+        self._parent.apply_plot_settings(datafile_id=self._datafile_id,
+                                         dataset_id=self._dataset_id,
+                                         plot_settings=self.get_settings())
+        self._parent.redraw_plots()
+
     def run(self):
 
         if self._debug:
-            print("DEBUG: Running PropertyManager")
+            print("DEBUG: Running PlotPropertiesManager")
 
         # --- Calculate the positions to center the window --- #
         screen_size = self._parent.screen_size()

@@ -1,6 +1,6 @@
 from py_particle_processor_qt.dataset import *
 from py_particle_processor_qt.mainwindow import *
-from py_particle_processor_qt.properties import *
+from py_particle_processor_qt.plot_properties import *
 from dans_pymodules import MyColors
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import qApp, QFileDialog
@@ -93,7 +93,6 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionImport_New.triggered.connect(self.callback_load_new_ds)
         self._mainWindowGUI.actionImport_Add.triggered.connect(self.callback_load_add_ds)
         self._mainWindowGUI.actionUnload_Selected.triggered.connect(self.callback_delete_ds)
-        self._mainWindowGUI.actionProperties.triggered.connect(self.callback_properties)
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
@@ -331,9 +330,13 @@ class PyParticleProcessor(object):
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
 
-                self.open_property_manager(datafile_id=df_i,
-                                           dataset_id=ds_i,
-                                           debug=self._debug)
+                if number_of_datasets == 1:
+                    child_item.setCheckState(0, QtCore.Qt.Checked)
+                    self.open_property_manager(datafile_id=df_i,
+                                               dataset_id=ds_i,
+                                               debug=self._debug)
+
+                    self._selections.append("{}-{}".format(df_i, ds_i))
 
             top_level_item.setExpanded(True)
 
@@ -389,9 +392,13 @@ class PyParticleProcessor(object):
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
 
-                self.open_property_manager(datafile_id=df_i,
-                                           dataset_id=ds_i,
-                                           debug=self._debug)
+                if number_of_datasets == 1:
+                    child_item.setCheckState(0, QtCore.Qt.Checked)
+                    self.open_property_manager(datafile_id=df_i,
+                                               dataset_id=ds_i,
+                                               debug=self._debug)
+
+                    self._selections.append("{}-{}".format(df_i, ds_i))
 
             top_level_item.setExpanded(True)
 
@@ -418,12 +425,9 @@ class PyParticleProcessor(object):
         return 0
 
     def callback_plot(self):
-        self.redraw_plots()
-
-    def callback_properties(self):
 
         if self._debug:
-            "DEBUG: properties_callback called"
+            "DEBUG: callback_plot called"
 
         if len(self._selections) == 0:
             msg = "No dataset was selected!"
@@ -431,12 +435,12 @@ class PyParticleProcessor(object):
             self.send_status(msg)
             return 1
         elif len(self._selections) > 1:
-            msg = "You cannot select more than one dataset!"
+            msg = "Showing properties of the last selected dataset."
             print(msg)
             self.send_status(msg)
             return 1
 
-        df_i, ds_i = self.get_selection(self._selections[0])
+        df_i, ds_i = self.get_selection(self._selections[-1])
 
         self.open_property_manager(datafile_id=df_i, dataset_id=ds_i, debug=True)
 
@@ -581,7 +585,7 @@ class PyParticleProcessor(object):
         return 0
 
     def open_property_manager(self, datafile_id, dataset_id, debug=False):
-        self._pm = PropertyManager(self, datafile_id=datafile_id, dataset_id=dataset_id, debug=debug)
+        self._pm = PlotPropertiesManager(self, datafile_id=datafile_id, dataset_id=dataset_id, debug=debug)
         self._pm.run()
 
         return 0
@@ -787,6 +791,11 @@ class PyParticleProcessor(object):
                 df_i, ds_i = self.get_selection(selection_string)
                 self.clear_properties_table()
                 self.populate_properties_table(df_i, ds_i)
+                ds = self.find_dataset(df_i, ds_i)
+                plot_settings = ds.get_plot_settings(translated=True)
+                if plot_settings["redraw_en"]:
+                    self.redraw_plots()
+
             elif checkstate is False and selection_string in self._selections:
                 self._selections.remove(selection_string)
                 self.clear_properties_table()
@@ -794,6 +803,7 @@ class PyParticleProcessor(object):
                     df_i, ds_i = self.get_selection(self._selections[-1])
                     self.clear_properties_table()
                     self.populate_properties_table(df_i, ds_i)
+                self.redraw_plots()  # TODO: Make this better, it shouldn't redraw if the unchecked set wasn't plotted
 
         return 0
 
