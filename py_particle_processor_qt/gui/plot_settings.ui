@@ -157,7 +157,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="param_combo_c">
+          <widget class="QComboBox" name="param_combo_b">
            <property name="currentIndex">
             <number>1</number>
            </property>
@@ -194,7 +194,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="param_combo_b">
+          <widget class="QComboBox" name="param_combo_c">
            <property name="enabled">
             <bool>false</bool>
            </property>

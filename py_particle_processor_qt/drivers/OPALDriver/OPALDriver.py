@@ -40,7 +40,7 @@ class OPALDriver(AbstractDriver):
                 data["steps"] = len(_datasource.items())
 
                 if self._debug:
-                    print("Found {} steps in the file.".format(data["nsteps"]))
+                    print("Found {} steps in the file.".format(data["steps"]))
 
                 _data = _datasource.get("Step#0")
 

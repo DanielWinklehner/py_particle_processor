@@ -4,7 +4,7 @@ from dans_pymodules import MyColors
 from scipy import constants as const
 from py_particle_processor_qt.drivers import *
 
-__author__ = "Daniel Winklehner"
+__author__ = "Daniel Winklehner, Philip Weigel"
 __doc__ = """A container that holds a single dataset with 
 multiple time steps and multiple particles per time step. If the data
 is too large for memory, it is automatically transferred into 
@@ -103,6 +103,8 @@ class Dataset(object):
         if driver is not None:
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
             new_ied.export_data(dataset=self, filename=filename)
+        elif driver is None:
+            return 1
 
     def get_property(self, key):
         return self._properties[key]

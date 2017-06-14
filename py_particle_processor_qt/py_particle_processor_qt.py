@@ -269,11 +269,16 @@ class PyParticleProcessor(object):
         filename, driver = self.get_filename(action='save')  # Get a filename and driver
         df_i, ds_i = self.get_selection(self._selections[0])  # Get the indices from the selection
 
+        if (filename, driver) == (None, None):
+            return 0
+
         # TODO: Modernize this statement
         self._datafiles[df_i].get_dataset(ds_i).export_to_file(filename=filename, driver=driver)
 
         print("Export complete!")
         self.send_status("Export complete!")
+
+        return 0
 
     def callback_load_add_ds(self, widget):
         """
@@ -532,6 +537,8 @@ class PyParticleProcessor(object):
 
     def get_filename(self, action="open"):
 
+        filename, filetype = "", ""
+
         # Format the filetypes selection
         first_flag1 = True
         filetypes_text = ""
@@ -567,8 +574,10 @@ class PyParticleProcessor(object):
                                                              directory=self._last_path,
                                                              filter=filetypes_text,
                                                              options=options)
-        else:
-            return None, None
+
+        if filename == "" or filetype == "":
+            filename, driver = None, None
+            return filename, driver
 
         driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
 

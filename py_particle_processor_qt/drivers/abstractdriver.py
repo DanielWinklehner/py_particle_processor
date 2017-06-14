@@ -29,12 +29,12 @@ class AbstractDriver(ABC):
                                stdout=subprocess.PIPE).communicate()[0].split("\n")
         vsz_index = out[0].split().index("RSS")
         mem = float(out[1].split()[vsz_index]) / 1024.0
-        return mem  # Output in bytes
+        return mem
 
     # Source: https://stackoverflow.com/questions/2104080/how-to-check-file-size-in-python
     @staticmethod
     def _get_file_size(filename):
-        return os.stat(filename).st_size  # Output in bytes
+        return os.stat(filename).st_size
 
     def check_memory(self, filename):
         current_usage = self._memory_usage_ps()

@@ -192,10 +192,12 @@ class PlotManager(object):
             print("This dataset is already in the PlotObject!")
 
     def add_to_current_plot(self, dataset):
-        if self._current_plot is None:  # Catch the condition that the default plots are shown
+        current_index = self._tabs.currentIndex()
+        if current_index == 0:  # Catch the condition that the default plots are shown
             self.add_to_default(dataset)
-        else:
-            self.add_to_plot(dataset, self._current_plot)
+        elif current_index > 1:
+            plot_object = self._plot_objects[current_index - 2]
+            self.add_to_plot(dataset, plot_object)
 
     def add_to_default(self, dataset):
         for plot_object in self._default_plots:  # Add the dataset to all of the default plot objects
@@ -256,18 +258,19 @@ class PlotManager(object):
         local_tab = QtWidgets.QWidget(parent=self._tabs, flags=self._tabs.windowFlags())
 
         gl = QtWidgets.QGridLayout(local_tab)  # Create a grid layout
-        gl.setContentsMargins(11, 11, 11, 11)
+        gl.setContentsMargins(0, 0, 0, 0)
         gl.setSpacing(6)
 
         self._gvs.append(pg.PlotWidget(local_tab))  # Add the PlotWidget to the list of graphics views
 
         gl.addWidget(self._gvs[-1])  # Add the grid layout to the newest graphics view
 
-        self._tabs.addTab(local_tab, "Tab GV")  # Add the new widget to the tabs widget, and give it a name
+        # Add the new widget to the tabs widget, and give it a name
+        self._tabs.addTab(local_tab, "Tab {}".format(self._tabs.count() + 1))
 
     def plot_settings(self):
-        index = self._tabs.currentIndex()  # The current index of the tab widget
-        plot_object = self._plot_objects[index - 2]  # Find the plot object corresponding to that tab index
+        current_index = self._tabs.currentIndex()  # The current index of the tab widget
+        plot_object = self._plot_objects[current_index - 2]  # Find the plot object corresponding to that tab index
         self._plot_settings_gui = PlotSettings(self, plot_object, debug=self._debug)  # Open the plot settings
         self._plot_settings_gui.run()  # Run the GUI
 
@@ -282,7 +285,7 @@ class PlotManager(object):
         if current_index == 0:  # If it's zero, it's the first tab/default plots
             self.redraw_default_plots()
         else:
-            plot_object = self._plot_objects[current_index - 1]  # If not, get the plot object and redraw
+            plot_object = self._plot_objects[current_index - 2]  # If not, get the plot object and redraw
             plot_object.clear()
             plot_object.show()
 
