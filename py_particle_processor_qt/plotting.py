@@ -4,6 +4,9 @@ from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 import numpy as np
 
+__author__ = "Philip Weigel, Daniel Winklehner"
+__doc__ = """Plotting objects and associated GUI objects used in the PyParticleProcessor."""
+
 
 class PlotObject(object):
 
@@ -24,12 +27,12 @@ class PlotObject(object):
 
     def clear(self):
 
-        if self._is_3d:
-            self._graphics_view.items = []
-            self._graphics_view.update()
+        if self._is_3d:  # Check if it's a 3D plot
+            self._graphics_view.items = []  # Clear the items list
+            self._graphics_view.update()  # Update the graphics view
         else:
-            for data_item in self._graphics_view.listDataItems():
-                self._graphics_view.removeItem(data_item)
+            for data_item in self._graphics_view.listDataItems():  # Loop through each data item
+                self._graphics_view.removeItem(data_item)  # Remove the data item from the graphics view
 
         return 0
 
