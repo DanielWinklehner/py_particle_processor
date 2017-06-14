@@ -5,17 +5,13 @@ from PyQt5.QtWidgets import qApp, QFileDialog
 # from dans_pymodules import MyColors
 import time
 
-
 __author__ = "Philip Weigel, Daniel Winklehner"
 __doc__ = """A GTK+3 based GUI that allows loading particle data from 
 various simulation codes and exporting them for various other simulation codes.
 """
 
-# Initialize some global constants
-amu = const.value("atomic mass constant energy equivalent in MeV")
-echarge = const.value("elementary charge")
-clight = const.value("speed of light in vacuum")
 
+# Initializ
 
 class DataFile(object):
     """
@@ -43,7 +39,6 @@ class DataFile(object):
         return [i for i, v in enumerate(self._selected) if v is True]
 
     def load(self, c_i):
-
         number_of_datasets = 1
         for i in range(number_of_datasets):
             _ds = Dataset(debug=self._debug)
@@ -59,7 +54,6 @@ class DataFile(object):
 
 
 class PyParticleProcessor(object):
-
     def __init__(self, debug=False):
         """
         Initialize the GUI
@@ -458,7 +452,7 @@ class PyParticleProcessor(object):
 
         # Format: "Datafile {}, Dataset {}" or "Datafile {}"
         if len(txt) == 4:  # If there are 4 items, it's a dataset
-            df_i, ds_i = int(txt[1]), int(txt[3]) # Get the corresponding indices
+            df_i, ds_i = int(txt[1]), int(txt[3])  # Get the corresponding indices
             dataset = self.find_dataset(df_i, ds_i)  # Get the dataset
             self._properties_table.dfds = (df_i, ds_i)  # Set the table's dfds property
             self.populate_properties_table(dataset)  # Populate the properties table with the dataset info
@@ -517,7 +511,7 @@ class PyParticleProcessor(object):
         self._properties_table.dfds = (None, None)  # Clear the dfds property
         self._properties_label.setText("Properties")  # Set the label
 
-        for idx in range(len(self._property_list)): # Loop through each row
+        for idx in range(len(self._property_list)):  # Loop through each row
             v = QtGui.QTableWidgetItem("")  # Create a placeholder item
             v.setFlags(QtCore.Qt.NoItemFlags)  # Disable item flags
             self._properties_table.setItem(idx, 1, v)  # Add the item to the table
@@ -583,7 +577,7 @@ class PyParticleProcessor(object):
     @staticmethod
     def get_selection(selection_string):
 
-        if "-" in selection_string: # If there's a hyphen, it's a dataset
+        if "-" in selection_string:  # If there's a hyphen, it's a dataset
             indices = selection_string.split("-")
             datafile_index, dataset_index = int(indices[0]), int(indices[1])  # Convert the strings to ints
             return datafile_index, dataset_index
@@ -618,15 +612,15 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def populate_properties_table(self, object):
+    def populate_properties_table(self, data_object):
         self.clear_properties_table()
 
-        if type(object) is DataFile:  # If the object passed is a datafile...
-            df = object
+        if type(data_object) is DataFile:  # If the object passed is a datafile...
+            # df = data_object
             print("Datafile properties are not implemented yet!")
             return 1
-        elif type(object) is Dataset:  # If the object passed is a dataset...
-            ds = object
+        elif type(data_object) is Dataset:  # If the object passed is a dataset...
+            ds = data_object
             # self._properties_table.dfds = (df_i, ds_i)
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
             for idx, item in enumerate(self._property_list):  # Enumerate through the properties list
@@ -634,7 +628,7 @@ class PyParticleProcessor(object):
                     v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())  # Set the value item
                     if ds.is_native_property(item):  # If it's a native property to the set, it's not editable
                         v.setFlags(QtCore.Qt.ItemIsEnabled)
-                    else: # If it is not a native property, it may be edited
+                    else:  # If it is not a native property, it may be edited
                         v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
                 else:  # IF the property wasn't found
                     v = QtGui.QTableWidgetItem("Property not found")  # Create a placeholder
@@ -705,7 +699,7 @@ class PyParticleProcessor(object):
 
             elif checkstate is False and selection_string in self._selections:
                 df_i, ds_i = self.get_selection(selection_string)  # Get the indices from the string
-                self._selections.remove(selection_string) # Remove the string from the selections
+                self._selections.remove(selection_string)  # Remove the string from the selections
 
                 if ds_i is not None:  # If it is a dataset...
                     self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataet
