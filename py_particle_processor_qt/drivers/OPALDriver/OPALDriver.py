@@ -37,7 +37,7 @@ class OPALDriver(AbstractDriver):
                 if self._debug:
                     print("Loading dataset from h5 file in OPAL format.")
 
-                data["nsteps"] = len(_datasource.items())
+                data["steps"] = len(_datasource.items())
 
                 if self._debug:
                     print("Found {} steps in the file.".format(data["nsteps"]))
@@ -47,8 +47,9 @@ class OPALDriver(AbstractDriver):
                 # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
                 # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
                 data["ion"] = IonSpecies("proton", _data.attrs["ENERGY"])
-                data["mass"] = data["ion"].a()
-                data["charge"] = data["ion"].q()
+                if type(data["ion"]) is IonSpecies:
+                    data["mass"] = data["ion"].a()
+                    data["charge"] = data["ion"].q()
                 data["current"] = 0.0  # TODO: Get actual current! -DW
                 data["particles"] = len(_data.get("x").value)
 

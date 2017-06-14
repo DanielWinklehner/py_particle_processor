@@ -58,9 +58,10 @@ class Dataset(object):
         self._driver = None
         self._debug = debug
         self._data = None
-        self._plot_settings = {}
+        self._color = (0.0, 0.0, 0.0)
 
-        self._properties = {"ion": None,
+        self._properties = {"name": None,
+                            "ion": None,
                             "multispecies": None,
                             "current": None,
                             "mass": None,
@@ -92,6 +93,12 @@ class Dataset(object):
 
         return 0
 
+    def color(self):
+        return self._color
+
+    def assign_color(self, i):
+        self._color = colors[i]
+
     def export_to_file(self, filename, driver):
         if driver is not None:
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
@@ -118,31 +125,6 @@ class Dataset(object):
 
     def set_selected(self, selected):
         self._selected = selected
-
-    def get_plot_settings(self, translated=False):
-        """
-        Gets the plot settings used in propertieswindow.
-        Translated means using "x", "y", ... instead of 0, 1, 2, ...
-        :param translated: 
-        :return: 
-        """
-        if translated is False:
-            return self._plot_settings
-        else:
-            t_plot_settings = {}
-            en_val = [False, None, True]
-            combo_val = ["x", "y", "z", "px", "py", "pz"]
-            for k, v in self._plot_settings.items():
-                if "_en" in k:
-                    t_plot_settings[k] = en_val[v]
-                elif "step" in k:
-                    t_plot_settings[k] = v
-                else:
-                    t_plot_settings[k] = combo_val[v]
-            return t_plot_settings
-
-    def set_plot_settings(self, plot_settings):
-        self._plot_settings = plot_settings
 
     def get(self, key):
         """
@@ -250,7 +232,8 @@ class Dataset(object):
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
             _data = new_ied.import_data(self._filename)
 
-            print("_data is {}".format(_data))
+            # if self._debug:
+            #     print("_data is {}".format(_data))
 
             if _data is not None:
 
@@ -260,7 +243,8 @@ class Dataset(object):
                     print(k)
                     self._properties[k] = _data[k]
                     self._native_properties[k] = _data[k]
-                print(self._properties["ion"])
+                if type(self._properties["ion"]) is IonSpecies:
+                    self._properties["name"] = self._properties["ion"].name()
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 

@@ -1,7 +1,7 @@
 from py_particle_processor_qt.dataset import *
-from py_particle_processor_qt.mainwindow import *
-from py_particle_processor_qt.plot_properties import *
-from dans_pymodules import MyColors
+from py_particle_processor_qt.gui.main_window import *
+from py_particle_processor_qt.plotting import *
+# from dans_pymodules import MyColors
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import qApp, QFileDialog
 import time
@@ -32,6 +32,9 @@ class DataFile(object):
         self._datasets = []
         self._selected = []  # Probably temporary
 
+    def dataset_count(self):
+        return len(self._datasets)
+
     def filename(self):
         return self._filename
 
@@ -41,18 +44,323 @@ class DataFile(object):
     def get_selected(self):
         return [i for i, v in enumerate(self._selected) if v is True]
 
-    def load(self):
-        # TODO: How to get each dataset from one file? For now, it's just one.
+    def load(self, c_i):
+        # TODO: How to get each dataset from one file? For now, it's just one. -PW
         number_of_datasets = 1
         for i in range(number_of_datasets):
             _ds = Dataset(debug=self._debug)
             _ds.load_from_file(filename=self._filename, driver=self._driver)
+            _ds.assign_color(c_i)
+            c_i += 1
             self._datasets.append(_ds)
         return 0
 
     def remove_dataset(self, index):
         del self._datasets[index]
         return 0
+
+
+class PlotObject(object):
+
+    def __init__(self, parent, graphics_view):
+        self._parent = parent  # This should always be a PlotManager
+        self._is_shown = False
+        self._is_3d = False
+        self._enabled = False
+        self._graphics_view = graphics_view
+        self._plot_settings = {}
+        self._datasets = []  # Data shown in the plot
+
+        # if len(axes) == 2:
+        #     self._is_3d = False
+        # elif len(axes) == 3:
+        #     self._is_3d = True
+        # else:
+        #     print("You can only select two or three axes to plot.")
+
+    def add_dataset(self, dataset):
+
+        self._datasets.append(dataset)
+
+        return 0
+
+    def clear(self):
+
+        if self._is_3d:
+            self._graphics_view.items = []
+            self._graphics_view.update()
+        else:
+            for data_item in self._graphics_view.listDataItems():
+                self._graphics_view.removeItem(data_item)
+
+        return 0
+
+    def is_shown(self):
+        return self._is_shown
+
+    def datasets(self):
+        return self._datasets
+
+    def remove_dataset(self, dataset):
+        if dataset in self._datasets:
+            del self._datasets[self._datasets.index(dataset)]
+
+    def set_plot_settings(self, plot_settings):
+        self._plot_settings = plot_settings
+
+        if "is_3d" in plot_settings.keys():
+            if plot_settings["is_3d"] == 2:
+                self._is_3d = True
+            else:
+                self._is_3d = False
+        else:
+            self._is_3d = False
+
+        if "param_en" in plot_settings.keys():
+            if plot_settings["param_en"]:
+                self._enabled = True
+            else:
+                self._enabled = False
+        else:
+            self._enabled = False
+
+    def get_plot_settings(self, translated=False):
+        """
+        Gets the plot settings used in propertieswindow.
+        Translated means using "x", "y", ... instead of 0, 1, 2, ...
+        :param translated: 
+        :return: 
+        """
+        if translated is False:
+            return self._plot_settings
+        else:
+            t_plot_settings = {}
+            en_val = [False, None, True]
+            combo_val = ["x", "y", "z", "px", "py", "pz"]
+
+            for k, v in self._plot_settings.items():
+                if "_en" in k or "is" in k:
+                    t_plot_settings[k] = en_val[v]
+                elif "step" in k:
+                    t_plot_settings[k] = v
+                elif v is None:
+                    t_plot_settings[k] = None
+                else:
+                    t_plot_settings[k] = combo_val[v]
+
+            return t_plot_settings
+
+    def show(self):
+
+        t_plot_settings = self.get_plot_settings(translated=True)
+        axes = t_plot_settings["param_a"], t_plot_settings["param_b"], t_plot_settings["param_c"]
+        step = t_plot_settings["step"]
+
+        if self._is_3d:
+
+            # TODO: 3D Plotting, this is from the previous redraw() fucntion
+
+            for dataset in self._datasets:
+
+                # Only do a 3D display for data with more than one step and it's enabled
+                if dataset.get_nsteps() > 1 and self._enabled:
+
+                    _grid = True  # Always display the grids for now
+
+                    for particle_id in range(dataset.get_npart()):
+                        particle, _c = dataset.get_particle(particle_id, get_color="random")
+                        pts = np.array([particle.get(axes[0]), particle.get(axes[1]), particle.get(axes[2])]).T
+                        plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
+                                                       antialias=True)
+
+                        self._graphics_view.addItem(plt)
+
+                    if _grid:
+                        # TODO: Make the grid size dynamic -PW
+                        # TODO: The maximum and minimum values might be useful to get during import -PW
+
+                        gx = pg.opengl.GLGridItem()
+                        gx.rotate(90, 0, 1, 0)
+                        gx.translate(0.0, 0.0, 0.0)
+                        gx.setSize(x=0.2, y=0.2, z=0.2)
+                        gx.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                        gy = pg.opengl.GLGridItem()
+                        gy.rotate(90, 1, 0, 0)
+                        gy.translate(0.0, 0.0, 0.0)
+                        gy.setSize(x=0.2, y=0.2, z=0.2)
+                        gy.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                        gz = pg.opengl.GLGridItem()
+                        gz.translate(0.0, 0.0, 0.0)
+                        gz.setSize(x=0.2, y=0.2, z=1.0)
+                        gz.setSpacing(x=0.01, y=0.01, z=0.01)
+
+                        self._graphics_view.addItem(gx)
+                        self._graphics_view.addItem(gy)
+                        self._graphics_view.addItem(gz)
+
+                    self._graphics_view.opts["distance"] = 3e-1  # Seems to be a good value for now
+
+        else:
+
+            # TODO: We should make sure that the "axes" are in the dataset first -PW
+            for dataset in self._datasets:
+
+                dataset.set_step_view(step)
+
+                scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
+                                             y=dataset.get(axes[1]),
+                                             pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+
+                self._graphics_view.addItem(scatter)
+
+                title = axes[0].upper() + "-" + axes[1].upper()
+                self._graphics_view.setTitle(title)
+                self._graphics_view.repaint()
+
+            self._is_shown = True
+
+        return 0
+
+
+class PlotManager(object):
+
+    def __init__(self, parent, debug=False):
+        self._parent = parent
+        self._tabs = parent.tabs()
+        self._gvs = []
+        self._plot_objects = []
+        self._debug = debug
+        self._screen_size = parent.screen_size()
+        self._plot_settings = None
+        self._current_plot = None
+        self._default_plots = [None, None, None, None]
+        self._default_plot_settings = {}
+        self._initialize_default_plots()
+
+    def _initialize_default_plots(self):
+        # TODO: Better way to do this -PW
+        default_gv = (self._parent._mainWindowGUI.graphicsView_1,
+                      self._parent._mainWindowGUI.graphicsView_2,
+                      self._parent._mainWindowGUI.graphicsView_3,
+                      self._parent._mainWindowGUI.graphicsView_4)
+        self._default_plots = [PlotObject(self, gv) for gv in default_gv]
+
+    def add_to_plot(self, dataset, plot_object):
+        if dataset not in plot_object.datasets():
+            plot_object.add_dataset(dataset)
+        else:
+            print("This dataset is already in the PlotObject!")
+
+    def add_to_current_plot(self, dataset):
+        if self._current_plot is None:
+            self.add_to_default(dataset)
+        else:
+            self.add_to_plot(dataset, self._current_plot)
+
+    def add_to_default(self, dataset):
+        for plot_object in self._default_plots:
+            plot_object.add_dataset(dataset)
+
+    def apply_default_plot_settings(self, plot_settings, redraw=False):
+        # TODO: Better way to do this -PW
+        self._default_plot_settings = plot_settings
+        plot_list = ["tl", "tr", "bl", "3d"]
+        for idx, plot_object in enumerate(self._default_plots):
+            new_plot_settings = {"step": plot_settings["step"]}
+            for key, val in plot_settings.items():
+                if plot_list[idx] in key:
+                    new_key = "param_"+key.split("_")[1]
+                    new_plot_settings[new_key] = val
+            new_plot_settings["param_c"] = None
+            if idx == 3:
+                new_plot_settings["param_a"] = 0
+                new_plot_settings["param_b"] = 1
+                new_plot_settings["param_c"] = 2
+                new_plot_settings["is_3d"] = 2
+            plot_object.set_plot_settings(new_plot_settings)
+
+        if redraw:
+            self.redraw_plot()
+
+    def clear_plot(self):
+        pass
+
+    def get_default_plot_settings(self):
+        return self._default_plot_settings
+
+    def has_default_settings(self):
+
+        for plot_object in self._default_plots:
+            if len(plot_object.get_plot_settings()) > 0:
+                return True
+
+        return False
+
+    def modify_plot(self):
+        pass
+
+    def new_plot(self):
+        self.new_tab()
+        plot_object = PlotObject(parent=self, graphics_view=self._gvs[-1])
+        self._plot_objects.append(plot_object)  # Object and tab index encoded (i - 2?)
+        self.plot_settings(plot_object)
+        pass
+
+    def new_tab(self):
+        local_tab = QtWidgets.QWidget(parent=self._tabs, flags=self._tabs.windowFlags())
+
+        gl = QtWidgets.QGridLayout(local_tab)  # TODO: Send this to the PlotObject? -PW
+        gl.setContentsMargins(11, 11, 11, 11)
+        gl.setSpacing(6)
+
+        self._gvs.append(PlotWidget(local_tab))
+
+        gl.addWidget(self._gvs[-1])
+
+        self._tabs.addTab(local_tab, "Tab GV")
+        # To ge the index, we may be able to use: idx = self._tabs.indexOf(local_tab)
+
+    def plot_settings(self, plot_object):
+        self._plot_settings = PlotSettings(self, plot_object, debug=self._debug)
+        self._plot_settings.run()
+
+    def redraw_plot(self):
+        current_index = self._tabs.currentIndex()
+        if current_index == 0:
+            self.redraw_default_plots()
+        else:
+            plot_object = self._plot_objects[current_index - 1]
+            plot_object.clear()
+            plot_object.show()
+
+    def remove_dataset(self, dataset):
+        for plot_object in self._plot_objects:
+            plot_object.remove_dataset(dataset)
+
+        for default_plot_object in self._default_plots:
+            default_plot_object.remove_dataset(dataset)
+
+    def remove_plot(self):
+        # TODO: GUI for removing plots, it should find which tab/GV it's in -PW
+        # if dataset in self._gvs[gv_i].datasets():
+        #     self._gvs[gv_i].remove_dataset(dataset)
+        # else:
+        #     print("This dataset is not in the PlotObject!")
+        pass
+
+    def screen_size(self):
+        return self._screen_size
+
+    def redraw_default_plots(self):
+        for plot_object in self._default_plots:
+            plot_object.clear()
+            plot_object.show()
+
+    def default_plot_settings(self, redraw=False):
+        self._plot_settings = DefaultPlotSettings(self, redraw=redraw, debug=self._debug)
+        self._plot_settings.run()
 
 
 class PyParticleProcessor(object):
@@ -65,11 +373,11 @@ class PyParticleProcessor(object):
         self._app.setStyle('Fusion')
 
         self._debug = debug
-        self._colors = MyColors()
+        self._ci = 0  # A color index for datasets
         self._datafiles = []  # Container for holding the datasets
         self._selections = []  # Temporary dataset selections
-        self._last_path = ""  # TODO: Not working yet -PW
-        self._pm = None  # Used to keep the property manager in scope
+        self._last_path = ""  # Stores the last path from loading/saving files
+        self._children = []
 
         # --- Load the GUI from XML file and initialize connections --- #
         self._mainWindow = QtGui.QMainWindow()
@@ -77,14 +385,21 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.setupUi(self._mainWindow)
 
         # --- Get some widgets from the builder --- #
+        self._tabs = self._mainWindowGUI.tabWidget
+
         self._status_bar = self._mainWindowGUI.statusBar
+
         self._log_textbuffer = self._mainWindowGUI.textEdit_2
+
         self._treeview = self._mainWindowGUI.treeWidget
+
+        self._properties_select = self._mainWindowGUI.properties_combo
         self._properties_table = self._mainWindowGUI.properties_table
         self._properties_label = self._mainWindowGUI.properties_label
         self._properties_table.setHorizontalHeaderLabels(["Property", "Value"])
         self._properties_table.__setattr__("dfds", (None, None))  # Used to find the shown dataset
         self._properties_label.setText("Properties")
+
         self._menubar = self._mainWindowGUI.menuBar
         self._menubar.setNativeMenuBar(False)  # This is needed to make the menu bar actually appear -PW
 
@@ -97,6 +412,7 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
         self._properties_table.cellChanged.connect(self.callback_cell_changed)
+        self._properties_select.currentIndexChanged.connect(self.callback_properties_select)
         self._treeview.itemClicked.connect(self.treeview_clicked)
 
         # --- Resize the columns in the treeview --- #
@@ -104,9 +420,16 @@ class PyParticleProcessor(object):
             self._treeview.resizeColumnToContents(i)
 
         # --- Initial population of the properties table --- #
-        self._property_list = ["steps", "particles", "mass", "energy", "charge", "current"]
-        self._units_list = [None, None, "amu", "MeV", "e", "A"]
+        self._property_list = ["name", "steps", "particles", "mass", "energy", "charge", "current"]
+        self._units_list = [None, None, None, "amu", "MeV", "e", "A"]
         self._properties_table.setRowCount(len(self._property_list))
+
+        # --- Do some plot manager stuff --- #
+        # TODO
+        self._plot_manager = PlotManager(self)
+        self._mainWindowGUI.actionNew_Plot.triggered.connect(self._plot_manager.new_plot)
+        self._mainWindowGUI.actionModify_Plot.triggered.connect(self._plot_manager.modify_plot)
+        self._mainWindowGUI.actionRemove_Plot.triggered.connect(self._plot_manager.remove_plot)
 
         for idx, item in enumerate(self._property_list):
 
@@ -122,14 +445,16 @@ class PyParticleProcessor(object):
             v.setFlags(QtCore.Qt.NoItemFlags)
             self._properties_table.setItem(idx, 1, v)
 
-    def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
-
-        self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
-        top_level_item = self._treeview.topLevelItem(datafile_id)
-        this_item = top_level_item.child(dataset_id)
-        # this_item.setText(2, "{}".format(plot_settings["step"]))  # Change step value in the tree widget
-
-        return 0
+    # def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
+    #
+    #     self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
+    #     # top_level_item = self._treeview.topLevelItem(datafile_id)
+    #     # this_item = top_level_item.child(dataset_id)
+    #
+    #     if plot_settings["redraw_en"] == 2:
+    #         self.redraw_plots()
+    #
+    #     return 0
 
     def callback_about_program(self, menu_item):
         """
@@ -142,45 +467,14 @@ class PyParticleProcessor(object):
         return 0
 
     def callback_analyze(self):
-
+        # TODO: I'm just using this callback to test -PW
         print("Not implemented yet!")
 
-        return 0
-
-    def populate_properties_table(self, df_i, ds_i):
-
-        if ds_i is None:
-            # TODO: Datafile properties
-            print("Datafile properties are not implemented yet!")
-            return 1
-        else:
-            ds = self.find_dataset(df_i, ds_i)
-            self._properties_table.dfds = (df_i, ds_i)
-            self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
-            for idx, item in enumerate(self._property_list):
-                if ds.get_property(item) is not None:
-                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())
-                    if ds.is_native_property(item):
-                        v.setFlags(QtCore.Qt.ItemIsEnabled)
-                    else:
-                        v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-                    self._properties_table.setItem(idx, 1, v)
-                else:
-                    v = QtGui.QTableWidgetItem("Property not found")
-                    v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
-                    v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-                    self._properties_table.setItem(idx, 1, v)
+        self._plot_manager.new_plot()
+        # ds = self.get_selection(self._selections[0])
+        # self._plot_manager.create_plot(self.find_dataset(ds[0], ds[1]))
 
         return 0
-
-    def clear_properties_table(self):
-        self._properties_table.setCurrentItem(None)
-        self._properties_table.dfds = (None, None)
-        self._properties_label.setText("Properties")
-        for idx in range(len(self._property_list)):
-            v = QtGui.QTableWidgetItem("")
-            v.setFlags(QtCore.Qt.NoItemFlags)
-            self._properties_table.setItem(idx, 1, v)
 
     def callback_cell_changed(self):
         # Used for checking changed values in the property table
@@ -222,8 +516,6 @@ class PyParticleProcessor(object):
         :return: 
         """
 
-        # TODO: Sometimes there's a problem with deleting the full datafile item, I'm not sure what causes it -PW
-
         if self._debug:
             print("DEBUG: delete_ds_callback was called")
 
@@ -231,8 +523,6 @@ class PyParticleProcessor(object):
             msg = "You must select something to remove."
             print(msg)
             self.send_status(msg)
-
-        # TODO: Make this more efficient -PW
 
         redraw_flag = False
         df_indices = []
@@ -254,14 +544,25 @@ class PyParticleProcessor(object):
         self._selections = []
 
         # Remove the datasets first to avoid problems
-        for df_i, ds_i in ds_indices:
+        for df_i, ds_i in sorted(ds_indices, reverse=True):
+            i, count = 0, 0
+            while i < df_i:
+                count += self._datafiles[i].dataset_count() + 1
+                i += 1
+            self._properties_select.removeItem(count + ds_i + 1)
+            self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))
             self._datafiles[df_i].remove_dataset(ds_i)
 
         for item in ds_items:
             (item.parent() or root).removeChild(item)
 
         # Then remove the datafiles
-        for df_i in df_indices:
+        for df_i in sorted(df_indices, reverse=True):
+            i, count = 0, 0
+            while i < df_i:
+                count += self._datafiles[i].dataset_count() + 1
+                i += 1
+            self._properties_select.removeItem(count)
             del self._datafiles[df_i]
 
         for item in df_items:
@@ -314,10 +615,11 @@ class PyParticleProcessor(object):
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
-        if new_df.load() == 0:
+        if new_df.load(self._ci) == 0:
 
             self._datafiles.append(new_df)
             df_i = len(self._datafiles) - 1  # Load add, so it's the last id
+            self._ci += new_df.dataset_count()
 
             # Create the top level item for the file
             top_level_item = QtGui.QTreeWidgetItem(self._treeview)
@@ -329,6 +631,8 @@ class PyParticleProcessor(object):
             top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
             top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
 
+            self._properties_select.addItem("Datafile {}".format(df_i))
+
             # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
@@ -339,13 +643,20 @@ class PyParticleProcessor(object):
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
 
-                if number_of_datasets == 1:
-                    child_item.setCheckState(0, QtCore.Qt.Checked)
-                    self.open_property_manager(datafile_id=df_i,
-                                               dataset_id=ds_i,
-                                               debug=self._debug)
+                self._properties_select.addItem("Datafile {}, Dataset {}".format(df_i, ds_i))
 
-                    self._selections.append("{}-{}".format(df_i, ds_i))
+                if number_of_datasets == 1:
+                    ds = new_df.get_dataset(0)
+
+                    if not self._plot_manager.has_default_settings():
+                        self._plot_manager.default_plot_settings()
+
+                    # If you want the dataset to automatically be unselected
+                    child_item.setCheckState(0, QtCore.Qt.Unchecked)
+
+                    # If you want the dataset to automatically be selected
+                    # child_item.setCheckState(0, QtCore.Qt.Checked)
+                    # self._selections.append("{}-{}".format(df_i, ds_i))
 
             top_level_item.setExpanded(True)
 
@@ -374,10 +685,11 @@ class PyParticleProcessor(object):
 
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
-        if new_df.load() == 0:
+        if new_df.load(self._ci) == 0:
 
             self._datafiles = [new_df]
             df_i = 0  # Load new, so the id is zero
+            self._ci += new_df.dataset_count()
 
             self._treeview.clear()
 
@@ -391,6 +703,8 @@ class PyParticleProcessor(object):
             top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
             top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
 
+            self._properties_select.addItem("Datafile {}".format(df_i))
+
             # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
@@ -400,14 +714,19 @@ class PyParticleProcessor(object):
                 child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
                 self.update_tree_item(df_i, ds_i)
+                self._properties_select.addItem("Datafile {}, Dataset {}".format(df_i, ds_i))
 
                 if number_of_datasets == 1:
-                    child_item.setCheckState(0, QtCore.Qt.Checked)
-                    self.open_property_manager(datafile_id=df_i,
-                                               dataset_id=ds_i,
-                                               debug=self._debug)
+                    ds = new_df.get_dataset(0)
 
-                    self._selections.append("{}-{}".format(df_i, ds_i))
+                    self._plot_manager.default_plot_settings()
+
+                    # If you want the dataset to automatically be unselected
+                    child_item.setCheckState(0, QtCore.Qt.Unchecked)
+
+                    # If you want the dataset to automatically be selected
+                    # child_item.setCheckState(0, QtCore.Qt.Checked)
+                    # self._selections.append("{}-{}".format(df_i, ds_i))
 
             top_level_item.setExpanded(True)
 
@@ -448,9 +767,29 @@ class PyParticleProcessor(object):
             print(msg)
             self.send_status(msg)
 
-        df_i, ds_i = self.get_selection(self._selections[-1])
+        if self._tabs.currentIndex() == 0:
+            self._plot_manager.default_plot_settings(redraw=True)
 
-        self.open_property_manager(datafile_id=df_i, dataset_id=ds_i, debug=True)
+        # TODO: Plot settings for custom plots
+        return 0
+
+    def callback_properties_select(self, index):
+        txt = [item.rstrip(",") for item in self._properties_select.itemText(index).split()]
+
+        if len(txt) == 4:
+            df_i, ds_i = int(txt[1]), int(txt[3])
+            self.populate_properties_table(df_i, ds_i)
+        elif len(txt) == 2:
+            df_i, ds_i = int(txt[1]), None
+            self.populate_properties_table(df_i, ds_i)
+        elif index == -1:
+            # This happens when there are no more datasets (index is -1)
+            return 0
+
+        else:
+            # Something probably went wrong...
+            print("Something went wrong!")
+            return 1
 
         return 0
 
@@ -507,10 +846,23 @@ class PyParticleProcessor(object):
 
         return 0
 
+    def clear_properties_table(self):
+
+        self._properties_table.setCurrentItem(None)
+        self._properties_table.dfds = (None, None)
+        self._properties_label.setText("Properties")
+
+        for idx in range(len(self._property_list)):
+            v = QtGui.QTableWidgetItem("")
+            v.setFlags(QtCore.Qt.NoItemFlags)
+            self._properties_table.setItem(idx, 1, v)
+
+        return 0
+
     def find_dataset(self, datafile_id, dataset_id):
         return self._datafiles[datafile_id].get_dataset(dataset_id)
 
-    def get_filename(self, action='open'):
+    def get_filename(self, action="open"):
 
         first_flag1 = True
         filetypes_text = ""
@@ -592,159 +944,30 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def open_property_manager(self, datafile_id, dataset_id, debug=False):
-        self._pm = PlotPropertiesManager(self, datafile_id=datafile_id, dataset_id=dataset_id, debug=debug)
-        self._pm.run()
+    def populate_properties_table(self, df_i, ds_i):
+        self.clear_properties_table()
 
-        return 0
-
-    def redraw_plots(self):
-        """
-        (re)draw the plots that are checked
-        :return: 
-        """
-
-        if self._debug:
-            print("DEBUG: redraw_plots called")
-
-        self.clear_plots()
-
-        if len(self._selections) == 0:
-            msg = "Nothing is selected to plot!"
-            print(msg)
-            self.send_status(msg)
+        if ds_i is None:
+            # TODO: Datafile properties -PW
+            print("Datafile properties are not implemented yet!")
             return 1
-
-        # TODO: A better way to color the scatter plots
-        c_i = 0  # Just an index for coloring
-
-        for selection_string in sorted(self._selections):
-
-            df_i, ds_i = self.get_selection(selection_string)
-
-            if ds_i is None:  # Meaning that a datafile was selected, not a dataset -PW
-                msg = "You cannot plot a datafile, select a dataset within it."
-                print(msg)
-                self.send_status(msg)
-                return 1
-
-            dataset = self._datafiles[df_i].get_dataset(ds_i)
-            settings = dataset.get_plot_settings(translated=True)
-            top_level_item = self._treeview.topLevelItem(df_i)
-            this_item = top_level_item.child(ds_i)
-
-            try:
-                step = int(settings["step"])
-            except ValueError:
-                print("redraw_plots: Requested step is not an integer!")
-                return 1
-
-            try:
-                dataset.set_step_view(step)
-            except Exception as e:
-                print("redraw_plots: Exception happened when trying to set step view to: '{}'!".format(step))
-                print(e)
-
-            plot_settings = dataset.get_plot_settings(translated=True)
-
-            if self._debug:
-                print("DEBUG: Displaying Dataset#{}-{}".format(df_i, ds_i))
-
-            if plot_settings["tl_en"] | plot_settings["tr_en"] | \
-               plot_settings["bl_en"] | plot_settings["3d_en"] is False:
-                msg = "No plots for Dataset#{}-{} were enabled".format(df_i, ds_i)
-                print(msg)
-                self.send_status(msg)
-                return 1
-
-            # TOP LEFT PLOT:
-
-            if plot_settings["tl_en"]:
-                top_left_data = (plot_settings["tl_a"], plot_settings["tl_b"])
-                top_left_title = (top_left_data[0] + "-" + top_left_data[1]).upper()
-
-                tl_scatter = pg.ScatterPlotItem(x=dataset.get(top_left_data[0]),
-                                                y=dataset.get(top_left_data[1]),
-                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
-
-                self._mainWindowGUI.graphicsView_1.addItem(tl_scatter)
-                self._mainWindowGUI.graphicsView_1.setTitle(top_left_title)
-                self._mainWindowGUI.graphicsView_1.repaint()
-
-            # TOP RIGHT PLOT:
-
-            if plot_settings["tr_en"]:
-                top_right_data = (plot_settings["tr_a"], plot_settings["tr_b"])
-                top_right_title = (top_right_data[0] + "-" + top_right_data[1]).upper()
-
-                tr_scatter = pg.ScatterPlotItem(x=dataset.get(top_right_data[0]),
-                                                y=dataset.get(top_right_data[1]),
-                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
-
-                self._mainWindowGUI.graphicsView_2.addItem(tr_scatter)
-                self._mainWindowGUI.graphicsView_2.setTitle(top_right_title)
-                self._mainWindowGUI.graphicsView_2.repaint()
-
-            # BOTTOM LEFT PLOT:
-
-            if plot_settings["bl_en"]:
-                bottom_left_data = (plot_settings["bl_a"], plot_settings["bl_b"])
-                bottom_left_title = (bottom_left_data[0] + "-" + bottom_left_data[1]).upper()
-
-                bl_scatter = pg.ScatterPlotItem(x=dataset.get(bottom_left_data[0]),
-                                                y=dataset.get(bottom_left_data[1]),
-                                                pen=pg.mkPen(self._colors[c_i]), brush='b', size=1.0, pxMode=True)
-
-                self._mainWindowGUI.graphicsView_3.addItem(bl_scatter)
-                self._mainWindowGUI.graphicsView_3.setTitle(bottom_left_title)
-                self._mainWindowGUI.graphicsView_3.repaint()
-
-            # BOTTOM RIGHT (3D) PLOT:
-
-            # Only do a 3D display for data with more than one step and it's enabled
-            if dataset.get_nsteps() > 1 and plot_settings["3d_en"]:
-
-                _grid = True  # Always display the grids for now
-
-                for particle_id in range(dataset.get_npart()):
-                    particle, _c = dataset.get_particle(particle_id, get_color="random")
-                    pts = np.array([particle.get("x"), particle.get("y"), particle.get("z")]).T
-                    plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
-                                                   antialias=True)
-
-                    self._mainWindowGUI.graphicsView_4.addItem(plt)
-
-                if _grid:
-
-                    # TODO: Make the grid size dynamic -PW
-                    # TODO: The maximum and minimum values might be useful to get during import -PW
-
-                    gx = pg.opengl.GLGridItem()
-                    gx.rotate(90, 0, 1, 0)
-                    gx.translate(0.0, 0.0, 0.0)
-                    gx.setSize(x=0.2, y=0.2, z=0.2)
-                    gx.setSpacing(x=0.01, y=0.01, z=0.01)
-
-                    gy = pg.opengl.GLGridItem()
-                    gy.rotate(90, 1, 0, 0)
-                    gy.translate(0.0, 0.0, 0.0)
-                    gy.setSize(x=0.2, y=0.2, z=0.2)
-                    gy.setSpacing(x=0.01, y=0.01, z=0.01)
-
-                    gz = pg.opengl.GLGridItem()
-                    gz.translate(0.0, 0.0, 0.0)
-                    gz.setSize(x=0.2, y=0.2, z=1.0)
-                    gz.setSpacing(x=0.01, y=0.01, z=0.01)
-
-                    self._mainWindowGUI.graphicsView_4.addItem(gx)
-                    self._mainWindowGUI.graphicsView_4.addItem(gy)
-                    self._mainWindowGUI.graphicsView_4.addItem(gz)
-
-                self._mainWindowGUI.graphicsView_4.opts["distance"] = 3e-1  # Seems to be a good value for now
-
-            c_i += 1  # Increment the color index
-
-        self.send_status("Plotting complete!")
+        else:
+            ds = self.find_dataset(df_i, ds_i)
+            self._properties_table.dfds = (df_i, ds_i)
+            # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
+            for idx, item in enumerate(self._property_list):
+                if ds.get_property(item) is not None:
+                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())
+                    if ds.is_native_property(item):
+                        v.setFlags(QtCore.Qt.ItemIsEnabled)
+                    else:
+                        v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+                    self._properties_table.setItem(idx, 1, v)
+                else:
+                    v = QtGui.QTableWidgetItem("Property not found")
+                    v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
+                    v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+                    self._properties_table.setItem(idx, 1, v)
 
         return 0
 
@@ -779,6 +1002,9 @@ class PyParticleProcessor(object):
 
         return 0
 
+    def tabs(self):
+        return self._tabs
+
     def treeview_clicked(self, item, column):
 
         if self._debug:
@@ -797,21 +1023,21 @@ class PyParticleProcessor(object):
             if checkstate is True and selection_string not in self._selections:
                 self._selections.append(selection_string)
                 df_i, ds_i = self.get_selection(selection_string)
-                self.clear_properties_table()
-                self.populate_properties_table(df_i, ds_i)
-                ds = self.find_dataset(df_i, ds_i)
-                plot_settings = ds.get_plot_settings(translated=True)
-                if plot_settings["redraw_en"]:
-                    self.redraw_plots()
+
+                if ds_i is not None:  # If it is a dataset, plot
+                    self._plot_manager.add_to_current_plot(self.find_dataset(df_i, ds_i))
+                    if not self._plot_manager.has_default_settings():
+                        self._plot_manager.default_plot_settings()
+                    self._plot_manager.redraw_plot()
 
             elif checkstate is False and selection_string in self._selections:
+                df_i, ds_i = self.get_selection(selection_string)
                 self._selections.remove(selection_string)
-                self.clear_properties_table()
-                if len(self._selections) > 0:
-                    df_i, ds_i = self.get_selection(self._selections[-1])
-                    self.clear_properties_table()
-                    self.populate_properties_table(df_i, ds_i)
-                self.redraw_plots()  # TODO: Make this better, it shouldn't redraw if the unchecked set wasn't plotted
+
+                if ds_i is not None:
+                    self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))
+                    # TODO: Make this better, it shouldn't redraw if the unchecked set wasn't plotted
+                    self._plot_manager.redraw_plot()
 
         return 0
 
@@ -825,8 +1051,3 @@ class PyParticleProcessor(object):
         child_item.setText(2, "{}".format(dataset.get_ion().name()))
 
         child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
-#
-# if __name__ == "__main__":
-#
-#     ppp = PyParticleProcessor(debug=True)
-#     ppp.run()
