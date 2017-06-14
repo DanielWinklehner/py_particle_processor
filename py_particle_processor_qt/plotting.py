@@ -4,8 +4,6 @@ from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 import numpy as np
 
-# TODO: Debug prints are old
-
 
 class PlotObject(object):
 
@@ -17,13 +15,6 @@ class PlotObject(object):
         self._graphics_view = graphics_view
         self._plot_settings = {}
         self._datasets = []  # Data shown in the plot
-
-        # if len(axes) == 2:
-        #     self._is_3d = False
-        # elif len(axes) == 3:
-        #     self._is_3d = True
-        # else:
-        #     print("You can only select two or three axes to plot.")
 
     def add_dataset(self, dataset):
 
@@ -105,8 +96,6 @@ class PlotObject(object):
 
         if self._is_3d:
 
-            # TODO: 3D Plotting, this is from the previous redraw() fucntion
-
             for dataset in self._datasets:
 
                 # Only do a 3D display for data with more than one step and it's enabled
@@ -151,7 +140,6 @@ class PlotObject(object):
 
         else:
 
-            # TODO: We should make sure that the "axes" are in the dataset first -PW
             for dataset in self._datasets:
 
                 dataset.set_step_view(step)
@@ -180,18 +168,14 @@ class PlotManager(object):
         self._plot_objects = []
         self._debug = debug
         self._screen_size = parent.screen_size()
-        self._plot_settings = None
+        self._plot_settings_gui = None
         self._current_plot = None
         self._default_plots = [None, None, None, None]
         self._default_plot_settings = {}
         self._initialize_default_plots()
 
     def _initialize_default_plots(self):
-        # TODO: Better way to do this -PW
-        default_gv = (self._parent._mainWindowGUI.graphicsView_1,
-                      self._parent._mainWindowGUI.graphicsView_2,
-                      self._parent._mainWindowGUI.graphicsView_3,
-                      self._parent._mainWindowGUI.graphicsView_4)
+        default_gv = self._parent.get_default_graphics_views()
         self._default_plots = [PlotObject(self, gv) for gv in default_gv]
 
     def add_to_plot(self, dataset, plot_object):
@@ -234,6 +218,10 @@ class PlotManager(object):
     def clear_plot(self):
         pass
 
+    def default_plot_settings(self, redraw=False):
+        self._plot_settings_gui = DefaultPlotSettings(self, redraw=redraw, debug=self._debug)
+        self._plot_settings_gui.run()
+
     def get_default_plot_settings(self):
         return self._default_plot_settings
 
@@ -270,8 +258,8 @@ class PlotManager(object):
         # To ge the index, we may be able to use: idx = self._tabs.indexOf(local_tab)
 
     def plot_settings(self, plot_object):
-        self._plot_settings = PlotSettings(self, plot_object, debug=self._debug)
-        self._plot_settings.run()
+        self._plot_settings_gui = PlotSettings(self, plot_object, debug=self._debug)
+        self._plot_settings_gui.run()
 
     def redraw_plot(self):
         current_index = self._tabs.currentIndex()
@@ -305,10 +293,6 @@ class PlotManager(object):
             plot_object.clear()
             plot_object.show()
 
-    def default_plot_settings(self, redraw=False):
-        self._plot_settings = DefaultPlotSettings(self, redraw=redraw, debug=self._debug)
-        self._plot_settings.run()
-
 
 class DefaultPlotSettings(object):
 
@@ -323,7 +307,7 @@ class DefaultPlotSettings(object):
         self._defaultPlotSettingsWindowGUI.setupUi(self._defaultPlotSettingsWindow)
 
         if len(self._settings) > 0:
-            self.populate_settings()
+            self.populate()
         else:
             self.apply_settings()
 
@@ -333,9 +317,6 @@ class DefaultPlotSettings(object):
         self._defaultPlotSettingsWindowGUI.dataset_label.setText("Default Plot Settings")
 
     def apply_settings(self):
-
-        if self._debug:
-            print("DEBUG: retrieve_settings called")
 
         # Step:
         self._settings["step"] = self._defaultPlotSettingsWindowGUI.step_input.value()
@@ -363,9 +344,6 @@ class DefaultPlotSettings(object):
 
     def callback_apply(self):
 
-        if self._debug:
-            print("DEBUG: callback_apply called")
-
         self.apply_settings()
         self._parent.apply_default_plot_settings(self.get_settings(), redraw=self._redraw)
         self._defaultPlotSettingsWindow.close()
@@ -373,9 +351,6 @@ class DefaultPlotSettings(object):
         return 0
 
     def callback_cancel(self):
-
-        if self._debug:
-            print("DEBUG: callback_cancel called")
 
         self._defaultPlotSettingsWindow.close()
 
@@ -389,10 +364,7 @@ class DefaultPlotSettings(object):
     def get_settings(self):
         return self._settings
 
-    def populate_settings(self):
-
-        if self._debug:
-            print("DEBUG: populate_settings called")
+    def populate(self):
 
         # Step:
         self._defaultPlotSettingsWindowGUI.step_input.setValue(self._settings["step"])
@@ -420,9 +392,6 @@ class DefaultPlotSettings(object):
 
     def run(self):
 
-        if self._debug:
-            print("DEBUG: Running PlotPropertiesManager")
-
         # --- Calculate the positions to center the window --- #
         screen_size = self._parent.screen_size()
         _x = 0.5 * (screen_size.width() - self._defaultPlotSettingsWindow.width())
@@ -446,7 +415,7 @@ class PlotSettings(object):
         self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
 
         if len(self._settings) > 0:
-            self.populate_settings()
+            self.populate()
         else:
             self.apply_settings()
 
@@ -473,9 +442,6 @@ class PlotSettings(object):
 
     def callback_apply(self):
 
-        if self._debug:
-            print("DEBUG: callback_apply called")
-
         self.apply_settings()
         self._plot_object.set_plot_settings(plot_settings=self.get_settings())
         self._plot_object.show()
@@ -484,9 +450,6 @@ class PlotSettings(object):
         return 0
 
     def callback_cancel(self):
-
-        if self._debug:
-            print("DEBUG: callback_cancel called")
 
         self._plotSettingsWindow.close()
 
@@ -500,10 +463,7 @@ class PlotSettings(object):
     def get_settings(self):
         return self._settings
 
-    def populate_settings(self):
-
-        if self._debug:
-            print("DEBUG: populate_settings called")
+    def populate(self):
 
         # Step:
         self._plotSettingsWindowGUI.step_input.setValue(self._settings["step"])
@@ -512,9 +472,9 @@ class PlotSettings(object):
         self._plotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
         # Parameters:
-        self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_combo_a"])
-        self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_combo_b"])
-        self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_combo_c"])
+        self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
+        self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
+        self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
 
         # Redraw:
         self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])

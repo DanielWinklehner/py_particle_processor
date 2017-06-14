@@ -43,7 +43,7 @@ class DataFile(object):
         return [i for i, v in enumerate(self._selected) if v is True]
 
     def load(self, c_i):
-        # TODO: How to get each dataset from one file? For now, it's just one. -PW
+
         number_of_datasets = 1
         for i in range(number_of_datasets):
             _ds = Dataset(debug=self._debug)
@@ -120,7 +120,6 @@ class PyParticleProcessor(object):
         self._properties_table.setRowCount(len(self._property_list))
 
         # --- Do some plot manager stuff --- #
-        # TODO
         self._plot_manager = PlotManager(self)
         self._mainWindowGUI.actionNew_Plot.triggered.connect(self._plot_manager.new_plot)
         self._mainWindowGUI.actionModify_Plot.triggered.connect(self._plot_manager.modify_plot)
@@ -140,17 +139,6 @@ class PyParticleProcessor(object):
             v.setFlags(QtCore.Qt.NoItemFlags)
             self._properties_table.setItem(idx, 1, v)
 
-    # def apply_plot_settings(self, datafile_id, dataset_id, plot_settings):
-    #
-    #     self._datafiles[datafile_id].get_dataset(dataset_id).set_plot_settings(plot_settings)
-    #     # top_level_item = self._treeview.topLevelItem(datafile_id)
-    #     # this_item = top_level_item.child(dataset_id)
-    #
-    #     if plot_settings["redraw_en"] == 2:
-    #         self.redraw_plots()
-    #
-    #     return 0
-
     def callback_about_program(self, menu_item):
         """
         :param menu_item:
@@ -161,11 +149,12 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def callback_analyze(self):
-        # TODO: I'm just using this callback to test -PW
+    @staticmethod
+    def callback_analyze():
+
         print("Not implemented yet!")
 
-        self._plot_manager.new_plot()
+        # self._plot_manager.new_plot()
         # ds = self.get_selection(self._selections[0])
         # self._plot_manager.create_plot(self.find_dataset(ds[0], ds[1]))
 
@@ -328,7 +317,6 @@ class PyParticleProcessor(object):
 
             self._properties_select.addItem("Datafile {}".format(df_i))
 
-            # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
             for ds_i in range(number_of_datasets):
@@ -400,7 +388,6 @@ class PyParticleProcessor(object):
 
             self._properties_select.addItem("Datafile {}".format(df_i))
 
-            # TODO: Find the number of datasets somehow -PW
             number_of_datasets = 1
 
             for ds_i in range(number_of_datasets):
@@ -473,10 +460,14 @@ class PyParticleProcessor(object):
 
         if len(txt) == 4:
             df_i, ds_i = int(txt[1]), int(txt[3])
-            self.populate_properties_table(df_i, ds_i)
+            dataset = self.find_dataset(df_i, ds_i)
+            self._properties_table.dfds = (df_i, ds_i)
+            self.populate_properties_table(dataset)
         elif len(txt) == 2:
             df_i, ds_i = int(txt[1]), None
-            self.populate_properties_table(df_i, ds_i)
+            datafile = self._datafiles[df_i]
+            self._properties_table.dfds = (df_i, None)
+            self.populate_properties_table(datafile)
         elif index == -1:
             # This happens when there are no more datasets (index is -1)
             return 0
@@ -512,8 +503,6 @@ class PyParticleProcessor(object):
             print("DEBUG: cell_toggled was called with widget {} and mode {}".format(widget, mode))
 
         model[path][0] = not model[path][0]
-
-        # TODO: Update some draw variable -DW
 
         return 0
 
@@ -556,6 +545,15 @@ class PyParticleProcessor(object):
 
     def find_dataset(self, datafile_id, dataset_id):
         return self._datafiles[datafile_id].get_dataset(dataset_id)
+
+    def get_default_graphics_views(self):
+
+        default_gv = (self._mainWindowGUI.graphicsView_1,
+                      self._mainWindowGUI.graphicsView_2,
+                      self._mainWindowGUI.graphicsView_3,
+                      self._mainWindowGUI.graphicsView_4)
+
+        return default_gv
 
     def get_filename(self, action="open"):
 
@@ -639,16 +637,17 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def populate_properties_table(self, df_i, ds_i):
+    def populate_properties_table(self, object):
         self.clear_properties_table()
 
-        if ds_i is None:
+        if type(object) is DataFile:
+            df = object
             # TODO: Datafile properties -PW
             print("Datafile properties are not implemented yet!")
             return 1
-        else:
-            ds = self.find_dataset(df_i, ds_i)
-            self._properties_table.dfds = (df_i, ds_i)
+        elif type(object) is Dataset:
+            ds = object
+            # self._properties_table.dfds = (df_i, ds_i)
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
             for idx, item in enumerate(self._property_list):
                 if ds.get_property(item) is not None:
@@ -731,18 +730,17 @@ class PyParticleProcessor(object):
 
                 if ds_i is not None:
                     self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))
-                    # TODO: Make this better, it shouldn't redraw if the unchecked set wasn't plotted
                     self._plot_manager.redraw_plot()
 
         return 0
 
-    def update_tree_item(self, df_i, ds_i):
+    def update_tree_item(self, datafile_id, dataset_id):
 
-        dataset = self._datafiles[df_i].get_dataset(ds_i)
-        child_item = self._treeview.topLevelItem(df_i).child(ds_i)
+        dataset = self._datafiles[datafile_id].get_dataset(dataset_id)
+        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)
 
         child_item.setText(0, "")
-        child_item.setText(1, "{}-{}".format(df_i, ds_i))
+        child_item.setText(1, "{}-{}".format(datafile_id, dataset_id))
         child_item.setText(2, "{}".format(dataset.get_ion().name()))
 
         child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
