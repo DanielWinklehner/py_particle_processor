@@ -65,14 +65,14 @@ class PyParticleProcessor(object):
         Initialize the GUI
         """
         self._app = QtGui.QApplication([])  # Initialize the application
-        self._app.setStyle('Fusion')
+        self._app.setStyle('Fusion')  # Apply a GUI style
 
         self._debug = debug
         self._ci = 0  # A color index for datasets
         self._datafiles = []  # Container for holding the datasets
         self._selections = []  # Temporary dataset selections
         self._last_path = ""  # Stores the last path from loading/saving files
-        self._children = []
+        self._children = []  # List of child objects TODO: Deprecated?
 
         # --- Load the GUI from XML file and initialize connections --- #
         self._mainWindow = QtGui.QMainWindow()
@@ -106,7 +106,7 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
-        self._properties_table.cellChanged.connect(self.callback_cell_changed)
+        self._properties_table.cellChanged.connect(self.callback_table_item_changed)
         self._properties_select.currentIndexChanged.connect(self.callback_properties_select)
         self._treeview.itemClicked.connect(self.treeview_clicked)
 
@@ -125,19 +125,20 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionModify_Plot.triggered.connect(self._plot_manager.modify_plot)
         self._mainWindowGUI.actionRemove_Plot.triggered.connect(self._plot_manager.remove_plot)
 
+        # Go through each property in the list
         for idx, item in enumerate(self._property_list):
 
-            p_string = item.title()
+            p_string = item.title()  # Create a string from the property name
             if self._units_list[idx] is not None:  # Add the unit if it's not none
-                p_string += " (" + self._units_list[idx] + ")"
+                p_string += " (" + self._units_list[idx] + ")"  # Add the unit to the property string
 
-            p = QtGui.QTableWidgetItem(p_string)
-            p.setFlags(QtCore.Qt.NoItemFlags)
-            self._properties_table.setItem(idx, 0, p)
+            p = QtGui.QTableWidgetItem(p_string)  # Create a new item with the property string
+            p.setFlags(QtCore.Qt.NoItemFlags)  # Disable all item flags
+            self._properties_table.setItem(idx, 0, p)  # Set the item to the corresponding row (first column)
 
-            v = QtGui.QTableWidgetItem("")
-            v.setFlags(QtCore.Qt.NoItemFlags)
-            self._properties_table.setItem(idx, 1, v)
+            v = QtGui.QTableWidgetItem("")  # Create a blank item to be a value placeholder
+            v.setFlags(QtCore.Qt.NoItemFlags)  # Disable all item flags
+            self._properties_table.setItem(idx, 1, v)  # Set the item to the corresponding row (second column)
 
     def callback_about_program(self, menu_item):
         """
@@ -160,37 +161,36 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def callback_cell_changed(self):
-        # Used for checking changed values in the property table
-        v = self._properties_table.currentItem()
+    def callback_table_item_changed(self):
+        v = self._properties_table.currentItem()  # Find the current item that was changed
 
-        # Filter out some of the other calls
+        # Filter out some meaningless things that could call this function
         if v is None or v.text == "":
             return 0
 
-        df_i, ds_i = self._properties_table.dfds
+        df_i, ds_i = self._properties_table.dfds  # Get the datafile and dataset ids from the table
 
+        # Filter out the condition that the program is just starting and populating the table
         if (df_i, ds_i) == (None, None):
             return 0
 
-        ds = self.find_dataset(df_i, ds_i)
-        idx = self._properties_table.currentRow()
+        # TODO: This might trigger a problem if a datafile is selected
+        ds = self.find_dataset(df_i, ds_i)  # Get the corresponding dataset
+        idx = self._properties_table.currentRow()  # Find the row of the value that was changed
 
         try:
-            value = float(v.text())
-            v.setText(str(value))  # Just a precaution
+            value = float(v.text())  # Try to convert the input to a float
+            v.setText(str(value))  # Reset the text of the table item to what was just set
 
-            # We also need to update the particle's properties
-            ds.set_property(self._property_list[idx], value)
+            ds.set_property(self._property_list[idx], value)  # Set the property of the dataset
 
-            # Only change the text color if it worked
-            v.setForeground(QtGui.QBrush(QtGui.QColor("#FFFFFF")))
+            v.setForeground(QtGui.QBrush(QtGui.QColor("#FFFFFF")))  # If all this worked, then set the text color
 
             return 0
 
         except ValueError:
-            ds.set_property(self._property_list[idx], None)
-            v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
+            # ds.set_property(self._property_list[idx], None)  # Set the dataset property to None
+            v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))  # Set the text color to red
 
             return 1
 
@@ -203,57 +203,55 @@ class PyParticleProcessor(object):
         if self._debug:
             print("DEBUG: delete_ds_callback was called")
 
-        if len(self._selections) < 1:
+        if len(self._selections) < 1:  # Check to make sure something was selected to remove
             msg = "You must select something to remove."
             print(msg)
             self.send_status(msg)
 
-        redraw_flag = False
-        df_indices = []
+        redraw_flag = False  # Set a redraw flag to False
+        df_indices = []  # Initialize lists of items and indices for both datafiles and datasets
         df_items = []
         ds_indices = []
         ds_items = []
-        root = self._treeview.invisibleRootItem()
+        root = self._treeview.invisibleRootItem()  # Find the root item
 
-        for selection in self._selections:
-            redraw_flag = True
-            df_i, ds_i = self.get_selection(selection)
-            if ds_i is None:
-                df_indices.append(df_i)
-                df_items.append(self._treeview.topLevelItem(df_i))
-            else:
-                ds_indices.append((df_i, ds_i))
-                ds_items.append(self._treeview.topLevelItem(df_i).child(ds_i))
+        for selection in self._selections:  # Go through each selection to delete
+            redraw_flag = True  # If there was at least one selection, we will redraw
+            df_i, ds_i = self.get_selection(selection)  # Get the datafile and dataset indices
+            if ds_i is None:  # If there is no dataset index, then it's a datafile
+                df_indices.append(df_i)  # Add the index to the list to remove
+                df_items.append(self._treeview.topLevelItem(df_i))  # Add the item to the list to remove
+            else:  # The other condition is that it is a dataset
+                ds_indices.append((df_i, ds_i))  # Add both the datafile and dataset indices as a doublet
+                ds_items.append(self._treeview.topLevelItem(df_i).child(ds_i))  # Add the dataset item to the list
 
-        self._selections = []
+        self._selections = []  # Clear the selections list
 
-        # Remove the datasets first to avoid problems
-        for df_i, ds_i in sorted(ds_indices, reverse=True):
-            i, count = 0, 0
-            while i < df_i:
+        # Remove the datasets first to avoid issues
+        for df_i, ds_i in sorted(ds_indices, reverse=True):  # Sort backwards to prevent indexing errors
+            count = 0
+            for i in range(df_i):  # Find the number of preceding items in the property selection list
                 count += self._datafiles[i].dataset_count() + 1
-                i += 1
-            self._properties_select.removeItem(count + ds_i + 1)
-            self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))
-            self._datafiles[df_i].remove_dataset(ds_i)
+            self._properties_select.removeItem(count + ds_i + 1)  # Remove the dataset from the selection list
+            self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataset from the plots
+            self._datafiles[df_i].remove_dataset(ds_i)  # Remove the dataset from the datafile
 
-        for item in ds_items:
+        for item in ds_items:  # Remove the dataset from its parent or root item
             (item.parent() or root).removeChild(item)
 
-        # Then remove the datafiles
-        for df_i in sorted(df_indices, reverse=True):
-            i, count = 0, 0
-            while i < df_i:
+        # Remove the datafiles
+        for df_i in sorted(df_indices, reverse=True):  # Sort backwards to prevent indexing errors
+            count = 0
+            for i in range(df_i):  # Find the number of preceding items in the property selection list
                 count += self._datafiles[i].dataset_count() + 1
-                i += 1
-            self._properties_select.removeItem(count)
-            del self._datafiles[df_i]
+            self._properties_select.removeItem(count)  # Remove the datafile form the selection list
+            del self._datafiles[df_i]  # Delete the datafile from the datafiles list
 
-        for item in df_items:
+        for item in df_items:  # Remove the datafile from its parent or root item
             (item.parent() or root).removeChild(item)
 
-        if redraw_flag:
-            self.clear_plots()
+        if redraw_flag:  # If the redraw flag was set, redraw the plot
+            self._plot_manager.redraw_plot()
 
         return 0
 
@@ -262,20 +260,22 @@ class PyParticleProcessor(object):
         if self._debug:
             "DEBUG: export_callback called"
 
-        if len(self._selections) == 0:
+        # TODO: This should make sure we're selecting a dataset vs. datafile
+        if len(self._selections) == 0:  # Check to see if no datasets were selected
             msg = "No dataset was selected!"
             print(msg)
             self.send_status(msg)
             return 1
-        elif len(self._selections) > 1:
+        elif len(self._selections) > 1:  # Check to see if too many datasets were selected
             msg = "You cannot select more than one dataset!"
             print(msg)
             self.send_status(msg)
             return 1
 
-        filename, driver = self.get_filename(action='save')
-        df_i, ds_i = self.get_selection(self._selections[0])
+        filename, driver = self.get_filename(action='save')  # Get a filename and driver
+        df_i, ds_i = self.get_selection(self._selections[0])  # Get the indices from the selection
 
+        # TODO: Modernize this statement
         self._datafiles[df_i].get_dataset(ds_i).export_to_file(filename=filename, driver=driver)
 
         print("Export complete!")
@@ -290,49 +290,51 @@ class PyParticleProcessor(object):
         if self._debug:
             print("DEBUG: load_add_ds_callback was called with widget {}".format(widget))
 
-        filename, driver = self.get_filename(action="open")
+        filename, driver = self.get_filename(action="open")  # Get a filename and driver
 
-        if filename is None:
+        if filename is None:  # Return if no file was selected
             return 1
 
         self.send_status("Loading file with driver: {}".format(driver))
 
+        # Create a new datafile with the supplied parameters
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
-        if new_df.load(self._ci) == 0:
+        if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
-            self._datafiles.append(new_df)
-            df_i = len(self._datafiles) - 1  # Load add, so it's the last id
-            self._ci += new_df.dataset_count()
+            self._datafiles.append(new_df)  # Add the datafile to the list
+            df_i = len(self._datafiles) - 1  # Since it's the latest datafile, it's the last index
+            self._ci += new_df.dataset_count()  # TODO: Is this right?
 
-            # Create the top level item for the file
-            top_level_item = QtGui.QTreeWidgetItem(self._treeview)
+            top_level_item = QtGui.QTreeWidgetItem(self._treeview)  # Create the top level item for the datafile
 
-            top_level_item.setText(0, "")  # Selection
-            top_level_item.setText(1, "{}".format(df_i))
-            top_level_item.setText(2, self._datafiles[-1].filename())  # Name
+            top_level_item.setText(0, "")  # Selection box
+            top_level_item.setText(1, "{}".format(df_i))  # Display the id of the datafile
+            top_level_item.setText(2, self._datafiles[-1].filename())  # Display the filename
 
-            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
-            top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
+            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)  # Set item flags
+            top_level_item.setCheckState(0, QtCore.Qt.Unchecked)  # Set the datafile to be unchecked by default
 
-            self._properties_select.addItem("Datafile {}".format(df_i))
+            self._properties_select.addItem("Datafile {}".format(df_i))  # Add an item to the property selection
 
-            number_of_datasets = 1
+            number_of_datasets = 1  # For now, assume there exists only one dataset
 
-            for ds_i in range(number_of_datasets):
+            for ds_i in range(number_of_datasets):  # Loop through each dataset
 
-                child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
-                child_item.setCheckState(0, QtCore.Qt.Unchecked)
-                self.update_tree_item(df_i, ds_i)
+                child_item = QtGui.QTreeWidgetItem(top_level_item)  # Create a child item for the dataset
+                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)  # Set item flags
+                child_item.setCheckState(0, QtCore.Qt.Unchecked)  # Set the dataset to be unchecked by default
+                self.update_tree_item(df_i, ds_i)  # Update the tree item with those indices
 
+                # Add an item to the property selection
                 self._properties_select.addItem("Datafile {}, Dataset {}".format(df_i, ds_i))
 
+                # Conditional to check if there's only one dataset
                 if number_of_datasets == 1:
-                    ds = new_df.get_dataset(0)
+                    ds = new_df.get_dataset(0)  # Get the first dataset from the datafile
 
-                    if not self._plot_manager.has_default_settings():
-                        self._plot_manager.default_plot_settings()
+                    if not self._plot_manager.has_default_plot_settings():  # If the default plot settings aren't set...
+                        self._plot_manager.default_plot_settings()  # Open the default plot settings GUI
 
                     # If you want the dataset to automatically be unselected
                     child_item.setCheckState(0, QtCore.Qt.Unchecked)
@@ -341,9 +343,9 @@ class PyParticleProcessor(object):
                     # child_item.setCheckState(0, QtCore.Qt.Checked)
                     # self._selections.append("{}-{}".format(df_i, ds_i))
 
-            top_level_item.setExpanded(True)
+            top_level_item.setExpanded(True)  # Expand the tree widget
 
-            for i in range(self._treeview.columnCount()):
+            for i in range(self._treeview.columnCount()):  # Resize the columns of the tree
                 self._treeview.resizeColumnToContents(i)
 
             self.send_status("File loaded successfully!")
@@ -357,51 +359,53 @@ class PyParticleProcessor(object):
         """
 
         if self._debug:
-            print("DEBUG: load_new_ds_callback was called")
+            print("DEBUG: load_new_ds_callback was called.")
 
-        filename, driver = self.get_filename(action='open')
+        filename, driver = self.get_filename(action="open")  # Get a filename and driver
 
-        if filename is None:
+        if filename is None:  # Return if no file was selected
             return 1
 
-        self.send_status("Loading file with driver: {}...".format(driver))
+        self.send_status("Loading file with driver: {}".format(driver))
 
+        # Create a new datafile with the supplied parameters
         new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
 
-        if new_df.load(self._ci) == 0:
+        if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
-            self._datafiles = [new_df]
-            df_i = 0  # Load new, so the id is zero
-            self._ci += new_df.dataset_count()
+            self._datafiles = [new_df]  # Set the list of datafiles to just this one
+            df_i = 0  # Since it's the only datafile, it's the zeroth index
+            self._ci += new_df.dataset_count()  # TODO: Is this right?
 
-            self._treeview.clear()
+            top_level_item = QtGui.QTreeWidgetItem(self._treeview)  # Create the top level item for the datafile
 
-            # Create the top level item for the file
-            top_level_item = QtGui.QTreeWidgetItem(self._treeview)
+            top_level_item.setText(0, "")  # Selection box
+            top_level_item.setText(1, "{}".format(df_i))  # Display the id of the datafile
+            top_level_item.setText(2, self._datafiles[-1].filename())  # Display the filename
 
-            top_level_item.setText(0, "")  # Selection
-            top_level_item.setText(1, "{}".format(df_i))
-            top_level_item.setText(2, self._datafiles[0].filename())  # Name
+            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)  # Set item flags
+            top_level_item.setCheckState(0, QtCore.Qt.Unchecked)  # Set the datafile to be unchecked by default
 
-            top_level_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
-            top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
+            self._properties_select.addItem("Datafile {}".format(df_i))  # Add an item to the property selection
 
-            self._properties_select.addItem("Datafile {}".format(df_i))
+            number_of_datasets = 1  # For now, assume there exists only one dataset
 
-            number_of_datasets = 1
+            for ds_i in range(number_of_datasets):  # Loop through each dataset
 
-            for ds_i in range(number_of_datasets):
+                child_item = QtGui.QTreeWidgetItem(top_level_item)  # Create a child item for the dataset
+                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)  # Set item flags
+                child_item.setCheckState(0, QtCore.Qt.Unchecked)  # Set the dataset to be unchecked by default
+                self.update_tree_item(df_i, ds_i)  # Update the tree item with those indices
 
-                child_item = QtGui.QTreeWidgetItem(top_level_item)
-                child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
-                child_item.setCheckState(0, QtCore.Qt.Unchecked)
-                self.update_tree_item(df_i, ds_i)
+                # Add an item to the property selection
                 self._properties_select.addItem("Datafile {}, Dataset {}".format(df_i, ds_i))
 
+                # Conditional to check if there's only one dataset
                 if number_of_datasets == 1:
-                    ds = new_df.get_dataset(0)
+                    ds = new_df.get_dataset(0)  # Get the first dataset from the datafile
 
-                    self._plot_manager.default_plot_settings()
+                    if not self._plot_manager.has_default_plot_settings():  # If the default plot settings aren't set...
+                        self._plot_manager.default_plot_settings()  # Open the default plot settings GUI
 
                     # If you want the dataset to automatically be unselected
                     child_item.setCheckState(0, QtCore.Qt.Unchecked)
@@ -410,9 +414,9 @@ class PyParticleProcessor(object):
                     # child_item.setCheckState(0, QtCore.Qt.Checked)
                     # self._selections.append("{}-{}".format(df_i, ds_i))
 
-            top_level_item.setExpanded(True)
+            top_level_item.setExpanded(True)  # Expand the tree widget
 
-            for i in range(self._treeview.columnCount()):
+            for i in range(self._treeview.columnCount()):  # Resize the columns of the tree
                 self._treeview.resizeColumnToContents(i)
 
             self.send_status("File loaded successfully!")
@@ -435,49 +439,50 @@ class PyParticleProcessor(object):
         return 0
 
     def callback_plot(self):
+        # Called when the "Plot..." Button is pressed
 
         if self._debug:
             "DEBUG: callback_plot called"
 
-        if len(self._selections) == 0:
-            msg = "No dataset was selected!"
-            print(msg)
-            self.send_status(msg)
-            return 1
-        elif len(self._selections) > 1:
-            msg = "Showing properties of the last selected dataset."
-            print(msg)
-            self.send_status(msg)
+        if self._tabs.currentIndex() == 0:  # Check to see if it's the default plot tab
+            self._plot_manager.default_plot_settings(redraw=True)  # Open the default plot settings
+        elif self._tabs.currentIndex() > 1:  # Check to see if it's after the text tab
+            self._plot_manager.plot_settings()  # Open the plot settings
 
-        if self._tabs.currentIndex() == 0:
-            self._plot_manager.default_plot_settings(redraw=True)
-
-        # TODO: Plot settings for custom plots
         return 0
 
     def callback_properties_select(self, index):
+
+        # Get the text from the selected item in the properties selection
         txt = [item.rstrip(",") for item in self._properties_select.itemText(index).split()]
 
-        if len(txt) == 4:
-            df_i, ds_i = int(txt[1]), int(txt[3])
-            dataset = self.find_dataset(df_i, ds_i)
-            self._properties_table.dfds = (df_i, ds_i)
-            self.populate_properties_table(dataset)
-        elif len(txt) == 2:
-            df_i, ds_i = int(txt[1]), None
-            datafile = self._datafiles[df_i]
-            self._properties_table.dfds = (df_i, None)
-            self.populate_properties_table(datafile)
-        elif index == -1:
-            # This happens when there are no more datasets (index is -1)
+        # Format: "Datafile {}, Dataset {}" or "Datafile {}"
+        if len(txt) == 4:  # If there are 4 items, it's a dataset
+            df_i, ds_i = int(txt[1]), int(txt[3]) # Get the corresponding indices
+            dataset = self.find_dataset(df_i, ds_i)  # Get the dataset
+            self._properties_table.dfds = (df_i, ds_i)  # Set the table's dfds property
+            self.populate_properties_table(dataset)  # Populate the properties table with the dataset info
+
             return 0
 
-        else:
-            # Something probably went wrong...
-            print("Something went wrong!")
-            return 1
+        elif len(txt) == 2:  # If there are two items, it's a datafile
+            df_i, ds_i = int(txt[1]), None  # Get the datafile index
+            datafile = self._datafiles[df_i]  # Get the datafile object
+            self._properties_table.dfds = (df_i, None)  # Set the table's dfds
+            self.populate_properties_table(datafile)  # Populate the properties table with datafile info
 
-        return 0
+            return 0
+
+        elif index == -1:  # Check if the index is -1
+            # This happens when there are no more datasets
+
+            return 0
+
+        else:  # This can only happen when something on the backend isn't working right
+
+            print("Something went wrong!")
+
+            return 1
 
     def callback_statusbar_changed(self, statusbar, context_id, text):
         """
@@ -488,9 +493,9 @@ class PyParticleProcessor(object):
         if self._debug:
             print("Called statusbar_changed callback for statusbar {}, ID = {}".format(statusbar, context_id))
 
-        _timestr = time.strftime("%d %b, %Y, %H:%M:%S: ", time.localtime())
+        _timestr = time.strftime("%d %b, %Y, %H:%M:%S: ", time.localtime())  # Get a string for the date and time
 
-        self._log_textbuffer.insert(self._log_textbuffer.get_end_iter(), _timestr + text + "\n")
+        self._log_textbuffer.insert(self._log_textbuffer.get_end_iter(), _timestr + text + "\n")  # Send to the buffer
 
         return 0
 
@@ -506,48 +511,24 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def clear_plots(self):
-        """
-        Clear the plot windows
-        :return: 
-        """
-
-        if self._debug:
-            print("DEBUG: clear_plots called")
-
-        for data_item in self._mainWindowGUI.graphicsView_1.listDataItems():
-            self._mainWindowGUI.graphicsView_1.removeItem(data_item)
-        for data_item in self._mainWindowGUI.graphicsView_2.listDataItems():
-            self._mainWindowGUI.graphicsView_2.removeItem(data_item)
-        for data_item in self._mainWindowGUI.graphicsView_3.listDataItems():
-            self._mainWindowGUI.graphicsView_3.removeItem(data_item)
-
-        # Using the removeItem(data_item) method does not work properly, this is a workaround -PW
-        self._mainWindowGUI.graphicsView_4.items = []
-        self._mainWindowGUI.graphicsView_4.update()
-
-        self.send_status("Views cleared!")
-
-        return 0
-
     def clear_properties_table(self):
 
-        self._properties_table.setCurrentItem(None)
-        self._properties_table.dfds = (None, None)
-        self._properties_label.setText("Properties")
+        self._properties_table.setCurrentItem(None)  # Set the current item to None
+        self._properties_table.dfds = (None, None)  # Clear the dfds property
+        self._properties_label.setText("Properties")  # Set the label
 
-        for idx in range(len(self._property_list)):
-            v = QtGui.QTableWidgetItem("")
-            v.setFlags(QtCore.Qt.NoItemFlags)
-            self._properties_table.setItem(idx, 1, v)
+        for idx in range(len(self._property_list)): # Loop through each row
+            v = QtGui.QTableWidgetItem("")  # Create a placeholder item
+            v.setFlags(QtCore.Qt.NoItemFlags)  # Disable item flags
+            self._properties_table.setItem(idx, 1, v)  # Add the item to the table
 
         return 0
 
     def find_dataset(self, datafile_id, dataset_id):
-        return self._datafiles[datafile_id].get_dataset(dataset_id)
+        return self._datafiles[datafile_id].get_dataset(dataset_id)  # Return the dataset object given the indices
 
     def get_default_graphics_views(self):
-
+        # Return a tuple of the graphics views from the default plots tab
         default_gv = (self._mainWindowGUI.graphicsView_1,
                       self._mainWindowGUI.graphicsView_2,
                       self._mainWindowGUI.graphicsView_3,
@@ -557,6 +538,7 @@ class PyParticleProcessor(object):
 
     def get_filename(self, action="open"):
 
+        # Format the filetypes selection
         first_flag1 = True
         filetypes_text = ""
         for key in sorted(driver_mapping.keys()):
@@ -575,39 +557,38 @@ class PyParticleProcessor(object):
                         filetypes_text += " *{}".format(extension)
                 filetypes_text += ")"
 
+        # Create the file dialog options
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
-        if action == "open":
+        if action == "open":  # For opening a file
             filename, filetype = QFileDialog.getOpenFileName(self._mainWindow,
                                                              caption="Import dataset...",
                                                              directory=self._last_path,
                                                              filter=filetypes_text,
                                                              options=options)
-        elif action == "save":
+        elif action == "save":  # For saving a file
             filename, filetype = QFileDialog.getSaveFileName(self._mainWindow,
                                                              caption="Export dataset...",
                                                              directory=self._last_path,
                                                              filter=filetypes_text,
                                                              options=options)
         else:
-            filename, filetype = "", None
-
-        if filename == "":
             return None, None
 
-        driver = filetype.split("Files")[0].strip()
+        driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
 
         return filename, driver
 
     @staticmethod
     def get_selection(selection_string):
-        if "-" in selection_string:  # "#(item)"
+
+        if "-" in selection_string: # If there's a hyphen, it's a dataset
             indices = selection_string.split("-")
-            datafile_index, dataset_index = int(indices[0]), int(indices[1])
+            datafile_index, dataset_index = int(indices[0]), int(indices[1])  # Convert the strings to ints
             return datafile_index, dataset_index
-        else:
-            datafile_index = int(selection_string)
+        else:  # Or else it's a datafile
+            datafile_index = int(selection_string)  # Convert the string into an int
             return datafile_index, None
 
     def initialize(self):
@@ -632,36 +613,34 @@ class PyParticleProcessor(object):
         if self._debug:
             print("DEBUG: Called main_quit")
 
-        self._mainWindow.destroy()
-        qApp.quit()
+        self._mainWindow.destroy()  # Close the window
+        qApp.quit()  # Quit the application
 
         return 0
 
     def populate_properties_table(self, object):
         self.clear_properties_table()
 
-        if type(object) is DataFile:
+        if type(object) is DataFile:  # If the object passed is a datafile...
             df = object
-            # TODO: Datafile properties -PW
             print("Datafile properties are not implemented yet!")
             return 1
-        elif type(object) is Dataset:
+        elif type(object) is Dataset:  # If the object passed is a dataset...
             ds = object
             # self._properties_table.dfds = (df_i, ds_i)
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
-            for idx, item in enumerate(self._property_list):
-                if ds.get_property(item) is not None:
-                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())
-                    if ds.is_native_property(item):
+            for idx, item in enumerate(self._property_list):  # Enumerate through the properties list
+                if ds.get_property(item) is not None:  # If the property is not None
+                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())  # Set the value item
+                    if ds.is_native_property(item):  # If it's a native property to the set, it's not editable
                         v.setFlags(QtCore.Qt.ItemIsEnabled)
-                    else:
+                    else: # If it is not a native property, it may be edited
                         v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-                    self._properties_table.setItem(idx, 1, v)
-                else:
-                    v = QtGui.QTableWidgetItem("Property not found")
-                    v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))
-                    v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-                    self._properties_table.setItem(idx, 1, v)
+                else:  # IF the property wasn't found
+                    v = QtGui.QTableWidgetItem("Property not found")  # Create a placeholder
+                    v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))  # Set the text color to red
+                    v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)  # Make it editable
+                self._properties_table.setItem(idx, 1, v)  # Put the item in the table
 
         return 0
 
@@ -685,10 +664,10 @@ class PyParticleProcessor(object):
         return 0
 
     def screen_size(self):
-        return self._app.desktop().availableGeometry()
+        return self._app.desktop().availableGeometry()  # Return the size of the screen
 
     def send_status(self, message):
-        if type(message) is str:
+        if type(message) is str:  # Make sure we're sending a string to the status bar
             self._status_bar.showMessage(message)
         else:
             print("Status message is not a string!")
@@ -697,50 +676,50 @@ class PyParticleProcessor(object):
         return 0
 
     def tabs(self):
-        return self._tabs
+        return self._tabs  # Return the tab widget
 
     def treeview_clicked(self, item, column):
 
         if self._debug:
             print("treeview_data_changed callback called with item {} and column {}".format(item, column))
 
-        if column == 0:
-            checkstate = (item.checkState(0) == QtCore.Qt.Checked)
-            index = self._treeview.indexFromItem(item).row()
+        if column == 0:  # If the first column was clicked
+            checkstate = (item.checkState(0) == QtCore.Qt.Checked)  # Get a True or False value for selection
+            index = self._treeview.indexFromItem(item).row()  # Get the row index
 
-            if item.parent() is None:
+            if item.parent() is None:  # If the item does not have a parent, it's a datafile
                 selection_string = "{}".format(index)
-            else:
+            else:  # If it does, it's a dataset
                 parent_index = self._treeview.indexFromItem(item.parent()).row()
                 selection_string = "{}-{}".format(parent_index, index)
 
             if checkstate is True and selection_string not in self._selections:
-                self._selections.append(selection_string)
-                df_i, ds_i = self.get_selection(selection_string)
+                self._selections.append(selection_string)  # Add the string to the selections
+                df_i, ds_i = self.get_selection(selection_string)  # Get the indices from the string
 
-                if ds_i is not None:  # If it is a dataset, plot
-                    self._plot_manager.add_to_current_plot(self.find_dataset(df_i, ds_i))
-                    if not self._plot_manager.has_default_settings():
-                        self._plot_manager.default_plot_settings()
-                    self._plot_manager.redraw_plot()
+                if ds_i is not None:  # If it is a dataset...
+                    self._plot_manager.add_to_current_plot(self.find_dataset(df_i, ds_i))  # Add to plot
+                    if not self._plot_manager.has_default_plot_settings():  # Check for default plot settings
+                        self._plot_manager.default_plot_settings()  # Open the default plot settings
+                    self._plot_manager.redraw_plot()  # Redraw the plot
 
             elif checkstate is False and selection_string in self._selections:
-                df_i, ds_i = self.get_selection(selection_string)
-                self._selections.remove(selection_string)
+                df_i, ds_i = self.get_selection(selection_string)  # Get the indices from the string
+                self._selections.remove(selection_string) # Remove the string from the selections
 
-                if ds_i is not None:
-                    self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))
-                    self._plot_manager.redraw_plot()
+                if ds_i is not None:  # If it is a dataset...
+                    self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataet
+                    self._plot_manager.redraw_plot()  # Redraw the plot
 
         return 0
 
     def update_tree_item(self, datafile_id, dataset_id):
 
-        dataset = self._datafiles[datafile_id].get_dataset(dataset_id)
-        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)
+        dataset = self._datafiles[datafile_id].get_dataset(dataset_id)  # Get the dataset object from the indices
+        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)  # Create a child item
 
-        child_item.setText(0, "")
-        child_item.setText(1, "{}-{}".format(datafile_id, dataset_id))
-        child_item.setText(2, "{}".format(dataset.get_ion().name()))
+        child_item.setText(0, "")  # Selection box
+        child_item.setText(1, "{}-{}".format(datafile_id, dataset_id))  # Set the object id
+        child_item.setText(2, "{}".format(dataset.get_ion().name()))  # Set the dataset name (for now, the ion name)
 
-        child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)  # Set item flags
