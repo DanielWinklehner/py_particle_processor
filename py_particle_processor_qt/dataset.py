@@ -49,7 +49,7 @@ class ImportExportDriver(object):
 
 class Dataset(object):
 
-    def __init__(self, debug=False):
+    def __init__(self, indices, debug=False):
         self._draw = False
         self._selected = False
 
@@ -59,6 +59,7 @@ class Dataset(object):
         self._debug = debug
         self._data = None
         self._color = (0.0, 0.0, 0.0)
+        self._indices = indices
 
         self._properties = {"name": None,
                             "ion": None,
@@ -215,6 +216,9 @@ class Dataset(object):
             return self._properties["ion"].q()
         else:
             return None
+
+    def indices(self):
+        return self._indices
 
     def load_from_file(self, filename, driver=None):
         """

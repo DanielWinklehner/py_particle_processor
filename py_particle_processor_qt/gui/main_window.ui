@@ -370,7 +370,6 @@ color: rgb(255, 255, 255);</string>
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuPlot">
     <property name="title">
@@ -487,11 +486,6 @@ color: rgb(255, 255, 255);</string>
    </property>
    <property name="toolTip">
     <string>Analyze</string>
-   </property>
-  </action>
-  <action name="actionTest">
-   <property name="text">
-    <string>Test</string>
    </property>
   </action>
   <action name="actionNew_Plot">
