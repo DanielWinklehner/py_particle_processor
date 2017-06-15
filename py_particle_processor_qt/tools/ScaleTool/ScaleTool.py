@@ -47,6 +47,17 @@ class ScaleTool(AbstractTool):
     def close_gui(self):
         self._scaleToolWindow.close()
 
+    def callback_apply(self):
+        if self.apply() == 0:
+            self.close_gui()
+            return self._output
+
+    def callback_cancel(self):
+        self.close_gui()
+        return self._output  # Should be None
+
+    # --- Tool-related Functions --- #
+
     def check_scaling_factor(self):
 
         scale_txt = self._scaleToolGUI.scaling_factor.text()
@@ -65,17 +76,6 @@ class ScaleTool(AbstractTool):
             # Set the text color to red
             self._scaleToolGUI.scaling_factor.setStyleSheet("color: #FF0000")
             return None
-
-    def callback_apply(self):
-        if self.apply() == 0:
-            self.close_gui()
-            return self._output
-
-    def callback_cancel(self):
-        self.close_gui()
-        return self._output  # Should be None
-
-    # --- Tool-related Functions --- #
 
     def apply(self):
         

@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 # TODO: WIP
 
@@ -8,7 +8,11 @@ class AbstractTool(ABC):
         self._name = None
         self._need_selection = False
         self._num_selections = 1
-        self._selections = selections  #
+        self._selections = selections
+
+    @abstractmethod
+    def run(self):
+        pass
 
     def name(self):
         return self._name
