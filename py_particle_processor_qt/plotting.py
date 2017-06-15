@@ -235,6 +235,12 @@ class PlotManager(object):
     def get_default_plot_settings(self):
         return self._default_plot_settings  # Returns the default plot settings (untranslated)
 
+    def get_plot_object(self, tab_index):
+        if tab_index == 0:  # In the case of the default plots tab
+            return self._default_plots  # It returns the list of all the objects
+        else:
+            return [self._plot_objects[tab_index - 2]]  # Return it in a list
+
     def has_default_plot_settings(self):
         # Returns True if the settings for the default plots have been set previously
         for plot_object in self._default_plots:
@@ -306,6 +312,9 @@ class PlotManager(object):
 
     def screen_size(self):
         return self._screen_size  # Return the size of the screen
+
+
+# TODO: DefaultPlotSettings and PlotSettings can probably be made into one object with a "default" flag
 
 
 class DefaultPlotSettings(object):

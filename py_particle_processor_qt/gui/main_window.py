@@ -217,6 +217,8 @@ class Ui_MainWindow(object):
         self.actionModify_Plot.setObjectName("actionModify_Plot")
         self.actionRemove_Plot = QtWidgets.QAction(MainWindow)
         self.actionRemove_Plot.setObjectName("actionRemove_Plot")
+        self.actionRedraw = QtWidgets.QAction(MainWindow)
+        self.actionRedraw.setObjectName("actionRedraw")
         self.mainToolBar.addAction(self.actionImport_New)
         self.mainToolBar.addAction(self.actionImport_Add)
         self.mainToolBar.addAction(self.actionRemove)
@@ -231,6 +233,8 @@ class Ui_MainWindow(object):
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.actionQuit)
         self.menuHelp.addAction(self.actionAbout)
+        self.menuPlot.addAction(self.actionRedraw)
+        self.menuPlot.addSeparator()
         self.menuPlot.addAction(self.actionNew_Plot)
         self.menuPlot.addAction(self.actionModify_Plot)
         self.menuPlot.addAction(self.actionRemove_Plot)
@@ -278,6 +282,7 @@ class Ui_MainWindow(object):
         self.actionNew_Plot.setText(_translate("MainWindow", "New Plot..."))
         self.actionModify_Plot.setText(_translate("MainWindow", "Modify Current Plot"))
         self.actionRemove_Plot.setText(_translate("MainWindow", "Remove Current Plot"))
+        self.actionRedraw.setText(_translate("MainWindow", "Redraw"))
 
 from pyqtgraph import PlotWidget
 from pyqtgraph.opengl import GLViewWidget

@@ -375,6 +375,8 @@ color: rgb(255, 255, 255);</string>
     <property name="title">
      <string>Plot</string>
     </property>
+    <addaction name="actionRedraw"/>
+    <addaction name="separator"/>
     <addaction name="actionNew_Plot"/>
     <addaction name="actionModify_Plot"/>
     <addaction name="actionRemove_Plot"/>
@@ -501,6 +503,11 @@ color: rgb(255, 255, 255);</string>
   <action name="actionRemove_Plot">
    <property name="text">
     <string>Remove Current Plot</string>
+   </property>
+  </action>
+  <action name="actionRedraw">
+   <property name="text">
+    <string>Redraw</string>
    </property>
   </action>
  </widget>

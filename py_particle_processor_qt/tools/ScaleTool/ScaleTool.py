@@ -5,11 +5,10 @@ from PyQt5 import QtGui
 
 class ScaleTool(AbstractTool):
 
-    def __init__(self, parent, selection):
-        super(ScaleTool, self).__init__(selection)
+    def __init__(self, parent):
+        super(ScaleTool, self).__init__()
         self._name = "Scale Tool"
         self._parent = parent
-        self._selection = selection
 
         # --- Initialize the GUI --- #
         self._scaleToolWindow = QtGui.QMainWindow()
@@ -22,9 +21,9 @@ class ScaleTool(AbstractTool):
 
         self._has_gui = True
         self._need_selection = True
-        self._num_selections = 1
-
-        self._output = None
+        self._min_selections = 1
+        self._max_selections = None
+        self._redraw_on_exit = True
 
     # --- Required Functions --- #
     
@@ -49,12 +48,11 @@ class ScaleTool(AbstractTool):
 
     def callback_apply(self):
         if self.apply() == 0:
+            self._redraw()
             self.close_gui()
-            return self._output
 
     def callback_cancel(self):
         self.close_gui()
-        return self._output  # Should be None
 
     # --- Tool-related Functions --- #
 
@@ -80,7 +78,6 @@ class ScaleTool(AbstractTool):
     def apply(self):
         
         prop_txt = self._scaleToolGUI.parameter_combo.currentText()
-        print(prop_txt)
         scaling_factor = self.check_scaling_factor()
 
         if scaling_factor is None:
@@ -88,15 +85,14 @@ class ScaleTool(AbstractTool):
         
         # Let's do this on a text basis instead of inferring from the indices
         properties = [t.rstrip(",").lower() for t in prop_txt.split(" ") if "(" not in t]
-        dataset = self._selection[0]
-        datasource = dataset.get_datasource()
-        nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
 
-        for step in range(nsteps):
-            for part in range(npart):
-                for prop in properties:
-                    datasource["Step#{}".format(step)][prop][part] *= scaling_factor
+        for dataset in self._selections:
+            datasource = dataset.get_datasource()
+            nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
 
-        self._output = dataset
+            for step in range(nsteps):
+                for part in range(npart):
+                    for prop in properties:
+                        datasource["Step#{}".format(step)][prop][part] *= scaling_factor
 
         return 0
