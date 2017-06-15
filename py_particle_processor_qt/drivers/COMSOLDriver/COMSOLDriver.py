@@ -1,6 +1,6 @@
 from ..arraywrapper import ArrayWrapper
 from ..abstractdriver import AbstractDriver
-from dans_pymodules import IonSpecies
+from dans_pymodules import IonSpecies, clight
 import numpy as np
 
 
@@ -28,7 +28,7 @@ class COMSOLDriver(AbstractDriver):
             data = {}
 
             # TODO: Need a better way to find the mass and ion species -PW
-            ion_mass_mev = IonSpecies("proton", 1.0).mass_mev()
+            ion = IonSpecies("H2_1+", 1.0)
 
             with open(filename, 'rb') as infile:
 
@@ -68,7 +68,8 @@ class COMSOLDriver(AbstractDriver):
 
                     values = raw_values[(1 + step * _n):(_n + step * _n)]
 
-                    gamma = values[6] / ion_mass_mev + 1.0
+                    # TODO: The energy input is the total energy, not MeV/amu.
+                    gamma = values[6] / ion.mass_mev() + 1.0
                     beta = np.sqrt(1.0 - np.power(gamma, -2.0))
                     v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
@@ -89,9 +90,9 @@ class COMSOLDriver(AbstractDriver):
                         step_str = "Step#{}".format(step)
                         values = raw_values[(1 + step * _n):(_n + step * _n)]
 
-                        gamma = values[6] / ion_mass_mev + 1.0
+                        gamma = values[6] / ion.mass_mev() + 1.0
                         beta = np.sqrt(1.0 - gamma ** (-2.0))
-                        v_tot = np.sqrt(values[3]**2.0 + values[4]**2.0 + values[5]**2)
+                        v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
                         values[0:3] = [r for r in values[0:3]]
                         values[3:6] = [beta * gamma * v / v_tot for v in values[3:6]]  # Convert velocity to momentum
@@ -100,7 +101,7 @@ class COMSOLDriver(AbstractDriver):
                             datasource[step_str][key][_id - 1] = values[idx]
 
                 data["datasource"] = datasource
-                data["ion"] = IonSpecies("proton", datasource["Step#0"]["E"][0])
+                data["ion"] = IonSpecies("H2_1+", datasource["Step#0"]["E"][0]) # TODO
                 data["mass"] = data["ion"].a()
                 data["charge"] = data["ion"].q()
                 data["steps"] = len(datasource.keys())
@@ -120,19 +121,29 @@ class COMSOLDriver(AbstractDriver):
 
         return None
 
-    def export_data(self, data):
-
-        # TODO
+    def export_data(self, dataset, filename):
 
         if self._debug:
             print("Exporting data for program: {}".format(self._program_name))
 
-        print("Export not yet implemented :(")
+        datasource = dataset.get_datasource()
+        nsteps = dataset.get_nsteps()
+        npart = dataset.get_npart()
 
-        return data
+        with open(filename + ".txt", "w") as outfile:
+            for i in range(npart):
+                outstring = ""
+                for step in range(nsteps):
+                    _px = datasource.get("Step#{}".format(step)).get("px")[i]
+                    _py = datasource.get("Step#{}".format(step)).get("py")[i]
+                    _pz = datasource.get("Step#{}".format(step)).get("pz")[i]
 
+                    _vx, _vy, _vz = (clight * _px / np.sqrt(_px ** 2.0 + 1.0),
+                                     clight * _py / np.sqrt(_py ** 2.0 + 1.0),
+                                     clight * _pz / np.sqrt(_pz ** 2.0 + 1.0))
 
-if __name__ == '__main__':
-    fn = "/home/philip/work/COMSOL/test_data_set.txt"
-    A = COMSOLDriver(debug=True).import_data(fn)
-    print(A["ion"])
+                    outstring += "{} {} {} {} {} {} ".format(datasource.get("Step#{}".format(step)).get("x")[i],
+                                                             datasource.get("Step#{}".format(step)).get("y")[i],
+                                                             datasource.get("Step#{}".format(step)).get("z")[i],
+                                                             _vx, _vy, _vz)
+                outfile.write(outstring + "\n")
