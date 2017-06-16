@@ -1,6 +1,7 @@
 from py_particle_processor_qt.dataset import *
 from py_particle_processor_qt.gui.main_window import *
 from py_particle_processor_qt.plotting import *
+from py_particle_processor_qt.tools import *
 from PyQt5.QtWidgets import qApp, QFileDialog
 # from dans_pymodules import MyColors
 import time
@@ -11,20 +12,19 @@ various simulation codes and exporting them for various other simulation codes.
 """
 
 
-# Initializ
-
 class DataFile(object):
     """
     This object will contain a list of datasets and some attributes for easier handling.
     """
-    __slots__ = ("_filename", "_driver", "_debug", "_datasets", "_selected")
+    __slots__ = ("_filename", "_driver", "_debug", "_datasets", "_selected", "_index")
 
-    def __init__(self, filename, driver, debug=False):
+    def __init__(self, filename, driver, index, debug=False):
         self._filename = filename
         self._driver = driver
         self._debug = debug
         self._datasets = []
         self._selected = []  # Probably temporary
+        self._index = index
 
     def dataset_count(self):
         return len(self._datasets)
@@ -38,10 +38,13 @@ class DataFile(object):
     def get_selected(self):
         return [i for i, v in enumerate(self._selected) if v is True]
 
+    def index(self):
+        return self._index
+
     def load(self, c_i):
         number_of_datasets = 1
         for i in range(number_of_datasets):
-            _ds = Dataset(debug=self._debug)
+            _ds = Dataset(indices=(self._index, i), debug=self._debug)
             _ds.load_from_file(filename=self._filename, driver=self._driver)
             _ds.assign_color(c_i)
             c_i += 1
@@ -51,6 +54,9 @@ class DataFile(object):
     def remove_dataset(self, index):
         del self._datasets[index]
         return 0
+
+    def set_dataset(self, index, dataset):
+        self._datasets[index] = dataset
 
 
 class PyParticleProcessor(object):
@@ -66,7 +72,6 @@ class PyParticleProcessor(object):
         self._datafiles = []  # Container for holding the datasets
         self._selections = []  # Temporary dataset selections
         self._last_path = ""  # Stores the last path from loading/saving files
-        self._children = []  # List of child objects TODO: Deprecated?
 
         # --- Load the GUI from XML file and initialize connections --- #
         self._mainWindow = QtGui.QMainWindow()
@@ -75,12 +80,14 @@ class PyParticleProcessor(object):
 
         # --- Get some widgets from the builder --- #
         self._tabs = self._mainWindowGUI.tabWidget
+        self._tabs.currentChanged.connect(self.callback_tab_change)
 
         self._status_bar = self._mainWindowGUI.statusBar
 
         self._log_textbuffer = self._mainWindowGUI.textEdit_2
 
         self._treeview = self._mainWindowGUI.treeWidget
+        self._treeview.itemClicked.connect(self.treeview_clicked)
 
         self._properties_select = self._mainWindowGUI.properties_combo
         self._properties_table = self._mainWindowGUI.properties_table
@@ -102,7 +109,17 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
         self._properties_table.cellChanged.connect(self.callback_table_item_changed)
         self._properties_select.currentIndexChanged.connect(self.callback_properties_select)
-        self._treeview.itemClicked.connect(self.treeview_clicked)
+
+        # --- Populate the Tools Menu --- #
+        self._tools_menu = self._mainWindowGUI.menuTools
+        self._current_tool = None
+        for tool_name, tool_object in sorted(tool_mapping.items()):
+            action = QtWidgets.QAction(self._mainWindow)
+            action.setText(tool_object[0])
+            action.setObjectName(tool_name)
+            # noinspection PyUnresolvedReferences
+            action.triggered.connect(self.callback_tool_action)
+            self._tools_menu.addAction(action)
 
         # --- Resize the columns in the treeview --- #
         for i in range(self._treeview.columnCount()):
@@ -115,6 +132,7 @@ class PyParticleProcessor(object):
 
         # --- Do some plot manager stuff --- #
         self._plot_manager = PlotManager(self)
+        self._mainWindowGUI.actionRedraw.triggered.connect(self._plot_manager.redraw_plot)
         self._mainWindowGUI.actionNew_Plot.triggered.connect(self._plot_manager.new_plot)
         self._mainWindowGUI.actionModify_Plot.triggered.connect(self._plot_manager.modify_plot)
         self._mainWindowGUI.actionRemove_Plot.triggered.connect(self._plot_manager.remove_plot)
@@ -297,7 +315,7 @@ class PyParticleProcessor(object):
         self.send_status("Loading file with driver: {}".format(driver))
 
         # Create a new datafile with the supplied parameters
-        new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
+        new_df = DataFile(filename=filename, driver=driver, index=len(self._datafiles), debug=self._debug)
 
         if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
@@ -368,7 +386,7 @@ class PyParticleProcessor(object):
         self.send_status("Loading file with driver: {}".format(driver))
 
         # Create a new datafile with the supplied parameters
-        new_df = DataFile(filename=filename, driver=driver, debug=self._debug)
+        new_df = DataFile(filename=filename, driver=driver, index=0, debug=self._debug)
 
         if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
@@ -420,21 +438,6 @@ class PyParticleProcessor(object):
 
             self.send_status("File loaded successfully!")
 
-        return 0
-
-    def callback_notebook_page_changed(self, notebook, page, page_num):
-        """
-        Callback for when user switches to a different notebook page in the main notebook.
-        :param notebook: a pointer to the gtk notebook object
-        :param page: a pointer to the top level child of the page
-        :param page_num: page number starting at 0
-        :return:
-        """
-
-        if self._debug:
-            print("DEBUG: Notebook {} changed page to {} (page_num = {})".format(notebook,
-                                                                                 page,
-                                                                                 page_num))
         return 0
 
     def callback_plot(self):
@@ -498,17 +501,45 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def cell_toggled(self, widget, path, model, mode):
-        """
-        Callback function for toggling one of the checkboxes in the species
-        TreeView. Updates the View and refreshes the plots...
-        """
-        if self._debug:
-            print("DEBUG: cell_toggled was called with widget {} and mode {}".format(widget, mode))
+    def callback_tab_change(self):
 
-        model[path][0] = not model[path][0]
+        current_index = self._tabs.currentIndex()
+        current_plot_objects = self._plot_manager.get_plot_object(current_index)
+        redraw = False
+
+        for plot_object in current_plot_objects:
+            for selection_string in self._selections:
+                df_i, ds_i = self.get_selection(selection_string)
+                dataset = self.find_dataset(df_i, ds_i)
+                if dataset not in plot_object.datasets():
+                    plot_object.add_dataset(dataset)
+                    redraw = True
+
+        if redraw:
+            self._plot_manager.redraw_plot()
 
         return 0
+
+    def callback_tool_action(self):
+
+        sender = self._mainWindow.sender()
+        name = sender.objectName()
+        datasets = []
+
+        for selection_string in self._selections:
+            df_i, ds_i = self.get_selection(selection_string)
+            datasets.append(self.find_dataset(df_i, ds_i))
+
+        tool_object = tool_mapping[name][1]
+
+        self._current_tool = tool_object(parent=self)
+        self._current_tool.set_selections(datasets)
+
+        if self._current_tool.redraw_on_exit():
+            self._current_tool.set_plot_manager(self._plot_manager)
+
+        if self._current_tool.check_requirements() == 0:
+            self._current_tool.open_gui()
 
     def clear_properties_table(self):
 
