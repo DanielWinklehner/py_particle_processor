@@ -59,6 +59,21 @@ class ParticleFile(object):
         self._datasets[index] = dataset
 
 
+class FieldFile(object):
+
+    def __init__(self):
+        pass
+
+    def filename(self):
+        pass
+
+    def load(self):
+        pass
+
+    def save(self):
+        pass
+
+
 class PyParticleProcessor(object):
 
     def __init__(self, debug=False):
@@ -492,7 +507,7 @@ class PyParticleProcessor(object):
 
         _timestr = time.strftime("%d %b, %Y, %H:%M:%S: ", time.localtime())  # Get a string for the date and time
 
-        self._log_textbuffer.insert(self._log_textbuffer.get_end_iter(), _timestr + text + "\n")  # Send to the buffer
+        # self._log_textbuffer.insert(self._log_textbuffer.get_end_iter(), _timestr + text + "\n")  # Send to the buffer
 
         return 0
 
@@ -737,7 +752,7 @@ class PyParticleProcessor(object):
                 self._selections.remove(selection_string)  # Remove the string from the selections
 
                 if ds_i is not None:  # If it is a dataset...
-                    self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataet
+                    self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataset
                     self._plot_manager.redraw_plot()  # Redraw the plot
 
         return 0

@@ -245,7 +245,7 @@ color: rgb(255, 255, 255);</string>
          <string notr="true">background-color: rgb(0, 0, 0);</string>
         </property>
         <attribute name="title">
-         <string>Tab 1</string>
+         <string>Default Plots</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="0" column="0">
@@ -483,7 +483,7 @@ color: rgb(255, 255, 255);</string>
   </action>
   <action name="actionModify_Plot">
    <property name="text">
-    <string>Modify Current Plot</string>
+    <string>Modify Current Plot...</string>
    </property>
   </action>
   <action name="actionRemove_Plot">

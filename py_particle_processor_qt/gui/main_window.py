@@ -244,7 +244,7 @@ class Ui_MainWindow(object):
         self.treeWidget.headerItem().setText(1, _translate("MainWindow", "ID"))
         self.treeWidget.headerItem().setText(2, _translate("MainWindow", "Name"))
         self.properties_label.setText(_translate("MainWindow", "Properties:"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Default Plots"))
         self.menu_File.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
@@ -268,7 +268,7 @@ class Ui_MainWindow(object):
         self.actionAnalyze.setText(_translate("MainWindow", "Analyze"))
         self.actionAnalyze.setToolTip(_translate("MainWindow", "Analyze"))
         self.actionNew_Plot.setText(_translate("MainWindow", "New Plot..."))
-        self.actionModify_Plot.setText(_translate("MainWindow", "Modify Current Plot"))
+        self.actionModify_Plot.setText(_translate("MainWindow", "Modify Current Plot..."))
         self.actionRemove_Plot.setText(_translate("MainWindow", "Remove Current Plot"))
         self.actionRedraw.setText(_translate("MainWindow", "Redraw"))
 
