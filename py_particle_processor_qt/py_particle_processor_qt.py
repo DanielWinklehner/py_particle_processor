@@ -60,6 +60,7 @@ class DataFile(object):
 
 
 class PyParticleProcessor(object):
+
     def __init__(self, debug=False):
         """
         Initialize the GUI
@@ -86,8 +87,8 @@ class PyParticleProcessor(object):
 
         self._log_textbuffer = self._mainWindowGUI.textEdit_2
 
-        self._treeview = self._mainWindowGUI.treeWidget
-        self._treeview.itemClicked.connect(self.treeview_clicked)
+        self._treewidget = self._mainWindowGUI.treeWidget
+        self._treewidget.itemClicked.connect(self.treewidget_clicked)
 
         self._properties_select = self._mainWindowGUI.properties_combo
         self._properties_table = self._mainWindowGUI.properties_table
@@ -121,9 +122,9 @@ class PyParticleProcessor(object):
             action.triggered.connect(self.callback_tool_action)
             self._tools_menu.addAction(action)
 
-        # --- Resize the columns in the treeview --- #
-        for i in range(self._treeview.columnCount()):
-            self._treeview.resizeColumnToContents(i)
+        # --- Resize the columns in the treewidget --- #
+        for i in range(self._treewidget.columnCount()):
+            self._treewidget.resizeColumnToContents(i)
 
         # --- Initial population of the properties table --- #
         self._property_list = ["name", "steps", "particles", "mass", "energy", "charge", "current"]
@@ -141,7 +142,7 @@ class PyParticleProcessor(object):
         for idx, item in enumerate(self._property_list):
 
             p_string = item.title()  # Create a string from the property name
-            if self._units_list[idx] is not None:  # Add the unit if it's not none
+            if self._units_list[idx] is not None:  # Check if the unit is not None
                 p_string += " (" + self._units_list[idx] + ")"  # Add the unit to the property string
 
             p = QtGui.QTableWidgetItem(p_string)  # Create a new item with the property string
@@ -225,17 +226,17 @@ class PyParticleProcessor(object):
         df_items = []
         ds_indices = []
         ds_items = []
-        root = self._treeview.invisibleRootItem()  # Find the root item
+        root = self._treewidget.invisibleRootItem()  # Find the root item
 
         for selection in self._selections:  # Go through each selection to delete
             redraw_flag = True  # If there was at least one selection, we will redraw
             df_i, ds_i = self.get_selection(selection)  # Get the datafile and dataset indices
             if ds_i is None:  # If there is no dataset index, then it's a datafile
                 df_indices.append(df_i)  # Add the index to the list to remove
-                df_items.append(self._treeview.topLevelItem(df_i))  # Add the item to the list to remove
+                df_items.append(self._treewidget.topLevelItem(df_i))  # Add the item to the list to remove
             else:  # The other condition is that it is a dataset
                 ds_indices.append((df_i, ds_i))  # Add both the datafile and dataset indices as a doublet
-                ds_items.append(self._treeview.topLevelItem(df_i).child(ds_i))  # Add the dataset item to the list
+                ds_items.append(self._treewidget.topLevelItem(df_i).child(ds_i))  # Add the dataset item to the list
 
         self._selections = []  # Clear the selections list
 
@@ -323,7 +324,7 @@ class PyParticleProcessor(object):
             df_i = len(self._datafiles) - 1  # Since it's the latest datafile, it's the last index
             self._ci += new_df.dataset_count()  # TODO: Is this right?
 
-            top_level_item = QtGui.QTreeWidgetItem(self._treeview)  # Create the top level item for the datafile
+            top_level_item = QtGui.QTreeWidgetItem(self._treewidget)  # Create the top level item for the datafile
 
             top_level_item.setText(0, "")  # Selection box
             top_level_item.setText(1, "{}".format(df_i))  # Display the id of the datafile
@@ -362,8 +363,8 @@ class PyParticleProcessor(object):
 
             top_level_item.setExpanded(True)  # Expand the tree widget
 
-            for i in range(self._treeview.columnCount()):  # Resize the columns of the tree
-                self._treeview.resizeColumnToContents(i)
+            for i in range(self._treewidget.columnCount()):  # Resize the columns of the tree
+                self._treewidget.resizeColumnToContents(i)
 
             self.send_status("File loaded successfully!")
 
@@ -394,7 +395,7 @@ class PyParticleProcessor(object):
             df_i = 0  # Since it's the only datafile, it's the zeroth index
             self._ci += new_df.dataset_count()  # TODO: Is this right?
 
-            top_level_item = QtGui.QTreeWidgetItem(self._treeview)  # Create the top level item for the datafile
+            top_level_item = QtGui.QTreeWidgetItem(self._treewidget)  # Create the top level item for the datafile
 
             top_level_item.setText(0, "")  # Selection box
             top_level_item.setText(1, "{}".format(df_i))  # Display the id of the datafile
@@ -433,8 +434,8 @@ class PyParticleProcessor(object):
 
             top_level_item.setExpanded(True)  # Expand the tree widget
 
-            for i in range(self._treeview.columnCount()):  # Resize the columns of the tree
-                self._treeview.resizeColumnToContents(i)
+            for i in range(self._treewidget.columnCount()):  # Resize the columns of the tree
+                self._treewidget.resizeColumnToContents(i)
 
             self.send_status("File loaded successfully!")
 
@@ -712,19 +713,19 @@ class PyParticleProcessor(object):
     def tabs(self):
         return self._tabs  # Return the tab widget
 
-    def treeview_clicked(self, item, column):
+    def treewidget_clicked(self, item, column):
 
         if self._debug:
-            print("treeview_data_changed callback called with item {} and column {}".format(item, column))
+            print("treewidget_data_changed callback called with item {} and column {}".format(item, column))
 
         if column == 0:  # If the first column was clicked
             checkstate = (item.checkState(0) == QtCore.Qt.Checked)  # Get a True or False value for selection
-            index = self._treeview.indexFromItem(item).row()  # Get the row index
+            index = self._treewidget.indexFromItem(item).row()  # Get the row index
 
             if item.parent() is None:  # If the item does not have a parent, it's a datafile
                 selection_string = "{}".format(index)
             else:  # If it does, it's a dataset
-                parent_index = self._treeview.indexFromItem(item.parent()).row()
+                parent_index = self._treewidget.indexFromItem(item.parent()).row()
                 selection_string = "{}-{}".format(parent_index, index)
 
             if checkstate is True and selection_string not in self._selections:
@@ -750,7 +751,7 @@ class PyParticleProcessor(object):
     def update_tree_item(self, datafile_id, dataset_id):
 
         dataset = self._datafiles[datafile_id].get_dataset(dataset_id)  # Get the dataset object from the indices
-        child_item = self._treeview.topLevelItem(datafile_id).child(dataset_id)  # Create a child item
+        child_item = self._treewidget.topLevelItem(datafile_id).child(dataset_id)  # Create a child item
 
         child_item.setText(0, "")  # Selection box
         child_item.setText(1, "{}-{}".format(datafile_id, dataset_id))  # Set the object id
