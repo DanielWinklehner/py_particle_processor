@@ -12,7 +12,7 @@ various simulation codes and exporting them for various other simulation codes.
 """
 
 
-class DataFile(object):
+class ParticleFile(object):
     """
     This object will contain a list of datasets and some attributes for easier handling.
     """
@@ -85,8 +85,6 @@ class PyParticleProcessor(object):
 
         self._status_bar = self._mainWindowGUI.statusBar
 
-        self._log_textbuffer = self._mainWindowGUI.textEdit_2
-
         self._treewidget = self._mainWindowGUI.treeWidget
         self._treewidget.itemClicked.connect(self.treewidget_clicked)
 
@@ -94,7 +92,7 @@ class PyParticleProcessor(object):
         self._properties_table = self._mainWindowGUI.properties_table
         self._properties_label = self._mainWindowGUI.properties_label
         self._properties_table.setHorizontalHeaderLabels(["Property", "Value"])
-        self._properties_table.__setattr__("dfds", (None, None))  # Used to find the shown dataset
+        self._properties_table.__setattr__("data", None)  # The currently selected data
         self._properties_label.setText("Properties")
 
         self._menubar = self._mainWindowGUI.menuBar
@@ -181,30 +179,26 @@ class PyParticleProcessor(object):
         if v is None or v.text == "":
             return 0
 
-        df_i, ds_i = self._properties_table.dfds  # Get the datafile and dataset ids from the table
+        data = self._properties_table.data  # Get the datafile and dataset ids from the table
 
         # Filter out the condition that the program is just starting and populating the table
-        if (df_i, ds_i) == (None, None):
+        if data is None:
             return 0
 
         # TODO: This might trigger a problem if a datafile is selected
-        ds = self.find_dataset(df_i, ds_i)  # Get the corresponding dataset
         idx = self._properties_table.currentRow()  # Find the row of the value that was changed
 
         try:
             value = float(v.text())  # Try to convert the input to a float
             v.setText(str(value))  # Reset the text of the table item to what was just set
 
-            ds.set_property(self._property_list[idx], value)  # Set the property of the dataset
-
+            data.set_property(self._property_list[idx], value)  # Set the property of the dataset
             v.setForeground(QtGui.QBrush(QtGui.QColor("#FFFFFF")))  # If all this worked, then set the text color
-
             return 0
 
         except ValueError:
             # ds.set_property(self._property_list[idx], None)  # Set the dataset property to None
             v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))  # Set the text color to red
-
             return 1
 
     def callback_delete_ds(self):
@@ -316,7 +310,7 @@ class PyParticleProcessor(object):
         self.send_status("Loading file with driver: {}".format(driver))
 
         # Create a new datafile with the supplied parameters
-        new_df = DataFile(filename=filename, driver=driver, index=len(self._datafiles), debug=self._debug)
+        new_df = ParticleFile(filename=filename, driver=driver, index=len(self._datafiles), debug=self._debug)
 
         if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
@@ -387,7 +381,7 @@ class PyParticleProcessor(object):
         self.send_status("Loading file with driver: {}".format(driver))
 
         # Create a new datafile with the supplied parameters
-        new_df = DataFile(filename=filename, driver=driver, index=0, debug=self._debug)
+        new_df = ParticleFile(filename=filename, driver=driver, index=0, debug=self._debug)
 
         if new_df.load(self._ci) == 0:  # If the loading of the datafile is successful...
 
@@ -463,7 +457,7 @@ class PyParticleProcessor(object):
         if len(txt) == 4:  # If there are 4 items, it's a dataset
             df_i, ds_i = int(txt[1]), int(txt[3])  # Get the corresponding indices
             dataset = self.find_dataset(df_i, ds_i)  # Get the dataset
-            self._properties_table.dfds = (df_i, ds_i)  # Set the table's dfds property
+            self._properties_table.data = dataset  # Set the table's data property
             self.populate_properties_table(dataset)  # Populate the properties table with the dataset info
 
             return 0
@@ -471,7 +465,7 @@ class PyParticleProcessor(object):
         elif len(txt) == 2:  # If there are two items, it's a datafile
             df_i, ds_i = int(txt[1]), None  # Get the datafile index
             datafile = self._datafiles[df_i]  # Get the datafile object
-            self._properties_table.dfds = (df_i, None)  # Set the table's dfds
+            self._properties_table.data = datafile
             self.populate_properties_table(datafile)  # Populate the properties table with datafile info
 
             return 0
@@ -545,7 +539,7 @@ class PyParticleProcessor(object):
     def clear_properties_table(self):
 
         self._properties_table.setCurrentItem(None)  # Set the current item to None
-        self._properties_table.dfds = (None, None)  # Clear the dfds property
+        self._properties_table.data = None  # Clear the data property
         self._properties_label.setText("Properties")  # Set the label
 
         for idx in range(len(self._property_list)):  # Loop through each row
@@ -656,13 +650,13 @@ class PyParticleProcessor(object):
     def populate_properties_table(self, data_object):
         self.clear_properties_table()
 
-        if type(data_object) is DataFile:  # If the object passed is a datafile...
+        if type(data_object) is ParticleFile:  # If the object passed is a datafile...
             # df = data_object
             print("Datafile properties are not implemented yet!")
             return 1
         elif type(data_object) is Dataset:  # If the object passed is a dataset...
             ds = data_object
-            # self._properties_table.dfds = (df_i, ds_i)
+            self._properties_table.data = ds
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
             for idx, item in enumerate(self._property_list):  # Enumerate through the properties list
                 if ds.get_property(item) is not None:  # If the property is not None
