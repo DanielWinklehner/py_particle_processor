@@ -185,7 +185,8 @@ class PlotManager(object):
         default_gv = self._parent.get_default_graphics_views()  # Get the default graphics views
         self._default_plots = [PlotObject(self, gv) for gv in default_gv]  # Make the plot objects
 
-    def add_to_plot(self, dataset, plot_object):
+    @staticmethod
+    def add_to_plot(dataset, plot_object):
         if dataset not in plot_object.datasets():  # Only add to the plot object if it isn't already in it
             plot_object.add_dataset(dataset)
         else:
@@ -197,7 +198,7 @@ class PlotManager(object):
             self.add_to_default(dataset)
         elif current_index > 1:
             plot_object = self._plot_objects[current_index - 2]
-            self.add_to_plot(dataset, plot_object)
+            self.add_to_plot(dataset=dataset, plot_object=plot_object)
 
     def add_to_default(self, dataset):
         for plot_object in self._default_plots:  # Add the dataset to all of the default plot objects
@@ -229,7 +230,7 @@ class PlotManager(object):
 
     def default_plot_settings(self, redraw=False):
         # Create the default plot settings GUI, store it in memory, and run it
-        self._plot_settings_gui = DefaultPlotSettings(self, redraw=redraw, debug=self._debug)
+        self._plot_settings_gui = PlotSettings(self, redraw=redraw, default=True, debug=self._debug)
         self._plot_settings_gui.run()
 
     def get_default_plot_settings(self):
@@ -254,10 +255,9 @@ class PlotManager(object):
 
     def new_plot(self):
         self.new_tab()  # Create a new tab for the new plot
-        self._tabs.setCurrentIndex(self._tabs.count() - 1)  # Go to that new tab
         plot_object = PlotObject(parent=self, graphics_view=self._gvs[-1])  # Create a plot object for the new gv
         self._plot_objects.append(plot_object)  # Add this new plot object to the list of plot objects
-        self.plot_settings()  # Open the plot settings for this plot
+        self.plot_settings(new_plot=True)  # Open the plot settings for this plot
 
     def new_tab(self):
         # Create a new widget that will be the new tab
@@ -274,10 +274,14 @@ class PlotManager(object):
         # Add the new widget to the tabs widget, and give it a name
         self._tabs.addTab(local_tab, "Tab {}".format(self._tabs.count() + 1))
 
-    def plot_settings(self):
-        current_index = self._tabs.currentIndex()  # The current index of the tab widget
-        plot_object = self._plot_objects[current_index - 2]  # Find the plot object corresponding to that tab index
-        self._plot_settings_gui = PlotSettings(self, plot_object, debug=self._debug)  # Open the plot settings
+    def plot_settings(self, new_plot=False):
+        if new_plot is False:
+            current_index = self._tabs.currentIndex()  # The current index of the tab widget
+            plot_object = self._plot_objects[current_index - 2]  # Find the plot object corresponding to that tab index
+            self._plot_settings_gui = PlotSettings(self, plot_object, debug=self._debug)
+        else:
+            plot_object = self._plot_objects[-1]
+            self._plot_settings_gui = PlotSettings(self, plot_object, new_plot=True, debug=self._debug)
         self._plot_settings_gui.run()  # Run the GUI
 
     def redraw_default_plots(self):
@@ -313,132 +317,38 @@ class PlotManager(object):
     def screen_size(self):
         return self._screen_size  # Return the size of the screen
 
-
-# TODO: DefaultPlotSettings and PlotSettings can probably be made into one object with a "default" flag
-
-
-class DefaultPlotSettings(object):
-
-    def __init__(self, parent, redraw=False, debug=False):
-        self._parent = parent
-        self._debug = debug  # Debug flag
-        self._redraw = redraw  # Redraw flag
-        self._settings = parent.get_default_plot_settings()  # Get the (possibly) previously set settings
-
-        # --- Initialize the GUI --- #
-        self._defaultPlotSettingsWindow = QtGui.QMainWindow()
-        self._defaultPlotSettingsWindowGUI = Ui_DefaultPlotSettingsWindow()
-        self._defaultPlotSettingsWindowGUI.setupUi(self._defaultPlotSettingsWindow)
-
-        if len(self._settings) > 0:  # If there are settings, then populate the GUI
-            self.populate()
-        else:  # If not, then apply the ones from the UI file
-            self.apply_settings()
-
-        # --- Connections --- #
-        self._defaultPlotSettingsWindowGUI.apply_button.clicked.connect(self.callback_apply)
-        self._defaultPlotSettingsWindowGUI.cancel_button.clicked.connect(self.callback_cancel)
-        self._defaultPlotSettingsWindowGUI.redraw_button.clicked.connect(self.callback_redraw)
-        self._defaultPlotSettingsWindowGUI.dataset_label.setText("Default Plot Settings")
-
-    def apply_settings(self):
-
-        # Step:
-        self._settings["step"] = self._defaultPlotSettingsWindowGUI.step_input.value()
-
-        # Top Left:
-        self._settings["tl_en"] = self._defaultPlotSettingsWindowGUI.tl_enabled.checkState()
-        self._settings["tl_a"] = self._defaultPlotSettingsWindowGUI.tl_combo_a.currentIndex()
-        self._settings["tl_b"] = self._defaultPlotSettingsWindowGUI.tl_combo_b.currentIndex()
-
-        # Top Right:
-        self._settings["tr_en"] = self._defaultPlotSettingsWindowGUI.tr_enabled.checkState()
-        self._settings["tr_a"] = self._defaultPlotSettingsWindowGUI.tr_combo_a.currentIndex()
-        self._settings["tr_b"] = self._defaultPlotSettingsWindowGUI.tr_combo_b.currentIndex()
-
-        # Bottom Left:
-        self._settings["bl_en"] = self._defaultPlotSettingsWindowGUI.bl_enabled.checkState()
-        self._settings["bl_a"] = self._defaultPlotSettingsWindowGUI.bl_combo_a.currentIndex()
-        self._settings["bl_b"] = self._defaultPlotSettingsWindowGUI.bl_combo_b.currentIndex()
-
-        # 3D Plot:
-        self._settings["3d_en"] = self._defaultPlotSettingsWindowGUI.three_d_enabled.checkState()
-
-        # Redraw:
-        self._settings["redraw_en"] = self._defaultPlotSettingsWindowGUI.redraw_enabled.checkState()
-
-    def callback_apply(self):
-        # Apply the settings in the GUI, then apply them to the parent (PlotManager)
-        self.apply_settings()
-        self._parent.apply_default_plot_settings(self.get_settings(), redraw=self._redraw)
-        self._defaultPlotSettingsWindow.close()  # Close the GUI
-
-        return 0
-
-    def callback_cancel(self):
-
-        self._defaultPlotSettingsWindow.close()  # Close the GUI
-
-        return 0
-
-    def callback_redraw(self):
-        self.apply_settings()  # Apply the settings to the GUI
-        self._parent.apply_default_plot_settings(self.get_settings())  # Apply the settings to the parent (PlotManager)
-        self._parent.redraw_default_plots()  # Redraw the default plots
-
-    def get_settings(self):
-        return self._settings  # Return the settings from the instance
-
-    def populate(self):
-
-        # Step:
-        self._defaultPlotSettingsWindowGUI.step_input.setValue(self._settings["step"])
-
-        # Top Left:
-        self._defaultPlotSettingsWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
-        self._defaultPlotSettingsWindowGUI.tl_combo_a.setCurrentIndex(self._settings["tl_a"])
-        self._defaultPlotSettingsWindowGUI.tl_combo_b.setCurrentIndex(self._settings["tl_b"])
-
-        # Top Right:
-        self._defaultPlotSettingsWindowGUI.tr_enabled.setCheckState(self._settings["tr_en"])
-        self._defaultPlotSettingsWindowGUI.tr_combo_a.setCurrentIndex(self._settings["tr_a"])
-        self._defaultPlotSettingsWindowGUI.tr_combo_b.setCurrentIndex(self._settings["tr_b"])
-
-        # Bottom Left:
-        self._defaultPlotSettingsWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
-        self._defaultPlotSettingsWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
-        self._defaultPlotSettingsWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
-
-        # 3D Plot:
-        self._defaultPlotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
-
-        # Redraw:
-        self._defaultPlotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
-
-    def run(self):
-
-        # --- Calculate the positions to center the window --- #
-        screen_size = self._parent.screen_size()
-        _x = 0.5 * (screen_size.width() - self._defaultPlotSettingsWindow.width())
-        _y = 0.5 * (screen_size.height() - self._defaultPlotSettingsWindow.height())
-
-        # --- Show the GUI --- #
-        self._defaultPlotSettingsWindow.show()
-        self._defaultPlotSettingsWindow.move(_x, _y)
+    def set_tab(self, index):
+        if index == "last":
+            self._tabs.setCurrentIndex(self._tabs.count() - 1)
+        elif index == "first":
+            self._tabs.setCurrentIndex(0)
+        else:
+            self._tabs.setCurrentIndex(index)
 
 
 class PlotSettings(object):
 
-    def __init__(self, parent, plot_object, debug=False):
+    def __init__(self, parent, plot_object=None, redraw=False, default=False, new_plot=False, debug=False):
         self._parent = parent
         self._plot_object = plot_object
         self._debug = debug  # Debug flag
-        self._settings = plot_object.get_plot_settings()  # Get the (possibly) previously set settings of the object
+        self._redraw = redraw  # Redraw flag
+        self._default = default  # Default flag
+        self._new_plot = new_plot  # New Plot flag
 
         # --- Initialize the GUI --- #
-        self._plotSettingsWindow = QtGui.QMainWindow()
-        self._plotSettingsWindowGUI = Ui_PlotSettingsWindow()
-        self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
+        if self._default:
+            self._settings = parent.get_default_plot_settings()  # Get the (possibly) previously set settings
+
+            self._plotSettingsWindow = QtGui.QMainWindow()
+            self._plotSettingsWindowGUI = Ui_DefaultPlotSettingsWindow()
+            self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
+        else:
+            self._settings = plot_object.get_plot_settings()  # Get the (possibly) previously set settings of the object
+
+            self._plotSettingsWindow = QtGui.QMainWindow()
+            self._plotSettingsWindowGUI = Ui_PlotSettingsWindow()
+            self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
 
         if len(self._settings) > 0:  # If there are settings, then populate the GUI
             self.populate()
@@ -459,20 +369,43 @@ class PlotSettings(object):
         # 3D Plot:
         self._settings["3d_en"] = self._plotSettingsWindowGUI.three_d_enabled.checkState()
 
-        # Parameters:
-        self._settings["param_a"] = self._plotSettingsWindowGUI.param_combo_a.currentIndex()
-        self._settings["param_b"] = self._plotSettingsWindowGUI.param_combo_b.currentIndex()
-        self._settings["param_c"] = self._plotSettingsWindowGUI.param_combo_c.currentIndex()
-
         # Redraw:
         self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
+
+        if self._default:
+            # Top Left:
+            self._settings["tl_en"] = self._plotSettingsWindowGUI.tl_enabled.checkState()
+            self._settings["tl_a"] = self._plotSettingsWindowGUI.tl_combo_a.currentIndex()
+            self._settings["tl_b"] = self._plotSettingsWindowGUI.tl_combo_b.currentIndex()
+
+            # Top Right:
+            self._settings["tr_en"] = self._plotSettingsWindowGUI.tr_enabled.checkState()
+            self._settings["tr_a"] = self._plotSettingsWindowGUI.tr_combo_a.currentIndex()
+            self._settings["tr_b"] = self._plotSettingsWindowGUI.tr_combo_b.currentIndex()
+
+            # Bottom Left:
+            self._settings["bl_en"] = self._plotSettingsWindowGUI.bl_enabled.checkState()
+            self._settings["bl_a"] = self._plotSettingsWindowGUI.bl_combo_a.currentIndex()
+            self._settings["bl_b"] = self._plotSettingsWindowGUI.bl_combo_b.currentIndex()
+        else:
+            # Parameters:
+            self._settings["param_a"] = self._plotSettingsWindowGUI.param_combo_a.currentIndex()
+            self._settings["param_b"] = self._plotSettingsWindowGUI.param_combo_b.currentIndex()
+            self._settings["param_c"] = self._plotSettingsWindowGUI.param_combo_c.currentIndex()
 
     def callback_apply(self):
         # Apply the settings in the GUI, then apply them to the plot object
         self.apply_settings()
-        self._plot_object.set_plot_settings(plot_settings=self.get_settings())
+
+        if self._default:
+            self._parent.apply_default_plot_settings(self.get_settings(), redraw=self._redraw)
+        else:
+            self._plot_object.set_plot_settings(plot_settings=self.get_settings())
 
         self._plotSettingsWindow.close()  # Close the GUI
+
+        if self._new_plot is True:
+            self._parent.set_tab("last")
         self._parent.redraw_plot()  # Redraw the plot
         return 0
 
@@ -484,8 +417,13 @@ class PlotSettings(object):
 
     def callback_redraw(self):
         self.apply_settings()   # Apply the settings to the GUI
-        self._plot_object.apply_plot_settings(plot_settings=self.get_settings()) # Apply the settings to the object
-        self._parent.redraw_plot()  # Redraw the plot
+
+        if self._default:
+            self._parent.apply_default_plot_settings(self.get_settings())
+            self._parent.redraw_default_plots()
+        else:
+            self._plot_object.apply_plot_settings(plot_settings=self.get_settings())
+            self._parent.redraw_plot()  # Redraw the plot
 
     def get_settings(self):
         return self._settings  # Return the plot settings
@@ -498,13 +436,29 @@ class PlotSettings(object):
         # 3D Plot:
         self._plotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
-        # Parameters:
-        self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
-        self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
-        self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
-
         # Redraw:
         self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
+
+        if self._default:
+            # Top Left:
+            self._plotSettingsWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
+            self._plotSettingsWindowGUI.tl_combo_a.setCurrentIndex(self._settings["tl_a"])
+            self._plotSettingsWindowGUI.tl_combo_b.setCurrentIndex(self._settings["tl_b"])
+
+            # Top Right:
+            self._plotSettingsWindowGUI.tr_enabled.setCheckState(self._settings["tr_en"])
+            self._plotSettingsWindowGUI.tr_combo_a.setCurrentIndex(self._settings["tr_a"])
+            self._plotSettingsWindowGUI.tr_combo_b.setCurrentIndex(self._settings["tr_b"])
+
+            # Bottom Left:
+            self._plotSettingsWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
+            self._plotSettingsWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
+            self._plotSettingsWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
+        else:
+            # Parameters:
+            self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
+            self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
+            self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
 
     def run(self):
 
