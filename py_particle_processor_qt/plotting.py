@@ -43,6 +43,7 @@ class PlotObject(object):
         return self._datasets  # Return the list of datasets being shown
 
     def remove_dataset(self, dataset):
+
         if dataset in self._datasets:  # If the dataset is in the list...
             del self._datasets[self._datasets.index(dataset)]  # Delete it from the list
 
@@ -84,6 +85,8 @@ class PlotObject(object):
             return t_plot_settings
 
     def show(self):
+
+        self._is_shown = False
 
         t_plot_settings = self.get_plot_settings(translated=True)  # Get the translated settings
         # Set the displayed axes to what the combo box settings were (param_c will be None for a 2D plot)
@@ -189,6 +192,7 @@ class PlotManager(object):
         self._initialize_default_plots()  # Initialization of the default plots
 
     def _initialize_default_plots(self):
+
         default_gv = self._parent.get_default_graphics_views()  # Get the default graphics views
         self._default_plots = [PlotObject(self, gv) for gv in default_gv]  # Make the plot objects
 
@@ -196,6 +200,7 @@ class PlotManager(object):
 
     @staticmethod
     def add_to_plot(dataset, plot_object):
+
         if dataset not in plot_object.datasets():  # Only add to the plot object if it isn't already in it
             plot_object.add_dataset(dataset)
         else:
@@ -205,6 +210,7 @@ class PlotManager(object):
 
     def add_to_current_plot(self, dataset):
         current_index = self._tabs.currentIndex()
+
         if current_index == 0:  # Catch the condition that the default plots are shown
             self.add_to_default(dataset)
         else:
@@ -214,6 +220,7 @@ class PlotManager(object):
         return 0
 
     def add_to_default(self, dataset):
+
         for plot_object in self._default_plots:  # Add the dataset to all of the default plot objects
             plot_object.add_dataset(dataset)
 
@@ -301,6 +308,7 @@ class PlotManager(object):
         return 0
 
     def plot_settings(self, new_plot=False):
+
         if new_plot is False:
             current_index = self._tabs.currentIndex()  # The current index of the tab widget
             plot_object = self._plot_objects[current_index - 1]  # Find the plot object corresponding to that tab index
@@ -308,12 +316,14 @@ class PlotManager(object):
         else:
             plot_object = self._plot_objects[-1]
             self._plot_settings_gui = PlotSettings(self, plot_object, new_plot=True, debug=self._debug)
+
         self._plot_settings_gui.run()  # Run the GUI
 
         return 0
 
     def redraw_default_plots(self):
         # Clear, then show each plot object in the default plot object list
+
         for plot_object in self._default_plots:
             plot_object.clear()
             plot_object.show()
@@ -333,6 +343,7 @@ class PlotManager(object):
         return 0
 
     def remove_dataset(self, dataset):
+
         for plot_object in self._plot_objects:  # Remove the dataset from each plot object
             plot_object.remove_dataset(dataset)  # Note: the method checks to see if the set is in the object
 

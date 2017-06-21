@@ -258,6 +258,9 @@ class Dataset(object):
 
         return 1
 
+    def set_indices(self, parent_index, index):
+        self._indices = (parent_index, index)
+
     def set_step_view(self, step):
 
         if step > self._properties["steps"]:
