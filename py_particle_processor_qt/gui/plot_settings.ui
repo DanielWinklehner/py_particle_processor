@@ -235,20 +235,20 @@
          </item>
         </layout>
        </item>
-       <item row="3" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QLabel" name="redraw_label">
-         <property name="text">
-          <string>Redraw On Selection: </string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="1" alignment="Qt::AlignLeft">
-        <widget class="QCheckBox" name="redraw_enabled">
+        <widget class="QCheckBox" name="param_enabled">
          <property name="text">
           <string>Enabled</string>
          </property>
          <property name="checked">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QLabel" name="en_label">
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>

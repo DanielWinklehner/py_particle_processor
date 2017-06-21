@@ -417,9 +417,6 @@ class PlotSettings(object):
         # 3D Plot:
         self._settings["3d_en"] = self._plotSettingsWindowGUI.three_d_enabled.checkState()
 
-        # Redraw:
-        self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
-
         if self._default:
             # Top Left:
             self._settings["tl_en"] = self._plotSettingsWindowGUI.tl_enabled.checkState()
@@ -435,11 +432,15 @@ class PlotSettings(object):
             self._settings["bl_en"] = self._plotSettingsWindowGUI.bl_enabled.checkState()
             self._settings["bl_a"] = self._plotSettingsWindowGUI.bl_combo_a.currentIndex()
             self._settings["bl_b"] = self._plotSettingsWindowGUI.bl_combo_b.currentIndex()
+
+            # Redraw:
+            self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
         else:
             # Parameters:
             self._settings["param_a"] = self._plotSettingsWindowGUI.param_combo_a.currentIndex()
             self._settings["param_b"] = self._plotSettingsWindowGUI.param_combo_b.currentIndex()
             self._settings["param_c"] = self._plotSettingsWindowGUI.param_combo_c.currentIndex()
+            self._settings["param_en"] = self._plotSettingsWindowGUI.param_enabled.checkState()
 
     def callback_apply(self):
         # Apply the settings in the GUI, then apply them to the plot object
@@ -484,9 +485,6 @@ class PlotSettings(object):
         # 3D Plot:
         self._plotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
-        # Redraw:
-        self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
-
         if self._default:
             # Top Left:
             self._plotSettingsWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
@@ -502,11 +500,15 @@ class PlotSettings(object):
             self._plotSettingsWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
             self._plotSettingsWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
             self._plotSettingsWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
+
+            # Redraw:
+            self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
         else:
             # Parameters:
             self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
             self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
             self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
+            self._plotSettingsWindowGUI.param_enabled.setCurrentIndex(self._settings["param_en"])
 
     def run(self):
 

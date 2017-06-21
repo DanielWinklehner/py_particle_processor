@@ -363,13 +363,14 @@ class PyParticleProcessor(object):
             return 1
 
         filename, driver = self.get_filename(action='save')  # Get a filename and driver
-        df_i, ds_i = self.get_selection(self._selections[0])  # Get the indices from the selection
 
         if (filename, driver) == (None, None):
             return 0
 
         # TODO: Modernize this statement
-        self._datafiles[df_i].get_dataset(ds_i).export_to_file(filename=filename, driver=driver)
+
+        selection = self._selections[0]
+        selection.export_to_file(filename=filename, driver=driver)
 
         print("Export complete!")
         self.send_status("Export complete!")
@@ -573,12 +574,11 @@ class PyParticleProcessor(object):
         redraw = False
 
         for plot_object in current_plot_objects:
-            for selection_string in self._selections:
-                df_i, ds_i = self.get_selection(selection_string)
-                dataset = self.find_dataset(df_i, ds_i)
-                if dataset not in plot_object.datasets():
-                    plot_object.add_dataset(dataset)
-                    redraw = True
+            for selection in self._selections:
+                if type(selection) is Dataset:
+                    if selection not in plot_object.datasets():
+                        plot_object.add_dataset(selection)
+                        redraw = True
 
         if redraw:
             self._plot_manager.redraw_plot()
@@ -620,9 +620,9 @@ class PyParticleProcessor(object):
         name = sender.objectName()
         datasets = []
 
-        for selection_string in self._selections:
-            df_i, ds_i = self.get_selection(selection_string)
-            datasets.append(self.find_dataset(df_i, ds_i))
+        for selection in self._selections:
+            if type(selection) is Dataset:
+                datasets.append(selection)
 
         tool_object = tool_mapping[name][1]
 
