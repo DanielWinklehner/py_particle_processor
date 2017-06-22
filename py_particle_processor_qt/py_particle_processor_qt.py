@@ -1,6 +1,7 @@
 from py_particle_processor_qt.dataset import *
 from py_particle_processor_qt.gui.main_window import *
 from py_particle_processor_qt.plotting import *
+from py_particle_processor_qt.generator import *
 from py_particle_processor_qt.tools import *
 from PyQt5.QtWidgets import qApp, QFileDialog
 # from dans_pymodules import MyColors
@@ -135,6 +136,7 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionRemove.triggered.connect(self.callback_delete_ds)
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
         self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
+        self._mainWindowGUI.actionGenerate.triggered.connect(self.callback_generate)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
         self._properties_table.cellChanged.connect(self.callback_table_item_changed)
         self._properties_select.currentIndexChanged.connect(self.callback_properties_select)
@@ -165,6 +167,10 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionNew_Plot.triggered.connect(self._plot_manager.new_plot)
         self._mainWindowGUI.actionModify_Plot.triggered.connect(self._plot_manager.modify_plot)
         self._mainWindowGUI.actionRemove_Plot.triggered.connect(self._plot_manager.remove_plot)
+
+        # Store generator information
+        self._gen = GeneratorGUI(self)
+        self._gen_data = {}
 
         # Go through each property in the list
         for idx, item in enumerate(self._property_list):
@@ -533,6 +539,14 @@ class PyParticleProcessor(object):
             self._plot_manager.plot_settings()  # Open the plot settings
 
         return 0
+
+    def callback_generate(self):
+        # Called when the "Generate..." button is pressed
+
+        self._gen.run()
+        self._gen_data = self._gen.data
+        return self._gen.data
+        # TODO Create a function that takes this data and enters it into the rest of the system
 
     def callback_properties_select(self, index):
 

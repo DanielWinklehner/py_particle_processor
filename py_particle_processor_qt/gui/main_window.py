@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui/main_window.ui'
+# Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -154,7 +154,7 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 25))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 31))
         self.menuBar.setDefaultUp(True)
         self.menuBar.setNativeMenuBar(True)
         self.menuBar.setObjectName("menuBar")
@@ -208,10 +208,15 @@ class Ui_MainWindow(object):
         self.actionRemove_Plot.setObjectName("actionRemove_Plot")
         self.actionRedraw = QtWidgets.QAction(MainWindow)
         self.actionRedraw.setObjectName("actionRedraw")
+        self.actionGenerate = QtWidgets.QAction(MainWindow)
+        icon = QtGui.QIcon.fromTheme("emblem-photos")
+        self.actionGenerate.setIcon(icon)
+        self.actionGenerate.setObjectName("actionGenerate")
         self.mainToolBar.addAction(self.actionImport_New)
         self.mainToolBar.addAction(self.actionImport_Add)
         self.mainToolBar.addAction(self.actionRemove)
         self.mainToolBar.addAction(self.actionPlot)
+        self.mainToolBar.addAction(self.actionGenerate)
         self.mainToolBar.addAction(self.actionAnalyze)
         self.mainToolBar.addAction(self.actionExport_For)
         self.mainToolBar.addAction(self.actionQuit)
@@ -271,6 +276,9 @@ class Ui_MainWindow(object):
         self.actionModify_Plot.setText(_translate("MainWindow", "Modify Current Plot..."))
         self.actionRemove_Plot.setText(_translate("MainWindow", "Remove Current Plot"))
         self.actionRedraw.setText(_translate("MainWindow", "Redraw"))
+        self.actionGenerate.setText(_translate("MainWindow", "Generate..."))
+        self.actionGenerate.setIconText(_translate("MainWindow", "Generate..."))
+        self.actionGenerate.setToolTip(_translate("MainWindow", "Generate distribution"))
 
 from pyqtgraph import PlotWidget
 from pyqtgraph.opengl import GLViewWidget

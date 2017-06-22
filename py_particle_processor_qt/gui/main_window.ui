@@ -312,6 +312,7 @@ color: rgb(255, 255, 255);</string>
    <addaction name="actionImport_Add"/>
    <addaction name="actionRemove"/>
    <addaction name="actionPlot"/>
+   <addaction name="actionGenerate"/>
    <addaction name="actionAnalyze"/>
    <addaction name="actionExport_For"/>
    <addaction name="actionQuit"/>
@@ -323,7 +324,7 @@ color: rgb(255, 255, 255);</string>
      <x>0</x>
      <y>0</y>
      <width>994</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -494,6 +495,21 @@ color: rgb(255, 255, 255);</string>
   <action name="actionRedraw">
    <property name="text">
     <string>Redraw</string>
+   </property>
+  </action>
+  <action name="actionGenerate">
+   <property name="icon">
+    <iconset theme="emblem-photos">
+     <normaloff>.</normaloff>.</iconset>
+   </property>
+   <property name="text">
+    <string>Generate...</string>
+   </property>
+   <property name="iconText">
+    <string>Generate...</string>
+   </property>
+   <property name="toolTip">
+    <string>Generate distribution</string>
    </property>
   </action>
  </widget>
