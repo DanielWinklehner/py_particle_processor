@@ -1,5 +1,6 @@
 import numpy as np
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QMainWindow
 from py_particle_processor_qt.gui.generate_main import Ui_Generate_Main
 from py_particle_processor_qt.gui.generate_error import Ui_Generate_Error
 from py_particle_processor_qt.gui.generate_envelope import Ui_Generate_Envelope
@@ -275,16 +276,16 @@ class GeneratorGUI(object):
         self._parent = parent
 
         # Initialize GUI
-        self._generate_main = QtGui.QMainWindow()
+        self._generate_main = QMainWindow()
         self._generate_mainGUI = Ui_Generate_Main()
         self._generate_mainGUI.setupUi(self._generate_main)
-        self._generate_envelope = QtGui.QMainWindow()
+        self._generate_envelope = QMainWindow()
         self._generate_envelopeGUI = Ui_Generate_Envelope()
         self._generate_envelopeGUI.setupUi(self._generate_envelope)
-        self._generate_twiss = QtGui.QMainWindow()
+        self._generate_twiss = QMainWindow()
         self._generate_twissGUI = Ui_Generate_Twiss()
         self._generate_twissGUI.setupUi(self._generate_twiss)
-        self._generate_error = QtGui.QMainWindow()
+        self._generate_error = QMainWindow()
         self._generate_errorGUI = Ui_Generate_Error()
         self._generate_errorGUI.setupUi(self._generate_error)
 

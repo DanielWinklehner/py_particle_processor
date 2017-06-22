@@ -47,9 +47,6 @@ class Ui_Generate_Error(object):
         self.dataset_label.setSizePolicy(sizePolicy)
         self.dataset_label.setAlignment(QtCore.Qt.AlignCenter)
         self.dataset_label.setObjectName("dataset_label")
-        self.verticalLayoutWidget.raise_()
-        self.dataset_label.raise_()
-        self.label.raise_()
         Generate_Error.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(Generate_Error)
@@ -57,7 +54,7 @@ class Ui_Generate_Error(object):
 
     def retranslateUi(self, Generate_Error):
         _translate = QtCore.QCoreApplication.translate
-        Generate_Error.setWindowTitle(_translate("Generate_Error", "Properties"))
+        Generate_Error.setWindowTitle(_translate("Generate_Error", "Error"))
         self.label.setText(_translate("Generate_Error", "Please fill out all fields available."))
         self.dataset_label.setText(_translate("Generate_Error", "Parameter(s) Not Entered!"))
 
