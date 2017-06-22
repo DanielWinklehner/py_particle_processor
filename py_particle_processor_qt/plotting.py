@@ -43,6 +43,7 @@ class PlotObject(object):
         return self._datasets  # Return the list of datasets being shown
 
     def remove_dataset(self, dataset):
+
         if dataset in self._datasets:  # If the dataset is in the list...
             del self._datasets[self._datasets.index(dataset)]  # Delete it from the list
 
@@ -85,83 +86,92 @@ class PlotObject(object):
 
     def show(self):
 
+        self._is_shown = False
+
         t_plot_settings = self.get_plot_settings(translated=True)  # Get the translated settings
         # Set the displayed axes to what the combo box settings were (param_c will be None for a 2D plot)
         axes = t_plot_settings["param_a"], t_plot_settings["param_b"], t_plot_settings["param_c"]
+        enabled = t_plot_settings["param_en"]
         step = t_plot_settings["step"]  # Get the step from the settings
 
         # Check if the plot object is a 3D plot
         if self._is_3d:
 
-            # Note: since the get_color is set to random, you won't be able to distinguish different datasets for now
-            for dataset in self._datasets:  # Loop through each dataset
+            if enabled:
 
-                # Only do a 3D display for data with more than one step and it's enabled
-                if dataset.get_nsteps() > 1 and self._enabled:
+                # Note: since the get_color is set to random, you won't be able to distinguish different datasets
+                for dataset in self._datasets:  # Loop through each dataset
 
-                    _grid = True  # Always display the grids for now
+                    # Only do a 3D display for data with more than one step and it's enabled
+                    if dataset.get_nsteps() > 1 and self._enabled:
 
-                    # Loop through each particle
-                    for particle_id in range(dataset.get_npart()):
-                        # Get the particle data and color for plotting
-                        particle, _c = dataset.get_particle(particle_id, get_color="random")
-                        # Make an array of the values and transpose it (needed for plotting)
-                        pts = np.array([particle.get(axes[0]), particle.get(axes[1]), particle.get(axes[2])]).T
-                        # Create a line item of all the points corresponding to this particle
-                        plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
-                                                       antialias=True)
-                        # Add the line object to the graphics view
-                        self._graphics_view.addItem(plt)
+                        _grid = False
 
-                    if _grid:  # If the grid is enabled for this plot
-                        # TODO: Make the grid size dynamic -PW
-                        # TODO: The maximum and minimum values might be useful to get during import -PW
+                        # Loop through each particle
+                        for particle_id in range(dataset.get_npart()):
+                            # Get the particle data and color for plotting
+                            particle, _c = dataset.get_particle(particle_id, get_color="random")
+                            # Make an array of the values and transpose it (needed for plotting)
+                            pts = np.array([particle.get(axes[0]), particle.get(axes[1]), particle.get(axes[2])]).T
+                            # Create a line item of all the points corresponding to this particle
+                            plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
+                                                           antialias=True)
+                            # Add the line object to the graphics view
+                            self._graphics_view.addItem(plt)
 
-                        gx = pg.opengl.GLGridItem()
-                        gx.rotate(90, 0, 1, 0)
-                        gx.translate(0.0, 0.0, 0.0)
-                        gx.setSize(x=0.2, y=0.2, z=0.2)
-                        gx.setSpacing(x=0.01, y=0.01, z=0.01)
+                        if _grid:  # If the grid is enabled for this plot
+                            # TODO: Make the grid size dynamic -PW
+                            # TODO: The maximum and minimum values might be useful to get during import -PW
 
-                        gy = pg.opengl.GLGridItem()
-                        gy.rotate(90, 1, 0, 0)
-                        gy.translate(0.0, 0.0, 0.0)
-                        gy.setSize(x=0.2, y=0.2, z=0.2)
-                        gy.setSpacing(x=0.01, y=0.01, z=0.01)
+                            gx = pg.opengl.GLGridItem()
+                            gx.rotate(90, 0, 1, 0)
+                            gx.translate(0.0, 0.0, 0.0)
+                            gx.setSize(x=0.2, y=0.2, z=0.2)
+                            gx.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                        gz = pg.opengl.GLGridItem()
-                        gz.translate(0.0, 0.0, 0.0)
-                        gz.setSize(x=0.2, y=0.2, z=1.0)
-                        gz.setSpacing(x=0.01, y=0.01, z=0.01)
+                            gy = pg.opengl.GLGridItem()
+                            gy.rotate(90, 1, 0, 0)
+                            gy.translate(0.0, 0.0, 0.0)
+                            gy.setSize(x=0.2, y=0.2, z=0.2)
+                            gy.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                        # Add the three grids to the graphics view
-                        self._graphics_view.addItem(gx)
-                        self._graphics_view.addItem(gy)
-                        self._graphics_view.addItem(gz)
+                            gz = pg.opengl.GLGridItem()
+                            gz.translate(0.0, 0.0, 0.0)
+                            gz.setSize(x=0.2, y=0.2, z=1.0)
+                            gz.setSpacing(x=0.01, y=0.01, z=0.01)
 
-                    # Set the "camera" distance
-                    self._graphics_view.opts["distance"] = 3e-1  # Seems to be a good value for now
+                            # Add the three grids to the graphics view
+                            self._graphics_view.addItem(gx)
+                            self._graphics_view.addItem(gy)
+                            self._graphics_view.addItem(gz)
+
+                        # Set the "camera" distance
+                        self._graphics_view.opts["distance"] = 3e-1  # Seems to be a good value for now
+
+                self._is_shown = True
 
         else:  # If it's not a 3D plot, it's a 2D plot...
 
-            for dataset in self._datasets:  # Loop through each dataset
+            if enabled:
 
-                dataset.set_step_view(step)  # Set the step for the current dataset
+                for dataset in self._datasets:  # Loop through each dataset
 
-                # Create a scatter plot item using the values and color from the dataset
-                scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
-                                             y=dataset.get(axes[1]),
-                                             pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+                    dataset.set_step_view(step)  # Set the step for the current dataset
 
-                # Add the scatter plot item to the graphics view
-                self._graphics_view.addItem(scatter)
+                    # Create a scatter plot item using the values and color from the dataset
+                    scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
+                                                 y=dataset.get(axes[1]),
+                                                 pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
 
-                # Create a title for the graph, which is just the axis labels for now
-                title = axes[0].upper() + "-" + axes[1].upper()
-                self._graphics_view.setTitle(title)  # Set the title of the graphics view
-                self._graphics_view.repaint()  # Repaint the view
+                    # Add the scatter plot item to the graphics view
+                    self._graphics_view.addItem(scatter)
 
-            self._is_shown = True  # Set the shown flag
+                    # Create a title for the graph, which is just the axis labels for now
+                    title = axes[0].upper() + "-" + axes[1].upper()
+                    self._graphics_view.setTitle(title)  # Set the title of the graphics view
+                    self._graphics_view.repaint()  # Repaint the view
+
+                self._is_shown = True  # Set the shown flag
 
         return 0
 
@@ -182,27 +192,39 @@ class PlotManager(object):
         self._initialize_default_plots()  # Initialization of the default plots
 
     def _initialize_default_plots(self):
+
         default_gv = self._parent.get_default_graphics_views()  # Get the default graphics views
         self._default_plots = [PlotObject(self, gv) for gv in default_gv]  # Make the plot objects
 
+        return 0
+
     @staticmethod
     def add_to_plot(dataset, plot_object):
+
         if dataset not in plot_object.datasets():  # Only add to the plot object if it isn't already in it
             plot_object.add_dataset(dataset)
         else:
             print("This dataset is already in the PlotObject!")
 
+        return 0
+
     def add_to_current_plot(self, dataset):
         current_index = self._tabs.currentIndex()
+
         if current_index == 0:  # Catch the condition that the default plots are shown
             self.add_to_default(dataset)
-        elif current_index > 1:
-            plot_object = self._plot_objects[current_index - 2]
+        else:
+            plot_object = self._plot_objects[current_index - 1]
             self.add_to_plot(dataset=dataset, plot_object=plot_object)
 
+        return 0
+
     def add_to_default(self, dataset):
+
         for plot_object in self._default_plots:  # Add the dataset to all of the default plot objects
             plot_object.add_dataset(dataset)
+
+        return 0
 
     def apply_default_plot_settings(self, plot_settings, redraw=False):
         # TODO: Better way to do this -PW
@@ -225,13 +247,14 @@ class PlotManager(object):
         if redraw:  # Redraw the plot if the flag is set
             self.redraw_plot()
 
-    def clear_plot(self):
-        pass
+        return 0
 
     def default_plot_settings(self, redraw=False):
         # Create the default plot settings GUI, store it in memory, and run it
         self._plot_settings_gui = PlotSettings(self, redraw=redraw, default=True, debug=self._debug)
         self._plot_settings_gui.run()
+
+        return 0
 
     def get_default_plot_settings(self):
         return self._default_plot_settings  # Returns the default plot settings (untranslated)
@@ -240,7 +263,7 @@ class PlotManager(object):
         if tab_index == 0:  # In the case of the default plots tab
             return self._default_plots  # It returns the list of all the objects
         else:
-            return [self._plot_objects[tab_index - 2]]  # Return it in a list
+            return [self._plot_objects[tab_index - 1]]  # Return it in a list
 
     def has_default_plot_settings(self):
         # Returns True if the settings for the default plots have been set previously
@@ -251,13 +274,21 @@ class PlotManager(object):
         return False
 
     def modify_plot(self):
-        pass
+
+        if self._tabs.currentIndex() == 0:
+            self.default_plot_settings(redraw=True)
+        else:
+            self.plot_settings(new_plot=False)
+
+        return 0
 
     def new_plot(self):
         self.new_tab()  # Create a new tab for the new plot
         plot_object = PlotObject(parent=self, graphics_view=self._gvs[-1])  # Create a plot object for the new gv
         self._plot_objects.append(plot_object)  # Add this new plot object to the list of plot objects
         self.plot_settings(new_plot=True)  # Open the plot settings for this plot
+
+        return 0
 
     def new_tab(self):
         # Create a new widget that will be the new tab
@@ -274,37 +305,52 @@ class PlotManager(object):
         # Add the new widget to the tabs widget, and give it a name
         self._tabs.addTab(local_tab, "Tab {}".format(self._tabs.count() + 1))
 
+        return 0
+
     def plot_settings(self, new_plot=False):
+
         if new_plot is False:
             current_index = self._tabs.currentIndex()  # The current index of the tab widget
-            plot_object = self._plot_objects[current_index - 2]  # Find the plot object corresponding to that tab index
+            plot_object = self._plot_objects[current_index - 1]  # Find the plot object corresponding to that tab index
             self._plot_settings_gui = PlotSettings(self, plot_object, debug=self._debug)
         else:
             plot_object = self._plot_objects[-1]
             self._plot_settings_gui = PlotSettings(self, plot_object, new_plot=True, debug=self._debug)
+
         self._plot_settings_gui.run()  # Run the GUI
+
+        return 0
 
     def redraw_default_plots(self):
         # Clear, then show each plot object in the default plot object list
+
         for plot_object in self._default_plots:
             plot_object.clear()
             plot_object.show()
 
+        return 0
+
     def redraw_plot(self):
         current_index = self._tabs.currentIndex()  # Get the current index of the tab widget
+
         if current_index == 0:  # If it's zero, it's the first tab/default plots
             self.redraw_default_plots()
         else:
-            plot_object = self._plot_objects[current_index - 2]  # If not, get the plot object and redraw
+            plot_object = self._plot_objects[current_index - 1]  # If not, get the plot object and redraw
             plot_object.clear()
             plot_object.show()
 
+        return 0
+
     def remove_dataset(self, dataset):
+
         for plot_object in self._plot_objects:  # Remove the dataset from each plot object
             plot_object.remove_dataset(dataset)  # Note: the method checks to see if the set is in the object
 
         for default_plot_object in self._default_plots:  # Remove the dataset from each default plot object
             default_plot_object.remove_dataset(dataset)
+
+        return 0
 
     def remove_plot(self):
         # TODO: GUI for removing plots, it should find which tab/GV it's in -PW
@@ -324,6 +370,8 @@ class PlotManager(object):
             self._tabs.setCurrentIndex(0)
         else:
             self._tabs.setCurrentIndex(index)
+
+        return 0
 
 
 class PlotSettings(object):
@@ -369,9 +417,6 @@ class PlotSettings(object):
         # 3D Plot:
         self._settings["3d_en"] = self._plotSettingsWindowGUI.three_d_enabled.checkState()
 
-        # Redraw:
-        self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
-
         if self._default:
             # Top Left:
             self._settings["tl_en"] = self._plotSettingsWindowGUI.tl_enabled.checkState()
@@ -387,11 +432,15 @@ class PlotSettings(object):
             self._settings["bl_en"] = self._plotSettingsWindowGUI.bl_enabled.checkState()
             self._settings["bl_a"] = self._plotSettingsWindowGUI.bl_combo_a.currentIndex()
             self._settings["bl_b"] = self._plotSettingsWindowGUI.bl_combo_b.currentIndex()
+
+            # Redraw:
+            self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
         else:
             # Parameters:
             self._settings["param_a"] = self._plotSettingsWindowGUI.param_combo_a.currentIndex()
             self._settings["param_b"] = self._plotSettingsWindowGUI.param_combo_b.currentIndex()
             self._settings["param_c"] = self._plotSettingsWindowGUI.param_combo_c.currentIndex()
+            self._settings["param_en"] = self._plotSettingsWindowGUI.param_enabled.checkState()
 
     def callback_apply(self):
         # Apply the settings in the GUI, then apply them to the plot object
@@ -436,9 +485,6 @@ class PlotSettings(object):
         # 3D Plot:
         self._plotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
-        # Redraw:
-        self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
-
         if self._default:
             # Top Left:
             self._plotSettingsWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
@@ -454,11 +500,15 @@ class PlotSettings(object):
             self._plotSettingsWindowGUI.bl_enabled.setCheckState(self._settings["bl_en"])
             self._plotSettingsWindowGUI.bl_combo_a.setCurrentIndex(self._settings["bl_a"])
             self._plotSettingsWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
+
+            # Redraw:
+            self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
         else:
             # Parameters:
             self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
             self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
             self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
+            self._plotSettingsWindowGUI.param_enabled.setCurrentIndex(self._settings["param_en"])
 
     def run(self):
 

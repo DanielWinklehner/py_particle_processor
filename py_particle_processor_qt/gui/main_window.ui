@@ -245,7 +245,7 @@ color: rgb(255, 255, 255);</string>
          <string notr="true">background-color: rgb(0, 0, 0);</string>
         </property>
         <attribute name="title">
-         <string>Tab 1</string>
+         <string>Default Plots</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="0" column="0">
@@ -278,20 +278,6 @@ color: rgb(255, 255, 255);</string>
             <widget class="GLViewWidget" name="graphicsView_4"/>
            </item>
           </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tab_2">
-        <attribute name="title">
-         <string>Tab 2</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="0">
-          <widget class="QTextEdit" name="textEdit_2">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
          </item>
         </layout>
        </widget>
@@ -497,7 +483,7 @@ color: rgb(255, 255, 255);</string>
   </action>
   <action name="actionModify_Plot">
    <property name="text">
-    <string>Modify Current Plot</string>
+    <string>Modify Current Plot...</string>
    </property>
   </action>
   <action name="actionRemove_Plot">
