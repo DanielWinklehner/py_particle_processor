@@ -49,11 +49,11 @@ class ImportExportDriver(object):
 
 class Dataset(object):
 
-    def __init__(self, indices, debug=False):
+    def __init__(self, indices, data=None, debug=False):
         self._draw = False
         self._selected = False
 
-        self._datasource = None
+        self._datasource = data
         self._filename = None
         self._driver = None
         self._debug = debug
@@ -73,6 +73,13 @@ class Dataset(object):
                             "particles": None}
 
         self._native_properties = {}
+
+        # This will only be true if the data was supplied via a generator
+        # Temporary flags for development - PW
+        if self._datasource is not None:
+            self._is_generated = True
+        else:
+            self._is_generated = False
 
     def close(self):
         """
@@ -149,7 +156,14 @@ class Dataset(object):
 
             return 1
 
-        return self._data.get(key).value
+        data = self._data.get(key)
+
+        if type(data) is ArrayWrapper:
+            return data.value
+        elif type(data) is np.ndarray:
+            return data
+        else:
+            return 1
 
     def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}
@@ -254,6 +268,8 @@ class Dataset(object):
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 
+                print(self._datasource)
+
                 return 0
 
         return 1
@@ -272,6 +288,7 @@ class Dataset(object):
             return 1
 
         self._properties["curstep"] = step
+
         self._data = self._datasource.get("Step#{}".format(step))
 
         return 0

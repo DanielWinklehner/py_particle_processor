@@ -25,6 +25,9 @@ class ParticleFile(object):
         self._datasets = []
         self._index = index
 
+    def add_dataset(self, dataset):
+        self._datasets.append(dataset)
+
     def dataset_count(self):
         return len(self._datasets)
 
@@ -187,14 +190,24 @@ class PyParticleProcessor(object):
             v.setFlags(QtCore.Qt.NoItemFlags)  # Disable all item flags
             self._properties_table.setItem(idx, 1, v)  # Set the item to the corresponding row (second column)
 
-    # TODO: This needs to be tested, and it also assumes the incoming data is in a Dataset object -PW
-    # TODO: Not expecting this to work since I just updated the way we find datafiles and datasets -PW
-    def add_generated_data_set(self, dataset):
+    def add_generated_dataset(self, data, settings):
 
         filename, driver = self.get_filename(action='save')  # Get a filename and driver
         df_i = len(self._datafiles)
         new_df = ParticleFile(filename=filename, driver=driver, index=df_i)
-        new_df.set_dataset(index=0, dataset=dataset)
+        dataset = Dataset(indices=(df_i, 0), data=data)
+
+        # We need a better way to do this -PW
+        dataset.set_property("name", "name?")
+        dataset.set_property("ion", IonSpecies(name=settings["species"], energy_mev=float(settings["energy"])))
+        dataset.set_property("steps", 1)
+        dataset.set_property("particles", int(settings["numpart"]))
+        dataset.set_property("curstep", 0)
+        dataset.assign_color(1)
+
+        dataset.export_to_file(filename=filename, driver=driver)
+
+        new_df.add_dataset(dataset=dataset)
         self._datafiles.append(new_df)
 
         top_level_item = QtGui.QTreeWidgetItem(self._treewidget)  # Create the top level item for the datafile
@@ -258,7 +271,7 @@ class PyParticleProcessor(object):
     def callback_analyze(self):
 
         print("Not implemented yet!")
-        print(self._properties_select.data_objects)
+        print(self._gen_data)
         return 0
 
     def callback_delete_ds(self):
@@ -544,9 +557,9 @@ class PyParticleProcessor(object):
         # Called when the "Generate..." button is pressed
 
         self._gen.run()
-        self._gen_data = self._gen.data
-        return self._gen.data
-        # TODO Create a function that takes this data and enters it into the rest of the system
+        # self._gen_data = self._gen.data
+
+        # self.add_generated_data_set(self._gen.data)
 
     def callback_properties_select(self, index):
 

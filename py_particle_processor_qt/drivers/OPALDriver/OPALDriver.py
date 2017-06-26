@@ -1,8 +1,8 @@
 from ..arraywrapper import ArrayWrapper
 from ..abstractdriver import AbstractDriver
 from dans_pymodules import IonSpecies
-import h5py
 import numpy as np
+import h5py
 
 
 class OPALDriver(AbstractDriver):
@@ -37,7 +37,7 @@ class OPALDriver(AbstractDriver):
                 if self._debug:
                     print("Loading dataset from h5 file in OPAL format.")
 
-                data["steps"] = len(_datasource.items())
+                data["steps"] = len(_datasource.keys())
 
                 if self._debug:
                     print("Found {} steps in the file.".format(data["steps"]))

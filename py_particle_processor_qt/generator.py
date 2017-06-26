@@ -19,14 +19,17 @@ class GenerateDistribution(object):
         if isinstance(rz, str): rz = float(rz)
         if ez == "":
             ez = 0.0
-        elif isinstance(ez, str): ez = float(ez)
+        elif isinstance(ez, str):
+            ez = float(ez)
         if stddev == "":
             stddev = 1.0
-        elif isinstance(stddev, str): numpart = float(stddev)
+        elif isinstance(stddev, str):
+            numpart = float(stddev)
         self._numpart = numpart  # number of particles
         self._species = IonSpecies(species, energy)  # instance of IonSpecies
+        self._data = None  # A variable to store the data dictionary
 
-        rzp = self._species.v_m_per_s()*1e-03
+        rzp = self._species.v_m_per_s() * 1e-03
 
         # Calculate longitudinal position distribution
         z = np.zeros(self._numpart)
@@ -51,8 +54,8 @@ class GenerateDistribution(object):
             z = a_z * rz * np.cos(beta)
         elif z_pos == "Parabolic":  # Parabolic distribution within an ellipse
             beta = 2 * np.pi * np.random.random(self._numpart)
-            alpha = np.arccos(1.0 - 2*np.random.random(self._numpart))
-            a = np.sqrt(1.0 - 2*np.cos((alpha - 2.0*np.pi)/3))
+            alpha = np.arccos(1.0 - 2 * np.random.random(self._numpart))
+            a = np.sqrt(1.0 - 2 * np.cos((alpha - 2.0 * np.pi) / 3))
             rand_phi = np.random.random(self._numpart)
             a_z = a * np.sqrt(rand_phi)
             z = a_z * rz * np.cos(beta)
@@ -100,16 +103,16 @@ class GenerateDistribution(object):
 
         # Initialize random variables
         a = np.ones(self._numpart)
-        beta_x = 2*np.pi*np.random.random(self._numpart)
-        beta_y = 2*np.pi*np.random.random(self._numpart)
+        beta_x = 2 * np.pi * np.random.random(self._numpart)
+        beta_y = 2 * np.pi * np.random.random(self._numpart)
         rand_phi = np.random.random(self._numpart)
 
         # Calculate distribution
-        a_x = a*np.sqrt(rand_phi)
-        a_y = a*np.sqrt(1 - rand_phi)
-        x = a_x*rx*np.cos(beta_x)
+        a_x = a * np.sqrt(rand_phi)
+        a_y = a * np.sqrt(1 - rand_phi)
+        x = a_x * rx * np.cos(beta_x)
         xp = a_x * (rxp * np.cos(beta_x) - (emittance[0] / rx) * np.sin(beta_x))
-        y = a_y*ry*np.cos(beta_y)
+        y = a_y * ry * np.cos(beta_y)
         yp = a_y * (ryp * np.cos(beta_y) - (emittance[1] / ry) * np.sin(beta_y))
 
         # Correct for z-position
@@ -154,10 +157,10 @@ class GenerateDistribution(object):
         yp_rand = np.random.normal(0, stddev, self._numpart)
 
         # Calculate distribution
-        x = x_rand*r0x*.5
-        xp = (a0x/r0x)*x + (emittance[0]/(2*r0x))*xp_rand
-        y = y_rand*r0y*.5
-        yp = (a0y/r0y)*y + (emittance[1]/(2*r0y))*yp_rand
+        x = x_rand * r0x * .5
+        xp = (a0x / r0x) * x + (emittance[0] / (2 * r0x)) * xp_rand
+        y = y_rand * r0y * .5
+        yp = (a0y / r0y) * y + (emittance[1] / (2 * r0y)) * yp_rand
 
         # Correct for z-position
         x = x + self._z * xp
@@ -194,16 +197,16 @@ class GenerateDistribution(object):
 
         # Initialize random variables
         a = np.sqrt(1.5 * np.sqrt(np.random.random(self._numpart)))
-        beta_x = 2*np.pi*np.random.random(self._numpart)
-        beta_y = 2*np.pi*np.random.random(self._numpart)
+        beta_x = 2 * np.pi * np.random.random(self._numpart)
+        beta_y = 2 * np.pi * np.random.random(self._numpart)
         rand_phi = np.random.random(self._numpart)
 
         # Calculate distribution
-        a_x = a*np.sqrt(rand_phi)
-        a_y = a*np.sqrt(1 - rand_phi)
-        x = a_x*rx*np.cos(beta_x)
+        a_x = a * np.sqrt(rand_phi)
+        a_y = a * np.sqrt(1 - rand_phi)
+        x = a_x * rx * np.cos(beta_x)
         xp = a_x * (rxp * np.cos(beta_x) - (emittance[0] / rx) * np.sin(beta_x))
-        y = a_y*ry*np.cos(beta_y)
+        y = a_y * ry * np.cos(beta_y)
         yp = a_y * (ryp * np.cos(beta_y) - (emittance[1] / ry) * np.sin(beta_y))
 
         # Correct for z-position
@@ -240,18 +243,18 @@ class GenerateDistribution(object):
         emittance = np.array(e_normalized) / ion.gamma() / ion.beta()  # mm-mrad - non-normalized, rms emittance
 
         # Initialize random variables
-        alpha = np.arccos(1.0 - 2*np.random.random(self._numpart))
-        a = np.sqrt(1.0 - 2*np.cos((alpha - 2.0*np.pi)/3))
-        beta_x = 2*np.pi*np.random.random(self._numpart)
-        beta_y = 2*np.pi*np.random.random(self._numpart)
+        alpha = np.arccos(1.0 - 2 * np.random.random(self._numpart))
+        a = np.sqrt(1.0 - 2 * np.cos((alpha - 2.0 * np.pi) / 3))
+        beta_x = 2 * np.pi * np.random.random(self._numpart)
+        beta_y = 2 * np.pi * np.random.random(self._numpart)
         rand_phi = np.random.random(self._numpart)
 
         # Calculate distribution
-        a_x = a*np.sqrt(rand_phi)
-        a_y = a*np.sqrt(1 - rand_phi)
-        x = a_x*rx*np.cos(beta_x)
+        a_x = a * np.sqrt(rand_phi)
+        a_y = a * np.sqrt(1 - rand_phi)
+        x = a_x * rx * np.cos(beta_x)
         xp = a_x * (rxp * np.cos(beta_x) - (emittance[0] / rx) * np.sin(beta_x))
-        y = a_y*ry*np.cos(beta_y)
+        y = a_y * ry * np.cos(beta_y)
         yp = a_y * (ryp * np.cos(beta_y) - (emittance[1] / ry) * np.sin(beta_y))
 
         # Correct for z-position
@@ -269,8 +272,8 @@ class GenerateDistribution(object):
 
         return data
 
-    # GUI Management
 
+# GUI Management
 class GeneratorGUI(object):
     def __init__(self, parent):
         self._parent = parent
@@ -323,7 +326,6 @@ class GeneratorGUI(object):
             self._settings["species"] = "H2_1+"
         elif info == "Alpha particle":
             self._settings["species"] = "4He_2+"
-
 
         # Energy:
         self._settings["energy"] = self._generate_mainGUI.energy.text()
@@ -403,7 +405,7 @@ class GeneratorGUI(object):
 
     def callback_ok_envelope(self):
         self.apply_settings_envelope()
-        if self._settings["eps"] == ["",""] or self._settings["r"] == ["",""] or self._settings["rp"] == ["",""]:
+        if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
             self.run_error()
         else:
             if self._settings["zpos"] == "Constant" and self._settings["zmom"] == "Constant":
@@ -412,27 +414,28 @@ class GeneratorGUI(object):
                                          self._settings["zr"])
             elif self._settings["zpos"] == "Gaussian" or self._settings["zmom"] == "Gaussian on ellipse":
                 g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                     self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                     self._settings["zr"], self._settings["ez"],
-                                     self._settings["zstddev"])
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ez"],
+                                         self._settings["zstddev"])
             else:
                 g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                     self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                     self._settings["zr"], self._settings["ez"])
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ez"])
             if self._settings["xydist"] == "Uniform":
                 self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
             elif self._settings["xydist"] == "Gaussian":
                 self.data = g.generate_gaussian(self._settings["r"], self._settings["rp"], self._settings["eps"],
-                                               self._settings["xystddev"])
+                                                self._settings["xystddev"])
             elif self._settings["xydist"] == "Waterbag":
                 self.data = g.generate_waterbag(self._settings["r"], self._settings["rp"], self._settings["eps"])
             elif self._settings["xydist"] == "Parabolic":
                 self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
             self._generate_envelope.close()
+            self._parent.add_generated_dataset(data=self.data, settings=self._settings)
 
     def callback_ok_twiss(self):
         self.apply_settings_twiss()
-        if self._settings["eps"] == ["",""] or self._settings["r"] == ["",""] or self._settings["rp"] == ["",""]:
+        if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
             self.run_error()
         else:
             if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
@@ -461,6 +464,7 @@ class GeneratorGUI(object):
                 elif self._settings["xydist"] == "Parabolic":
                     self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
                 self._generate_twiss.close()
+                self._parent.add_generated_dataset(data=self.data, settings=self._settings)
 
     def change_zpos_envelope(self):
         info = str(self._generate_envelopeGUI.zpos.currentText())
