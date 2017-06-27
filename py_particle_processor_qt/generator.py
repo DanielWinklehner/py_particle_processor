@@ -127,11 +127,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -174,11 +174,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -221,11 +221,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -269,11 +269,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -360,7 +360,6 @@ class GeneratorGUI(object):
                                       self._generate_envelopeGUI.ystddev.text(),
                                       self._generate_envelopeGUI.ypstddev.text()]
 
-    # TODO Add error messages to Twiss menu
     def apply_settings_twiss(self):
 
         # Convert from Twiss to envelope
@@ -454,33 +453,30 @@ class GeneratorGUI(object):
         if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
             self.run_error()
         else:
-            if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
-                self.run_error()
+            if self._settings["zpos"] == "Constant" and self._settings["zmom"] == "Constant":
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"])
+            elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ze"],
+                                         self._settings["zstddev"])
             else:
-                if self._settings["zpos"] == "Constant" and self._settings["zmom"] == "Constant":
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"])
-                elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ze"],
-                                             self._settings["zstddev"])
-                else:
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ze"])
-                if self._settings["xydist"] == "Uniform":
-                    self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                elif self._settings["xydist"] == "Gaussian":
-                    self.data = g.generate_gaussian(self._settings["r"], self._settings["rp"], self._settings["eps"],
-                                                    self._settings["xystddev"])
-                elif self._settings["xydist"] == "Waterbag":
-                    self.data = g.generate_waterbag(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                elif self._settings["xydist"] == "Parabolic":
-                    self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                self._generate_twiss.close()
-                self._parent.add_generated_dataset(data=self.data, settings=self._settings)
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ze"])
+            if self._settings["xydist"] == "Uniform":
+                self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            elif self._settings["xydist"] == "Gaussian":
+                self.data = g.generate_gaussian(self._settings["r"], self._settings["rp"], self._settings["eps"],
+                                                self._settings["xystddev"])
+            elif self._settings["xydist"] == "Waterbag":
+                self.data = g.generate_waterbag(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            elif self._settings["xydist"] == "Parabolic":
+                self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            self._generate_twiss.close()
+            self._parent.add_generated_dataset(data=self.data, settings=self._settings)
 
     def change_zpos_envelope(self):
         info = str(self._generate_envelopeGUI.zpos.currentText())
