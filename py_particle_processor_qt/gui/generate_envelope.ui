@@ -32,7 +32,7 @@
       <x>10</x>
       <y>10</y>
       <width>451</width>
-      <height>599</height>
+      <height>607</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -570,6 +570,22 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="5" column="2" alignment="Qt::AlignHCenter">
+          <widget class="QCheckBox" name="checkBox">
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Symmetric?</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

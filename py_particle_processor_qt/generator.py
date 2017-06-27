@@ -127,11 +127,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -174,11 +174,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -221,11 +221,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -269,11 +269,11 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': np.array(x),
+        data = {'Step#0': {'x': 0.001 * np.array(x),
                            'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': np.array(y),
+                           'y': 0.001 * np.array(y),
                            'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': np.array(self._z),
+                           'z': 0.001 * np.array(self._z),
                            'pz': np.array(ion.gamma() * ion.beta() * self._zp),
                            'id': range(self._numpart + 1),
                            'attrs': 0}}
@@ -316,6 +316,8 @@ class GeneratorGUI(object):
         self._generate_twissGUI.zpos.currentIndexChanged.connect(self.change_zpos_twiss)
         self._generate_twissGUI.zmom.currentIndexChanged.connect(self.change_zmom_twiss)
         self._generate_twissGUI.xydist.currentIndexChanged.connect(self.change_xy_twiss)
+        self._generate_envelopeGUI.checkBox.stateChanged.connect(self.sym_envelope)
+        self._generate_twissGUI.checkBox.stateChanged.connect(self.sym_twiss)
 
         self.data = {}
 
@@ -360,7 +362,6 @@ class GeneratorGUI(object):
                                       self._generate_envelopeGUI.ystddev.text(),
                                       self._generate_envelopeGUI.ypstddev.text()]
 
-    # TODO Add error messages to Twiss menu
     def apply_settings_twiss(self):
 
         # Convert from Twiss to envelope
@@ -401,11 +402,11 @@ class GeneratorGUI(object):
         self._settings["eps"] = [xe, ye]
         self._settings["r"] = [rx, ry]
         self._settings["rp"] = [rxp, ryp]
-        if self._generate_twissGUI.xstddev.text() != "":
-            self._settings["xystddev"] = [self._generate_envelopeGUI.xstddev.text(),
-                                          self._generate_envelopeGUI.xpstddev.text(),
-                                          self._generate_envelopeGUI.ystddev.text(),
-                                          self._generate_envelopeGUI.ypstddev.text()]
+        if self._generate_twissGUI.xydist.currentText() == "Gaussian":
+            self._settings["xystddev"] = [self._generate_twissGUI.xstddev.text(),
+                                          self._generate_twissGUI.xpstddev.text(),
+                                          self._generate_twissGUI.ystddev.text(),
+                                          self._generate_twissGUI.ypstddev.text()]
 
     def callback_ok_main(self):
         self.apply_settings_main()
@@ -454,33 +455,30 @@ class GeneratorGUI(object):
         if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
             self.run_error()
         else:
-            if self._settings["eps"] == ["", ""] or self._settings["r"] == ["", ""] or self._settings["rp"] == ["", ""]:
-                self.run_error()
+            if self._settings["zpos"] == "Constant" and self._settings["zmom"] == "Constant":
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"])
+            elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ze"],
+                                         self._settings["zstddev"])
             else:
-                if self._settings["zpos"] == "Constant" and self._settings["zmom"] == "Constant":
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"])
-                elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ze"],
-                                             self._settings["zstddev"])
-                else:
-                    g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
-                                             self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ze"])
-                if self._settings["xydist"] == "Uniform":
-                    self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                elif self._settings["xydist"] == "Gaussian":
-                    self.data = g.generate_gaussian(self._settings["r"], self._settings["rp"], self._settings["eps"],
-                                                    self._settings["xystddev"])
-                elif self._settings["xydist"] == "Waterbag":
-                    self.data = g.generate_waterbag(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                elif self._settings["xydist"] == "Parabolic":
-                    self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
-                self._generate_twiss.close()
-                self._parent.add_generated_dataset(data=self.data, settings=self._settings)
+                g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
+                                         self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
+                                         self._settings["zr"], self._settings["ze"])
+            if self._settings["xydist"] == "Uniform":
+                self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            elif self._settings["xydist"] == "Gaussian":
+                self.data = g.generate_gaussian(self._settings["r"], self._settings["rp"], self._settings["eps"],
+                                                self._settings["xystddev"])
+            elif self._settings["xydist"] == "Waterbag":
+                self.data = g.generate_waterbag(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            elif self._settings["xydist"] == "Parabolic":
+                self.data = g.generate_parabolic(self._settings["r"], self._settings["rp"], self._settings["eps"])
+            self._generate_twiss.close()
+            self._parent.add_generated_dataset(data=self.data, settings=self._settings)
 
     def change_zpos_envelope(self):
         info = str(self._generate_envelopeGUI.zpos.currentText())
@@ -561,6 +559,32 @@ class GeneratorGUI(object):
             self._generate_twissGUI.xpstddev.setDisabled(True)
             self._generate_twissGUI.ystddev.setDisabled(True)
             self._generate_twissGUI.ypstddev.setDisabled(True)
+
+    def sym_envelope(self):
+        info = self._generate_envelopeGUI.checkBox.isChecked()
+        if info:
+            self.apply_settings_envelope()
+            self._generate_envelopeGUI.yr.setText(self._settings["r"][0])
+            self._generate_envelopeGUI.yrp.setText(self._settings["rp"][0])
+            self._generate_envelopeGUI.ye.setText(self._settings["eps"][0])
+        else:
+            self._generate_envelopeGUI.yr.setText("")
+            self._generate_envelopeGUI.yrp.setText("")
+            self._generate_envelopeGUI.ye.setText("")
+
+    def sym_twiss(self):
+        info = self._generate_twissGUI.checkBox.isChecked()
+        if info:
+            xa = self._generate_twissGUI.xa.text()
+            self._generate_twissGUI.ya.setText(xa)
+            xb = self._generate_twissGUI.xb.text()
+            self._generate_twissGUI.yb.setText(xb)
+            xe = self._generate_twissGUI.xe.text()
+            self._generate_twissGUI.ye.setText(xe)
+        else:
+            self._generate_twissGUI.ya.setText("")
+            self._generate_twissGUI.yb.setText("")
+            self._generate_twissGUI.ye.setText("")
 
     def run(self):
         # --- Calculate the positions to center the window --- #
