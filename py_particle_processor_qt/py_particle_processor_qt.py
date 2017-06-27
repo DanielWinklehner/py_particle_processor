@@ -138,7 +138,7 @@ class PyParticleProcessor(object):
         self._mainWindowGUI.actionImport_Add.triggered.connect(self.callback_load_add_ds)
         self._mainWindowGUI.actionRemove.triggered.connect(self.callback_delete_ds)
         self._mainWindowGUI.actionAnalyze.triggered.connect(self.callback_analyze)
-        self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
+        # self._mainWindowGUI.actionPlot.triggered.connect(self.callback_plot)
         self._mainWindowGUI.actionGenerate.triggered.connect(self.callback_generate)
         self._mainWindowGUI.actionExport_For.triggered.connect(self.callback_export)
         self._properties_table.cellChanged.connect(self.callback_table_item_changed)
@@ -499,16 +499,16 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def callback_plot(self):
-        # Called when the "Plot..." Button is pressed
-
-        if self._debug:
-            "DEBUG: callback_plot called"
-
-        if self._tabs.currentIndex() == 0:  # Check to see if it's the default plot tab
-            self._plot_manager.default_plot_settings(redraw=True)  # Open the default plot settings
-        elif self._tabs.currentIndex() > 1:  # Check to see if it's after the text tab
-            self._plot_manager.plot_settings()  # Open the plot settings
+    # def callback_plot(self):
+    #     # Called when the "Plot..." Button is pressed
+    #
+    #     if self._debug:
+    #         "DEBUG: callback_plot called"
+    #
+    #     if self._tabs.currentIndex() == 0:  # Check to see if it's the default plot tab
+    #         self._plot_manager.default_plot_settings(redraw=True)  # Open the default plot settings
+    #     elif self._tabs.currentIndex() > 1:  # Check to see if it's after the text tab
+    #         self._plot_manager.plot_settings()  # Open the plot settings
 
         return 0
 

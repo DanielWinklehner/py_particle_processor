@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main_window.ui'
+# Form implementation generated from reading ui file 'gui/main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -154,7 +154,7 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 31))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 994, 25))
         self.menuBar.setDefaultUp(True)
         self.menuBar.setNativeMenuBar(True)
         self.menuBar.setObjectName("menuBar")
@@ -192,10 +192,6 @@ class Ui_MainWindow(object):
         icon = QtGui.QIcon.fromTheme("remove")
         self.actionRemove.setIcon(icon)
         self.actionRemove.setObjectName("actionRemove")
-        self.actionPlot = QtWidgets.QAction(MainWindow)
-        icon = QtGui.QIcon.fromTheme("emblem-photos")
-        self.actionPlot.setIcon(icon)
-        self.actionPlot.setObjectName("actionPlot")
         self.actionAnalyze = QtWidgets.QAction(MainWindow)
         icon = QtGui.QIcon.fromTheme("applications-accessories")
         self.actionAnalyze.setIcon(icon)
@@ -215,7 +211,6 @@ class Ui_MainWindow(object):
         self.mainToolBar.addAction(self.actionImport_New)
         self.mainToolBar.addAction(self.actionImport_Add)
         self.mainToolBar.addAction(self.actionRemove)
-        self.mainToolBar.addAction(self.actionPlot)
         self.mainToolBar.addAction(self.actionGenerate)
         self.mainToolBar.addAction(self.actionAnalyze)
         self.mainToolBar.addAction(self.actionExport_For)
@@ -267,9 +262,6 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(_translate("MainWindow", "About"))
         self.actionRemove.setText(_translate("MainWindow", "Remove"))
         self.actionRemove.setToolTip(_translate("MainWindow", "Remove"))
-        self.actionPlot.setText(_translate("MainWindow", "Plot..."))
-        self.actionPlot.setIconText(_translate("MainWindow", "Plot..."))
-        self.actionPlot.setToolTip(_translate("MainWindow", "Plot..."))
         self.actionAnalyze.setText(_translate("MainWindow", "Analyze"))
         self.actionAnalyze.setToolTip(_translate("MainWindow", "Analyze"))
         self.actionNew_Plot.setText(_translate("MainWindow", "New Plot..."))

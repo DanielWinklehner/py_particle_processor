@@ -311,7 +311,6 @@ color: rgb(255, 255, 255);</string>
    <addaction name="actionImport_New"/>
    <addaction name="actionImport_Add"/>
    <addaction name="actionRemove"/>
-   <addaction name="actionPlot"/>
    <addaction name="actionGenerate"/>
    <addaction name="actionAnalyze"/>
    <addaction name="actionExport_For"/>
@@ -324,7 +323,7 @@ color: rgb(255, 255, 255);</string>
      <x>0</x>
      <y>0</y>
      <width>994</width>
-     <height>31</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -448,21 +447,6 @@ color: rgb(255, 255, 255);</string>
    </property>
    <property name="toolTip">
     <string>Remove</string>
-   </property>
-  </action>
-  <action name="actionPlot">
-   <property name="icon">
-    <iconset theme="emblem-photos">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
-   <property name="text">
-    <string>Plot...</string>
-   </property>
-   <property name="iconText">
-    <string>Plot...</string>
-   </property>
-   <property name="toolTip">
-    <string>Plot...</string>
    </property>
   </action>
   <action name="actionAnalyze">
