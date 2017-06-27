@@ -57,6 +57,13 @@
        <property name="sizeConstraint">
         <enum>QLayout::SetMaximumSize</enum>
        </property>
+       <item row="1" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="tr_label">
+         <property name="text">
+          <string>Momentum:</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
         <widget class="QLabel" name="tl_label">
          <property name="text">
@@ -68,20 +75,6 @@
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Normalized Emittance (pi-mm-mrad):</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2" alignment="Qt::AlignHCenter">
-        <widget class="QLineEdit" name="ze">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="tr_label">
-         <property name="text">
-          <string>Momentum:</string>
          </property>
         </widget>
        </item>
@@ -134,6 +127,43 @@
          </item>
         </widget>
        </item>
+       <item row="4" column="2" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="ze">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Standard Deviation:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="bl_label">
+         <property name="text">
+          <string>Length/Envelope Radius (mm):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="1" column="2" alignment="Qt::AlignHCenter">
         <widget class="QComboBox" name="zmom">
          <property name="enabled">
@@ -179,42 +209,61 @@
          </item>
         </widget>
        </item>
-       <item row="2" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="bl_label">
-         <property name="text">
-          <string>Length/Envelope Radius (mm):</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Standard Deviation:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2" alignment="Qt::AlignHCenter">
-        <widget class="QLineEdit" name="zstddev">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
+       <item row="5" column="2">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0" alignment="Qt::AlignHCenter">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Position (mm):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" alignment="Qt::AlignHCenter">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Momentum (mrad):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" alignment="Qt::AlignRight">
+          <widget class="QLineEdit" name="zpstddev">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" alignment="Qt::AlignRight">
+          <widget class="QLineEdit" name="zmstddev">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>134</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
@@ -290,6 +339,9 @@
          <property name="sizeConstraint">
           <enum>QLayout::SetMinimumSize</enum>
          </property>
+         <item row="7" column="2" alignment="Qt::AlignHCenter">
+          <widget class="QLineEdit" name="yrp"/>
+         </item>
          <item row="2" column="1" alignment="Qt::AlignRight">
           <widget class="QLabel" name="bl_label_6">
            <property name="text">
@@ -297,10 +349,24 @@
            </property>
           </widget>
          </item>
-         <item row="6" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QLineEdit" name="yrp"/>
+         <item row="7" column="1" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="bl_label_3">
+           <property name="text">
+            <string>Envelope Angle (mrad):</string>
+           </property>
+          </widget>
          </item>
-         <item row="5" column="0" rowspan="2">
+         <item row="0" column="1" alignment="Qt::AlignLeft|Qt::AlignVCenter">
+          <widget class="QLabel" name="tl_label_2">
+           <property name="text">
+            <string>X Phase Space Ellipse:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="2" alignment="Qt::AlignHCenter">
+          <widget class="QLineEdit" name="ye"/>
+         </item>
+         <item row="6" column="0" rowspan="2">
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -316,62 +382,45 @@
            </property>
           </spacer>
          </item>
-         <item row="7" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QLineEdit" name="ye"/>
-         </item>
-         <item row="0" column="1" alignment="Qt::AlignLeft|Qt::AlignVCenter">
-          <widget class="QLabel" name="tl_label_2">
-           <property name="text">
-            <string>X Phase Space Ellipse:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1" alignment="Qt::AlignRight">
+         <item row="8" column="1" alignment="Qt::AlignRight">
           <widget class="QLabel" name="label_5">
            <property name="text">
             <string>Normalized Emittance (pi-mm-mrad):</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="1" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="bl_label_3">
-           <property name="text">
-            <string>Envelope Angle (mrad):</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1" alignment="Qt::AlignLeft">
-          <widget class="QLabel" name="tr_label_2">
-           <property name="text">
-            <string>Y Phase Space Ellipse:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QLineEdit" name="yr">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="bl_label_4">
-           <property name="text">
-            <string>Envelope Radius (mm):</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="1" alignment="Qt::AlignRight|Qt::AlignVCenter">
+         <item row="9" column="1" alignment="Qt::AlignRight|Qt::AlignVCenter">
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>Standard Deviation:</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QLineEdit" name="ystddev">
+         <item row="6" column="2" alignment="Qt::AlignHCenter">
+          <widget class="QLineEdit" name="yr">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="bl_label_4">
+           <property name="text">
+            <string>Envelope Radius (mm):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1" alignment="Qt::AlignLeft">
+          <widget class="QLabel" name="tr_label_2">
+           <property name="text">
+            <string>Y Phase Space Ellipse:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2" alignment="Qt::AlignHCenter">
+          <widget class="QLineEdit" name="xe">
+           <property name="enabled">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -403,12 +452,124 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2" alignment="Qt::AlignHCenter">
-          <widget class="QLineEdit" name="xe">
-           <property name="enabled">
-            <bool>true</bool>
+         <item row="4" column="1" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Standard Deviation:</string>
            </property>
           </widget>
+         </item>
+         <item row="4" column="2">
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="0" column="0" alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Radius (mm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Angle (mrad):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" alignment="Qt::AlignRight">
+            <widget class="QLineEdit" name="xstddev">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>134</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" alignment="Qt::AlignRight">
+            <widget class="QLineEdit" name="xpstddev">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>134</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="9" column="2">
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="0" alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Radius (mm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Angle (mrad):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" alignment="Qt::AlignRight">
+            <widget class="QLineEdit" name="ystddev">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>134</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" alignment="Qt::AlignRight">
+            <widget class="QLineEdit" name="ypstddev">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>134</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>

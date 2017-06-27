@@ -1,5 +1,4 @@
 import numpy as np
-from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow
 from py_particle_processor_qt.gui.generate_main import Ui_Generate_Main
 from py_particle_processor_qt.gui.generate_error import Ui_Generate_Error
@@ -13,18 +12,27 @@ class GenerateDistribution(object):
     A generator for creating various particle distributions.
     """
 
-    def __init__(self, numpart, species, energy, z_pos="Zero", z_mom="Zero", rz=0.0, ez=0.0, stddev=1.0):
-        if isinstance(numpart, str): numpart = int(numpart)
-        if isinstance(energy, str): energy = float(energy)
-        if isinstance(rz, str): rz = float(rz)
+    def __init__(self, numpart, species, energy, z_pos="Zero", z_mom="Zero", rz=0.0, ez=0.0, dev=[1.0, 1.0]):
+        if isinstance(numpart, str):
+            numpart = int(numpart)
+        if isinstance(energy, str):
+            energy = float(energy)
+        if isinstance(rz, str):
+            rz = float(rz)
         if ez == "":
             ez = 0.0
         elif isinstance(ez, str):
             ez = float(ez)
-        if stddev == "":
-            stddev = 1.0
-        elif isinstance(stddev, str):
-            numpart = float(stddev)
+        stddev = [0, 0]
+        if dev[0] == "":
+            stddev[0] = 1.0
+        else:
+            stddev[0] = float(dev[0])
+        if dev[1] == "":
+            stddev[1] = 1.0
+        else:
+            stddev[1] = float(dev[1])
+
         self._numpart = numpart  # number of particles
         self._species = IonSpecies(species, energy)  # instance of IonSpecies
         self._data = None  # A variable to store the data dictionary
@@ -44,7 +52,7 @@ class GenerateDistribution(object):
             a_z = a * np.sqrt(rand_phi)
             z = a_z * rz * np.cos(beta)
         elif z_pos == "Gaussian on ellipse":  # Gaussian distribution within an ellipse
-            rand = np.random.normal(0, stddev, self._numpart)
+            rand = np.random.normal(0, stddev[0], self._numpart)
             z = rand * rz * .5
         elif z_pos == "Waterbag":  # Waterbag distribution within an ellipse
             beta = 2 * np.pi * np.random.random(self._numpart)
@@ -73,8 +81,8 @@ class GenerateDistribution(object):
             a_z = a * np.sqrt(rand_phi)
             zp = a_z * (rzp * np.cos(beta) - (ez / rz) * np.sin(beta))
         elif z_mom == "Gaussian on ellipse":
-            z_rand = np.random.normal(0, stddev, self._numpart)
-            zp_rand = np.random.normal(0, stddev, self._numpart)
+            z_rand = np.random.normal(0, stddev[0], self._numpart)
+            zp_rand = np.random.normal(0, stddev[1], self._numpart)
             z_temp = z_rand * rz * .5
             zp = (rzp / rz) * z_temp + (ez / (2 * rz)) * zp_rand
 
@@ -145,16 +153,16 @@ class GenerateDistribution(object):
         a0x = float(rp[0])
         r0y = float(r[1])
         a0y = float(rp[1])
-        stddev = float(stddev)
+        stddev = [float(stddev[0]), float(stddev[1]), float(stddev[2]), float(stddev[3])]
         e_normalized = [float(e_normalized[0]), float(e_normalized[1])]
         ion = self._species
         emittance = np.array(e_normalized) / ion.gamma() / ion.beta()  # mm-mrad - non-normalized, rms emittance
 
         # Initialize random variables
-        x_rand = np.random.normal(0, stddev, self._numpart)
-        y_rand = np.random.normal(0, stddev, self._numpart)
-        xp_rand = np.random.normal(0, stddev, self._numpart)
-        yp_rand = np.random.normal(0, stddev, self._numpart)
+        x_rand = np.random.normal(0, stddev[0], self._numpart)
+        y_rand = np.random.normal(0, stddev[2], self._numpart)
+        xp_rand = np.random.normal(0, stddev[1], self._numpart)
+        yp_rand = np.random.normal(0, stddev[3], self._numpart)
 
         # Calculate distribution
         x = x_rand * r0x * .5
@@ -339,14 +347,18 @@ class GeneratorGUI(object):
         self._settings["zmom"] = str(self._generate_envelopeGUI.zmom.currentText())
         self._settings["ze"] = self._generate_envelopeGUI.ze.text()
         self._settings["zr"] = self._generate_envelopeGUI.zr.text()
-        self._settings["zstddev"] = self._generate_envelopeGUI.zstddev.text()
+        self._settings["zstddev"] = [self._generate_envelopeGUI.zpstddev.text(),
+                                     self._generate_envelopeGUI.zmstddev.text()]
 
         # Transverse parameters
         self._settings["xydist"] = str(self._generate_envelopeGUI.xydist.currentText())
         self._settings["eps"] = [self._generate_envelopeGUI.xe.text(), self._generate_envelopeGUI.ye.text()]
         self._settings["r"] = [self._generate_envelopeGUI.xr.text(), self._generate_envelopeGUI.yr.text()]
         self._settings["rp"] = [self._generate_envelopeGUI.xrp.text(), self._generate_envelopeGUI.yrp.text()]
-        self._settings["xystddev"] = self._generate_envelopeGUI.ystddev.text()
+        self._settings["xystddev"] = [self._generate_envelopeGUI.xstddev.text(),
+                                      self._generate_envelopeGUI.xpstddev.text(),
+                                      self._generate_envelopeGUI.ystddev.text(),
+                                      self._generate_envelopeGUI.ypstddev.text()]
 
     # TODO Add error messages to Twiss menu
     def apply_settings_twiss(self):
@@ -381,15 +393,19 @@ class GeneratorGUI(object):
         self._settings["zmom"] = str(self._generate_twissGUI.zmom.currentText())
         self._settings["ze"] = ze
         self._settings["zr"] = rz
-        self._settings["zstddev"] = self._generate_twissGUI.zstddev.text()
+        self._settings["zstddev"] = [self._generate_envelopeGUI.zpstddev.text(),
+                                     self._generate_envelopeGUI.zmstddev.text()]
 
         # Transverse parameters
         self._settings["xydist"] = str(self._generate_twissGUI.xydist.currentText())
         self._settings["eps"] = [xe, ye]
         self._settings["r"] = [rx, ry]
         self._settings["rp"] = [rxp, ryp]
-        if self._generate_twissGUI.xystddev.text() != "":
-            self._settings["xystddev"] = float(self._generate_twissGUI.xystddev.text())
+        if self._generate_twissGUI.xstddev.text() != "":
+            self._settings["xystddev"] = [self._generate_envelopeGUI.xstddev.text(),
+                                          self._generate_envelopeGUI.xpstddev.text(),
+                                          self._generate_envelopeGUI.ystddev.text(),
+                                          self._generate_envelopeGUI.ypstddev.text()]
 
     def callback_ok_main(self):
         self.apply_settings_main()
@@ -412,15 +428,15 @@ class GeneratorGUI(object):
                 g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                          self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
                                          self._settings["zr"])
-            elif self._settings["zpos"] == "Gaussian" or self._settings["zmom"] == "Gaussian on ellipse":
+            elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
                 g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                          self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                         self._settings["zr"], self._settings["ez"],
+                                         self._settings["zr"], self._settings["ze"],
                                          self._settings["zstddev"])
             else:
                 g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                          self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                         self._settings["zr"], self._settings["ez"])
+                                         self._settings["zr"], self._settings["ze"])
             if self._settings["xydist"] == "Uniform":
                 self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
             elif self._settings["xydist"] == "Gaussian":
@@ -445,15 +461,15 @@ class GeneratorGUI(object):
                     g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                              self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
                                              self._settings["zr"])
-                elif self._settings["zpos"] == "Gaussian" or self._settings["zmom"] == "Gaussian on ellipse":
+                elif self._settings["zpos"] == "Gaussian on ellipse" or self._settings["zmom"] == "Gaussian on ellipse":
                     g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                              self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ez"],
+                                             self._settings["zr"], self._settings["ze"],
                                              self._settings["zstddev"])
                 else:
                     g = GenerateDistribution(self._settings["numpart"], self._settings["species"],
                                              self._settings["energy"], self._settings["zpos"], self._settings["zmom"],
-                                             self._settings["zr"], self._settings["ez"])
+                                             self._settings["zr"], self._settings["ze"])
                 if self._settings["xydist"] == "Uniform":
                     self.data = g.generate_uniform(self._settings["r"], self._settings["rp"], self._settings["eps"])
                 elif self._settings["xydist"] == "Gaussian":
@@ -468,44 +484,83 @@ class GeneratorGUI(object):
 
     def change_zpos_envelope(self):
         info = str(self._generate_envelopeGUI.zpos.currentText())
-        if info != "Constant":
+        if info != "Constant" and info != "Uniform along length":
             self._generate_envelopeGUI.ze.setEnabled(True)
             if info == "Gaussian on ellipse":
-                self._generate_envelopeGUI.zstddev.setEnabled(True)
+                self._generate_envelopeGUI.zpstddev.setEnabled(True)
+            else:
+                self._generate_envelopeGUI.zpstddev.setDisabled(True)
+        else:
+            self._generate_envelopeGUI.ze.setDisabled(True)
+            self._generate_envelopeGUI.zpstddev.setDisabled(True)
 
     def change_zmom_envelope(self):
         info = str(self._generate_envelopeGUI.zmom.currentText())
-        if info != "Constant":
+        if info != "Constant" and info != "Uniform along length":
             self._generate_envelopeGUI.ze.setEnabled(True)
             if info == "Gaussian on ellipse":
-                self._generate_envelopeGUI.zstddev.setEnabled(True)
+                self._generate_envelopeGUI.zmstddev.setEnabled(True)
+            else:
+                self._generate_envelopeGUI.zmstddev.setDisabled(True)
+        else:
+            self._generate_envelopeGUI.ze.setDisabled(True)
+            self._generate_envelopeGUI.zmstddev.setDisabled(True)
 
     def change_xy_envelope(self):
         info = str(self._generate_envelopeGUI.xydist.currentText())
         if info == "Gaussian":
+            self._generate_envelopeGUI.xstddev.setEnabled(True)
+            self._generate_envelopeGUI.xpstddev.setEnabled(True)
             self._generate_envelopeGUI.ystddev.setEnabled(True)
+            self._generate_envelopeGUI.ypstddev.setEnabled(True)
+        else:
+            self._generate_envelopeGUI.xstddev.setDisabled(True)
+            self._generate_envelopeGUI.xpstddev.setDisabled(True)
+            self._generate_envelopeGUI.ystddev.setDisabled(True)
+            self._generate_envelopeGUI.ypstddev.setDisabled(True)
 
     def change_zpos_twiss(self):
         info = str(self._generate_twissGUI.zpos.currentText())
-        if info != "Constant":
+        if info != "Constant" and info != "Uniform along length":
             self._generate_twissGUI.ze.setEnabled(True)
             self._generate_twissGUI.zpa.setEnabled(True)
             self._generate_twissGUI.zpb.setEnabled(True)
             self._generate_twissGUI.length.setDisabled(True)
             if info == "Gaussian on ellipse":
-                self._generate_twissGUI.zstddev.setEnabled(True)
+                self._generate_twissGUI.zpstddev.setEnabled(True)
+            else:
+                self._generate_twissGUI.zpstddev.setDisabled(True)
+        else:
+            self._generate_twissGUI.ze.setDisabled(True)
+            self._generate_twissGUI.zpa.setDisabled(True)
+            self._generate_twissGUI.zpb.setDisabled(True)
+            self._generate_twissGUI.length.setEnabled(True)
+            self._generate_twissGUI.zpstddev.setDisabled(True)
 
     def change_zmom_twiss(self):
         info = str(self._generate_twissGUI.zmom.currentText())
-        if info != "Constant":
+        if info != "Constant" and info != "Uniform along length":
             self._generate_twissGUI.ze.setEnabled(True)
             if info == "Gaussian on ellipse":
-                self._generate_twissGUI.zstddev.setEnabled(True)
+                self._generate_twissGUI.zmstddev.setEnabled(True)
+            else:
+                self._generate_twissGUI.zmstddev.setDisabled(True)
+        else:
+            self._generate_twissGUI.ze.setDisabled(True)
+            self._generate_twissGUI.zmstddev.setDisabled(True)
 
     def change_xy_twiss(self):
         info = str(self._generate_twissGUI.xydist.currentText())
         if info == "Gaussian":
-            self._generate_twissGUI.xystddev.setEnabled(True)
+            self._generate_twissGUI.xstddev.setEnabled(True)
+            self._generate_twissGUI.xpstddev.setEnabled(True)
+            self._generate_twissGUI.ystddev.setEnabled(True)
+            self._generate_twissGUI.ypstddev.setEnabled(True)
+        else:
+            self._generate_twissGUI.xstddev.setDisabled(True)
+            self._generate_twissGUI.xpstddev.setDisabled(True)
+            self._generate_twissGUI.ystddev.setDisabled(True)
+            self._generate_twissGUI.ypstddev.setDisabled(True)
 
     def run(self):
         # --- Calculate the positions to center the window --- #
