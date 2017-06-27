@@ -29,7 +29,7 @@ class GenerateDistribution(object):
         self._species = IonSpecies(species, energy)  # instance of IonSpecies
         self._data = None  # A variable to store the data dictionary
 
-        rzp = self._species.v_m_per_s() * 1e-03
+        rzp = self._species.v_m_per_s() * 1e-03  # Should this be 1e-03 (original) or 1e03?
 
         # Calculate longitudinal position distribution
         z = np.zeros(self._numpart)

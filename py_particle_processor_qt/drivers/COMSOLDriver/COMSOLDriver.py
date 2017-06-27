@@ -32,43 +32,28 @@ class COMSOLDriver(AbstractDriver):
 
             with open(filename, 'rb') as infile:
 
-                # TODO: We may be able to save overall beam parameters into a separate file, but not the header -PW
-
-                # Line 1: Model (COMSOL File Name)
-                # Line 2: COMSOL Version
-                # Line 3: Date
-                # Line 4: Dimension
-                for _ in range(4):
-                    infile.readline()
-
-                # Line 5: Nodes (Number of particles, in our case)
-                npart = int(infile.readline().split()[-1])
-
-                # Line 6: Expressions
-                # Line 7: Descriptions
-                # Line 8: Properties
-                for _ in range(3):
-                    infile.readline()
-
-                _n = 8  # Length of the n-tuples to unpack from the values list
+                _n = 7  # Length of the n-tuples to unpack from the values list
                 key_list = ["x", "y", "z", "px", "py", "pz", "E"]  # Things we want to save
 
                 firstline = infile.readline()
+                lines = infile.readlines()
                 raw_values = [float(item) for item in firstline.strip().split()]
-                nsteps = int(len(raw_values) / _n)  # Number of steps
+                nsteps = int((len(raw_values) - 1) / _n) # Number of steps
+                npart = len(lines) + 1
 
                 # Fill in the values for the first line now
                 _id = int(raw_values.pop(0))
+
                 for step in range(nsteps):
                     step_str = "Step#{}".format(step)
+
                     datasource[step_str] = {}
 
                     for key in key_list:
                         datasource[step_str][key] = ArrayWrapper(np.zeros(npart))
 
-                    values = raw_values[(1 + step * _n):(_n + step * _n)]
+                    values = raw_values[(step * _n):(_n + step * _n)]
 
-                    # TODO: The energy input is the total energy, not MeV/amu.
                     gamma = values[6] / ion.mass_mev() + 1.0
                     beta = np.sqrt(1.0 - np.power(gamma, -2.0))
                     v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
@@ -80,15 +65,14 @@ class COMSOLDriver(AbstractDriver):
                         datasource[step_str][key][_id - 1] = values[idx]
 
                 # Now for every other line
-                for line in infile.readlines():
+                for line in lines:
 
                     raw_values = [float(item) for item in line.strip().split()]  # Data straight from the text file
                     _id = int(raw_values.pop(0))  # Particle ID number
-                    nsteps = int(len(raw_values) / _n)  # Number of steps the particle existed for
 
                     for step in range(nsteps):
                         step_str = "Step#{}".format(step)
-                        values = raw_values[(1 + step * _n):(_n + step * _n)]
+                        values = raw_values[(step * _n):(_n + step * _n)]
 
                         gamma = values[6] / ion.mass_mev() + 1.0
                         beta = np.sqrt(1.0 - gamma ** (-2.0))
@@ -127,12 +111,13 @@ class COMSOLDriver(AbstractDriver):
             print("Exporting data for program: {}".format(self._program_name))
 
         datasource = dataset.get_datasource()
+        ion = dataset.get_ion()
         nsteps = dataset.get_nsteps()
         npart = dataset.get_npart()
 
         with open(filename + ".txt", "w") as outfile:
             for i in range(npart):
-                outstring = ""
+                outstring = "{} ".format(i)
                 for step in range(nsteps):
                     _px = datasource.get("Step#{}".format(step)).get("px")[i]
                     _py = datasource.get("Step#{}".format(step)).get("py")[i]
@@ -142,8 +127,8 @@ class COMSOLDriver(AbstractDriver):
                                      clight * _py / np.sqrt(_py ** 2.0 + 1.0),
                                      clight * _pz / np.sqrt(_pz ** 2.0 + 1.0))
 
-                    outstring += "{} {} {} {} {} {} ".format(datasource.get("Step#{}".format(step)).get("x")[i],
+                    outstring += "{} {} {} {} {} {} {} ".format(datasource.get("Step#{}".format(step)).get("x")[i],
                                                              datasource.get("Step#{}".format(step)).get("y")[i],
                                                              datasource.get("Step#{}".format(step)).get("z")[i],
-                                                             _vx, _vy, _vz)
+                                                             _vx, _vy, _vz, ion.energy_mev())
                 outfile.write(outstring + "\n")

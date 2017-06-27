@@ -289,46 +289,7 @@ class PyParticleProcessor(object):
             self.send_status(msg)
 
         redraw_flag = False  # Set a redraw flag to False
-        # df_indices = []  # Initialize lists of items and indices for both datafiles and datasets
-        # df_items = []
-        # ds_indices = []
-        # ds_items = []
         root = self._treewidget.invisibleRootItem()  # Find the root item
-
-        # for selection in self._selections:  # Go through each selection to delete
-        #     redraw_flag = True  # If there was at least one selection, we will redraw
-        #     df_i, ds_i = self.get_selection(selection)  # Get the datafile and dataset indices
-        #     if ds_i is None:  # If there is no dataset index, then it's a datafile
-        #         df_indices.append(df_i)  # Add the index to the list to remove
-        #         df_items.append(self._treewidget.topLevelItem(df_i))  # Add the item to the list to remove
-        #     else:  # The other condition is that it is a dataset
-        #         ds_indices.append((df_i, ds_i))  # Add both the datafile and dataset indices as a doublet
-        #         ds_items.append(self._treewidget.topLevelItem(df_i).child(ds_i))  # Add the dataset item to the list
-        #
-        # self._selections = []  # Clear the selections list
-        #
-        # # Remove the datasets first to avoid issues
-        # for df_i, ds_i in sorted(ds_indices, reverse=True):  # Sort backwards to prevent indexing errors
-        #     count = 0
-        #     for i in range(df_i):  # Find the number of preceding items in the property selection list
-        #         count += self._datafiles[i].dataset_count() + 1
-        #     self._properties_select.removeItem(count + ds_i + 1)  # Remove the dataset from the selection list
-        #     self._plot_manager.remove_dataset(self.find_dataset(df_i, ds_i))  # Remove the dataset from the plots
-        #     self._datafiles[df_i].remove_dataset(ds_i)  # Remove the dataset from the datafile
-        #
-        # for item in ds_items:  # Remove the dataset from its parent or root item
-        #     (item.parent() or root).removeChild(item)
-        #
-        # # Remove the datafiles
-        # for df_i in sorted(df_indices, reverse=True):  # Sort backwards to prevent indexing errors
-        #     count = 0
-        #     for i in range(df_i):  # Find the number of preceding items in the property selection list
-        #         count += self._datafiles[i].dataset_count() + 1
-        #     self._properties_select.removeItem(count)  # Remove the datafile from the selection list
-        #     del self._datafiles[df_i]  # Delete the datafile from the datafiles list
-        #
-        # for item in df_items:  # Remove the datafile from its parent or root item
-        #     (item.parent() or root).removeChild(item)
 
         for selection in self._selections:
             redraw_flag = True
@@ -385,8 +346,6 @@ class PyParticleProcessor(object):
 
         if (filename, driver) == (None, None):
             return 0
-
-        # TODO: Modernize this statement
 
         selection = self._selections[0]
         selection.export_to_file(filename=filename, driver=driver)
