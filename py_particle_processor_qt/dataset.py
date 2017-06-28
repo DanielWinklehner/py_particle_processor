@@ -158,12 +158,7 @@ class Dataset(object):
 
         data = self._data.get(key)
 
-        if type(data) is ArrayWrapper:
-            return data.value
-        elif type(data) is np.ndarray:
-            return data
-        else:
-            return 1
+        return data.value
 
     def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}
