@@ -26,14 +26,12 @@ class PlotObject(object):
         return 0
 
     def clear(self):
-
         if self._is_3d:  # Check if it's a 3D plot
             self._graphics_view.items = []  # Clear the items list
             self._graphics_view.update()  # Update the graphics view
         else:
             for data_item in self._graphics_view.listDataItems():  # Loop through each data item
                 self._graphics_view.removeItem(data_item)  # Remove the data item from the graphics view
-
         return 0
 
     def is_shown(self):
@@ -151,24 +149,21 @@ class PlotObject(object):
                 self._is_shown = True
 
         else:  # If it's not a 3D plot, it's a 2D plot...
-
             if enabled:
 
                 for dataset in self._datasets:  # Loop through each dataset
 
                     dataset.set_step_view(step)  # Set the step for the current dataset
-
                     # Create a scatter plot item using the values and color from the dataset
                     scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
                                                  y=dataset.get(axes[1]),
                                                  pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
-
                     # Add the scatter plot item to the graphics view
                     self._graphics_view.addItem(scatter)
 
                     # Create a title for the graph, which is just the axis labels for now
-                    title = axes[0].upper() + "-" + axes[1].upper()
-                    self._graphics_view.setTitle(title)  # Set the title of the graphics view
+                    # title = axes[0].upper() + "-" + axes[1].upper()
+                    # self._graphics_view.setTitle(title)  # Set the title of the graphics view
                     self._graphics_view.repaint()  # Repaint the view
 
                 self._is_shown = True  # Set the shown flag

@@ -8,6 +8,7 @@ class AbstractTool(ABC):
     def __init__(self):
         self._name = None
 
+        self._has_gui = False
         self._need_selection = False
         self._min_selections = 1
         self._max_selections = 1
