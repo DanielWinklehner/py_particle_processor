@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='py_particle_processor',
-      version='0.1.0',
+      version='0.1.1',
       description='a GUI application to generate or load and export particle data for beam physics',
       url='https://github.com/DanielWinklehner/py_particle_processor',
       author='Daniel Winklehner, Philip Weigel, Maria Yampolskaya',
