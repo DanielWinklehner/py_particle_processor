@@ -348,12 +348,19 @@ class PlotManager(object):
         return 0
 
     def remove_plot(self):
-        # TODO: GUI for removing plots, it should find which tab/GV it's in -PW
-        # if dataset in self._gvs[gv_i].datasets():
-        #     self._gvs[gv_i].remove_dataset(dataset)
-        # else:
-        #     print("This dataset is not in the PlotObject!")
-        pass
+
+        current_index = self._tabs.currentIndex()
+
+        if current_index == 0:
+            print("You cannot remove the default plots!")
+            return 1
+        else:
+            self._tabs.setCurrentIndex(current_index - 1)  # This should always exist -PW
+            self._tabs.removeTab(current_index)
+            del self._plot_objects[current_index - 1]
+            del self._gvs[current_index - 1]
+
+        return 0
 
     def screen_size(self):
         return self._screen_size  # Return the size of the screen
@@ -412,7 +419,7 @@ class PlotSettings(object):
         # 3D Plot:
         self._settings["3d_en"] = self._plotSettingsWindowGUI.three_d_enabled.checkState()
 
-        if self._default:
+        if self._default and isinstance(self._plotSettingsWindowGUI, Ui_DefaultPlotSettingsWindow):
             # Top Left:
             self._settings["tl_en"] = self._plotSettingsWindowGUI.tl_enabled.checkState()
             self._settings["tl_a"] = self._plotSettingsWindowGUI.tl_combo_a.currentIndex()
@@ -430,7 +437,8 @@ class PlotSettings(object):
 
             # Redraw:
             self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
-        else:
+
+        elif isinstance(self._plotSettingsWindowGUI, Ui_PlotSettingsWindow):
             # Parameters:
             self._settings["param_a"] = self._plotSettingsWindowGUI.param_combo_a.currentIndex()
             self._settings["param_b"] = self._plotSettingsWindowGUI.param_combo_b.currentIndex()
@@ -480,7 +488,7 @@ class PlotSettings(object):
         # 3D Plot:
         self._plotSettingsWindowGUI.three_d_enabled.setCheckState(self._settings["3d_en"])
 
-        if self._default:
+        if self._default and isinstance(self._plotSettingsWindowGUI, Ui_DefaultPlotSettingsWindow):
             # Top Left:
             self._plotSettingsWindowGUI.tl_enabled.setCheckState(self._settings["tl_en"])
             self._plotSettingsWindowGUI.tl_combo_a.setCurrentIndex(self._settings["tl_a"])
@@ -498,12 +506,13 @@ class PlotSettings(object):
 
             # Redraw:
             self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
-        else:
+
+        elif isinstance(self._plotSettingsWindowGUI, Ui_PlotSettingsWindow):
             # Parameters:
             self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(self._settings["param_a"])
             self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(self._settings["param_b"])
             self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(self._settings["param_c"])
-            self._plotSettingsWindowGUI.param_enabled.setCurrentIndex(self._settings["param_en"])
+            self._plotSettingsWindowGUI.param_enabled.setCheckState(self._settings["param_en"])
 
     def run(self):
 
