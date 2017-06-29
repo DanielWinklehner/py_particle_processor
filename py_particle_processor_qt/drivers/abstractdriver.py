@@ -46,3 +46,6 @@ class AbstractDriver(ABC):
 
     def convert_to_h5(self):
         pass
+
+    def get_species(self):
+        pass

@@ -1,6 +1,6 @@
 # from dans_pymodules import IonSpecies
 # import h5py
-from dans_pymodules import MyColors
+from dans_pymodules import *
 from scipy import constants as const
 from py_particle_processor_qt.drivers import *
 
@@ -24,9 +24,7 @@ class ImportExportDriver(object):
     A thin wrapper around the drivers for importing and exporting particle data
     """
 
-    def __init__(self,
-                 driver_name=None,
-                 debug=False):
+    def __init__(self, driver_name=None, debug=False):
 
         self._driver_name = driver_name
         self._driver = None
@@ -40,8 +38,8 @@ class ImportExportDriver(object):
     def get_driver_name(self):
         return self._driver_name
 
-    def import_data(self, filename):
-        return self._driver.import_data(filename)
+    def import_data(self, filename, species):
+        return self._driver.import_data(filename, species=species)
 
     def export_data(self, dataset, filename):
         return self._driver.export_data(dataset=dataset, filename=filename)
@@ -49,20 +47,21 @@ class ImportExportDriver(object):
 
 class Dataset(object):
 
-    def __init__(self, indices, data=None, debug=False):
+    def __init__(self, indices, species, data=None, debug=False):
         self._draw = False
         self._selected = False
 
         self._datasource = data
         self._filename = None
         self._driver = None
+        self._species = species
         self._debug = debug
         self._data = None
         self._color = (0.0, 0.0, 0.0)
         self._indices = indices
 
         self._properties = {"name": None,
-                            "ion": None,
+                            "ion": species,
                             "multispecies": None,
                             "current": None,
                             "mass": None,
@@ -190,7 +189,7 @@ class Dataset(object):
 
     # noinspection PyUnresolvedReferences
     def get_a(self):
-        if type(self._properties) is IonSpecies:
+        if isinstance(self._properties, IonSpecies):
             return self._properties["ion"].a()
         else:
             return None
@@ -221,7 +220,7 @@ class Dataset(object):
 
     # noinspection PyUnresolvedReferences
     def get_q(self):
-        if type(self._properties) is IonSpecies:
+        if isinstance(self._properties, IonSpecies):
             return self._properties["ion"].q()
         else:
             return None
@@ -245,7 +244,7 @@ class Dataset(object):
         if driver is not None:
 
             new_ied = ImportExportDriver(driver_name=driver, debug=self._debug)
-            _data = new_ied.import_data(self._filename)
+            _data = new_ied.import_data(self._filename, species=self._species)
 
             # if self._debug:
             #     print("_data is {}".format(_data))
@@ -258,12 +257,13 @@ class Dataset(object):
                     print(k)
                     self._properties[k] = _data[k]
                     self._native_properties[k] = _data[k]
-                if type(self._properties["ion"]) is IonSpecies:
+                if isinstance(self._properties["ion"], IonSpecies):
                     self._properties["name"] = self._properties["ion"].name()
+                    self._native_properties["name"] = self._properties["ion"].name()
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 
-                print(self._datasource)
+                # print(self._datasource)
 
                 return 0
 

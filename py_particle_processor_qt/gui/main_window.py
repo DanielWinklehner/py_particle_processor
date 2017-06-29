@@ -61,7 +61,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addItem(spacerItem)
         self.treeWidget = QtWidgets.QTreeWidget(self.layoutWidget)
         self.treeWidget.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.treeWidget.setAlternatingRowColors(True)
+        self.treeWidget.setAlternatingRowColors(False)
         self.treeWidget.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.treeWidget.setTextElideMode(QtCore.Qt.ElideRight)
         self.treeWidget.setObjectName("treeWidget")

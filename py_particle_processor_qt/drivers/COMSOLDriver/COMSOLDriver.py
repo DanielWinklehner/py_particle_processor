@@ -15,7 +15,7 @@ class COMSOLDriver(AbstractDriver):
     def get_program_name(self):
         return self._program_name
 
-    def import_data(self, filename):
+    def import_data(self, filename, species):
 
         # TODO: There is a lot of looping going on, the less instructions the better. -PW
 
@@ -26,9 +26,6 @@ class COMSOLDriver(AbstractDriver):
 
             datasource = {}
             data = {}
-
-            # TODO: Need a better way to find the mass and ion species -PW
-            ion = IonSpecies("H2_1+", 1.0)
 
             with open(filename, 'rb') as infile:
 
@@ -54,7 +51,7 @@ class COMSOLDriver(AbstractDriver):
 
                     values = raw_values[(step * _n):(_n + step * _n)]
 
-                    gamma = values[6] / ion.mass_mev() + 1.0
+                    gamma = values[6] / species.mass_mev() + 1.0
                     beta = np.sqrt(1.0 - np.power(gamma, -2.0))
                     v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
@@ -74,7 +71,7 @@ class COMSOLDriver(AbstractDriver):
                         step_str = "Step#{}".format(step)
                         values = raw_values[(step * _n):(_n + step * _n)]
 
-                        gamma = values[6] / ion.mass_mev() + 1.0
+                        gamma = values[6] / species.mass_mev() + 1.0
                         beta = np.sqrt(1.0 - gamma ** (-2.0))
                         v_tot = np.sqrt(values[3] ** 2.0 + values[4] ** 2.0 + values[5] ** 2.0)
 
@@ -84,12 +81,14 @@ class COMSOLDriver(AbstractDriver):
                         for idx, key in enumerate(key_list):
                             datasource[step_str][key][_id - 1] = values[idx]
 
+                species.calculate_from_energy_mev(datasource["Step#0"]["E"][0])
+
                 data["datasource"] = datasource
-                data["ion"] = IonSpecies("H2_1+", datasource["Step#0"]["E"][0]) # TODO
-                data["mass"] = data["ion"].a()
-                data["charge"] = data["ion"].q()
+                data["ion"] = species
+                data["mass"] = species.a()
+                data["charge"] = species.q()
                 data["steps"] = len(datasource.keys())
-                data["current"] = 0.0
+                data["current"] = None
                 data["particles"] = len(datasource["Step#0"]["x"])
 
                 if self._debug:

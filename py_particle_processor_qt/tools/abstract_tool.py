@@ -5,8 +5,9 @@ from abc import ABC, abstractmethod
 
 class AbstractTool(ABC):
 
-    def __init__(self):
+    def __init__(self, parent):
         self._name = None
+        self._parent = parent
 
         self._has_gui = False
         self._need_selection = False

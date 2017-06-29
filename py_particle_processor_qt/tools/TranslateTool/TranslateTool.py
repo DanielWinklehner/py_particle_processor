@@ -6,7 +6,7 @@ from PyQt5 import QtGui
 class TranslateTool(AbstractTool):
     def __init__(self, parent):
         super(TranslateTool, self).__init__()
-        self._name = "translate Tool"
+        self._name = "Translate Tool"
         self._parent = parent
 
         # --- Initialize the GUI --- #
@@ -25,6 +25,7 @@ class TranslateTool(AbstractTool):
         self._min_selections = 1
         self._max_selections = None
         self._redraw_on_exit = True
+        self._invalid_input = False
 
     # --- Required Functions --- #
 
@@ -60,13 +61,14 @@ class TranslateTool(AbstractTool):
     def check_inputs(self):
 
         inputs = [self._translateToolGUI.x_trans, self._translateToolGUI.y_trans, self._translateToolGUI.z_trans]
+        self._invalid_input = False
 
         for input_item in inputs:
             translate_txt = input_item.text()
 
             if len(translate_txt) == 0:
                 input_item.setStyleSheet("color: #000000")
-                return None
+                self._invalid_input = True
 
             try:
                 value = float(translate_txt)  # Try to convert the input to a float
@@ -76,7 +78,7 @@ class TranslateTool(AbstractTool):
 
                 # Set the text color to red
                 input_item.setStyleSheet("color: #FF0000")
-                return None
+                self._invalid_input = True
 
         return 0
 
@@ -86,7 +88,8 @@ class TranslateTool(AbstractTool):
                       self._translateToolGUI.y_trans.text(),
                       self._translateToolGUI.z_trans.text())
 
-        if self.check_inputs() is None:
+        self.check_inputs()
+        if self._invalid_input:
             return 1
 
         # Let's do this on a text basis instead of inferring from the indices
@@ -98,7 +101,7 @@ class TranslateTool(AbstractTool):
 
             for step in range(nsteps):
                 for part in range(npart):
-                    for i, dir in enumerate(["x", "y", "z"]):
-                        datasource["Step#{}".format(step)][dir][part] += translations[i]
+                    for i, direction in enumerate(["x", "y", "z"]):
+                        datasource["Step#{}".format(step)][direction][part] += translations[i]
 
         return 0

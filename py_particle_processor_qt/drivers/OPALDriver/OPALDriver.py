@@ -15,7 +15,7 @@ class OPALDriver(AbstractDriver):
     def get_program_name(self):
         return self._program_name
 
-    def import_data(self, filename):
+    def import_data(self, filename, species):
 
         if self._debug:
             print("Importing data from program: {}".format(self._program_name))
@@ -46,11 +46,11 @@ class OPALDriver(AbstractDriver):
 
                 # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
                 # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
-                data["ion"] = IonSpecies("proton", _data.attrs["ENERGY"])
-                if type(data["ion"]) is IonSpecies:
-                    data["mass"] = data["ion"].a()
-                    data["charge"] = data["ion"].q()
-                data["current"] = 0.0  # TODO: Get actual current! -DW
+                species.calculate_from_energy_mev(_data.attrs["ENERGY"])
+                data["ion"] = species
+                data["mass"] = species.a()
+                data["charge"] = species.q()
+                data["current"] = None  # TODO: Get actual current! -DW
                 data["particles"] = len(_data.get("x").value)
 
                 return data
@@ -89,7 +89,6 @@ class OPALDriver(AbstractDriver):
 
                 # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
                 # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
-                data["ion"] = IonSpecies("proton", 0.07)  # TODO: Need a good way to get the energy -PW
                 data["current"] = 0.0
 
             return data

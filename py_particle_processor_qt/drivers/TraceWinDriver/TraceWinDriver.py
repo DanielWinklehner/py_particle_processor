@@ -14,7 +14,7 @@ class TraceWinDriver(AbstractDriver):
     def get_program_name(self):
         return self._program_name
 
-    def import_data(self, filename):
+    def import_data(self, filename, species=None):
 
         if self._debug:
             print("Importing data from program: {}".format(self._program_name))
@@ -38,8 +38,10 @@ class TraceWinDriver(AbstractDriver):
                 if self._debug:
                     print(header2)
 
+                species.calculate_from_energy_mev(energy)
+
                 data["steps"] = 1
-                data["ion"] = IonSpecies('H2_1+', energy)  # TODO: Actual ion species! -DW
+                data["ion"] = species
                 data["mass"] = data["ion"].a()
                 data["charge"] = data["ion"].q()
                 data["current"] = current  # (A)
