@@ -25,7 +25,7 @@ class OPALDriver(AbstractDriver):
             if self._debug:
                 print("Opening h5 file..."),
 
-            _datasource = h5py.File(filename, "r")
+            _datasource = h5py.File(filename, "r+")
 
             if self._debug:
                 print("Done!")
