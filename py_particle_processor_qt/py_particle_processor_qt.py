@@ -57,9 +57,11 @@ class ParticleFile(object):
         return 0
 
     def remove_dataset(self, selection):
-        if type(selection) is int:
+        # if type(selection) is int:
+        if isinstance(selection, int):
             del self._datasets[selection]
-        elif type(selection) is Dataset:
+        # elif type(selection) is Dataset:
+        elif isinstance(selection, Dataset):
             self._datasets.remove(selection)
         return 0
 
@@ -297,18 +299,21 @@ class PyParticleProcessor(object):
                 index = self._properties_select.data_objects.index(selection)
                 self._properties_select.removeItem(index)
                 self._properties_select.data_objects.remove(selection)
-                if type(selection) is ParticleFile or type(selection) is FieldFile:
+                # if type(selection) is ParticleFile or type(selection) is FieldFile:
+                if isinstance(selection, (ParticleFile, FieldFile)):
                     del self._datafiles[selection.index()]
                     item = self._treewidget.topLevelItem(selection.index())
                     (item.parent() or root).removeChild(item)
                     if len(self._properties_select.data_objects[index:]) > 0:
-                        while type(self._properties_select.data_objects[index]) is Dataset:
+                        # while type(self._properties_select.data_objects[index]) is Dataset:
+                        while isinstance(self._properties_select.data_objects[index], Dataset):
                             print(self._properties_select.data_objects[index].indices())
                             self._properties_select.removeItem(index)
                             del self._properties_select.data_objects[index]
                             if index == len(self._properties_select.data_objects):
                                 break
-                elif type(selection) is Dataset:
+                #elif type(selection) is Dataset:
+                elif isinstance(selection, Dataset):
                     self._plot_manager.remove_dataset(selection)
                     parent_index = selection.indices()[0]
                     child_index = selection.indices()[1]
@@ -509,8 +514,8 @@ class PyParticleProcessor(object):
     #         self._plot_manager.default_plot_settings(redraw=True)  # Open the default plot settings
     #     elif self._tabs.currentIndex() > 1:  # Check to see if it's after the text tab
     #         self._plot_manager.plot_settings()  # Open the plot settings
-
-        return 0
+    #
+    #     return 0
 
     def callback_generate(self):
         # Called when the "Generate..." button is pressed
@@ -561,7 +566,8 @@ class PyParticleProcessor(object):
 
         for plot_object in current_plot_objects:
             for selection in self._selections:
-                if type(selection) is Dataset:
+                # if type(selection) is Dataset:
+                if isinstance(selection, Dataset):
                     if selection not in plot_object.datasets():
                         plot_object.add_dataset(selection)
                         redraw = True
@@ -607,7 +613,8 @@ class PyParticleProcessor(object):
         datasets = []
 
         for selection in self._selections:
-            if type(selection) is Dataset:
+            # if type(selection) is Dataset:
+            if isinstance(selection, Dataset):
                 datasets.append(selection)
 
         tool_object = tool_mapping[name][1]
@@ -735,11 +742,13 @@ class PyParticleProcessor(object):
     def populate_properties_table(self, data_object):
         self.clear_properties_table()
 
-        if type(data_object) is ParticleFile:  # If the object passed is a datafile...
+        # if type(data_object) is ParticleFile:
+        if isinstance(data_object, (ParticleFile, FieldFile)):  # If the object passed is a datafile...
             # df = data_object
             print("Datafile properties are not implemented yet!")
             return 1
-        elif type(data_object) is Dataset:  # If the object passed is a dataset...
+        # elif type(data_object) is Dataset:
+        elif isinstance(data_object, Dataset):  # If the object passed is a dataset...
             ds = data_object
             self._properties_table.data = ds
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
@@ -823,7 +832,7 @@ class PyParticleProcessor(object):
         return self._app.desktop().availableGeometry()  # Return the size of the screen
 
     def send_status(self, message):
-        if type(message) is str:  # Make sure we're sending a string to the status bar
+        if isinstance(message, str):  # Make sure we're sending a string to the status bar
             self._status_bar.showMessage(message)
         else:
             print("Status message is not a string!")
@@ -852,7 +861,8 @@ class PyParticleProcessor(object):
             if checkstate is True and selection not in self._selections:
                 self._selections.append(selection)  # Add the string to the selections
 
-                if type(selection) is Dataset:
+                # if type(selection) is Dataset:
+                if isinstance(selection, Dataset):
                     self._plot_manager.add_to_current_plot(selection)  # Add to plot
                     if not self._plot_manager.has_default_plot_settings():  # Check for default plot settings
                         self._plot_manager.default_plot_settings()  # Open the default plot settings
@@ -861,7 +871,8 @@ class PyParticleProcessor(object):
             elif checkstate is False and selection in self._selections:
                 self._selections.remove(selection)  # Remove the string from the selections
 
-                if type(selection) is Dataset:
+                # if type(selection) is Dataset:
+                if isinstance(selection, Dataset):
                     self._plot_manager.remove_dataset(selection)  # Remove the dataset
                     self._plot_manager.redraw_plot()  # Redraw the plot
 
