@@ -12,7 +12,7 @@ class AnimateXY(AbstractTool):
         super(AnimateXY, self).__init__()
         self._name = "Animate X-Y"
         self._parent = parent
-        self.filename = ""
+        self._filename = ""
         
         self._has_gui = False
         self._need_selection = True
@@ -37,14 +37,9 @@ class AnimateXY(AbstractTool):
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
 
-                # Find the average position
-                avg_x = np.sum(x_val)/npart
-                avg_y = np.sum(y_val)/npart
-                avg_pos = [avg_x, avg_y]
-
                 # Center the beam
-                animate["Step#{}".format(step)]["x"] = x_val - avg_pos[0]
-                animate["Step#{}".format(step)]["y"] = y_val - avg_pos[1]
+                animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
+                animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
 
         # Handle animations
         last_step = animate["Step#{}".format(nsteps-1)]["x"]
@@ -74,7 +69,7 @@ class AnimateXY(AbstractTool):
         # Save animation
         writer1 = animation.writers['ffmpeg']
         writer2 = writer1(fps=10, bitrate=1800)
-        ani.save(self.filename[0]+".mp4", writer=writer2)
+        ani.save(self._filename[0]+".mp4", writer=writer2)
         ani._stop()
         self._parent.send_status("Animation saved successfully!")
 
@@ -83,7 +78,7 @@ class AnimateXY(AbstractTool):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
-        self.filename = QFileDialog.getSaveFileName(caption="Saving animation...", options=options,
-                                                    filter="Video (*.mp4)")
+        self._filename = QFileDialog.getSaveFileName(caption="Saving animation...", options=options,
+                                                     filter="Video (*.mp4)")
 
         self.run()
