@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QFileDialog
 class AnimateXY(AbstractTool):
 
     def __init__(self, parent):
-        super(AnimateXY, self).__init__()
+        super(AnimateXY, self).__init__(parent)
         self._name = "Animate X-Y"
         self._parent = parent
         self._filename = ""
@@ -43,7 +43,8 @@ class AnimateXY(AbstractTool):
 
         # Handle animations
         last_step = animate["Step#{}".format(nsteps-1)]["x"]
-        x_max = max(np.amin(last_step), np.amax(last_step), key=abs)
+        # x_max = max(np.amin(last_step), np.amax(last_step), key=abs)
+        x_max = 0.1
         fig = plt.figure()
         ax = plt.axes(xlim=(-x_max, x_max), ylim=(-x_max, x_max))
         line, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)

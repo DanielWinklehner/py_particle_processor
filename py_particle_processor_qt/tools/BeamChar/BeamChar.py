@@ -13,7 +13,7 @@ A tool for plotting beam characteristics.
 
 class BeamChar(AbstractTool):
     def __init__(self, parent):
-        super(BeamChar, self).__init__()
+        super(BeamChar, self).__init__(parent)
         self._name = "Beam Characteristics"
         self._parent = parent
         self._filename = ""
