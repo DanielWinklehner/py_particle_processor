@@ -2,6 +2,7 @@ from ..abstract_tool import AbstractTool
 from PyQt5.QtWidgets import QFileDialog, QMainWindow
 from .beamchargui import Ui_BeamChar
 from matplotlib.ticker import LinearLocator
+from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -52,6 +53,7 @@ class BeamChar(AbstractTool):
             datasource = dataset.get_datasource()
 
             nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
+            nsteps = 400
 
             for step in range(nsteps):
                 corrected["Step#{}".format(step)] = {}
@@ -60,22 +62,40 @@ class BeamChar(AbstractTool):
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
                 z_val = np.array(datasource["Step#{}".format(step)]["z"])
 
+                px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
+                py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
+                theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
+                if px_mean < 0:
+                    theta = -theta
+
                 # Center the beam
                 corrected["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
                 corrected["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
                 corrected["Step#{}".format(step)]["z"] = z_val - np.mean(z_val)
 
+                # Rotate the beam
+                temp_x = corrected["Step#{}".format(step)]["x"]
+                temp_y = corrected["Step#{}".format(step)]["y"]
+                corrected["Step#{}".format(step)]["x"] = temp_x*np.cos(theta) - temp_y*np.sin(theta)
+                corrected["Step#{}".format(step)]["y"] = temp_x*np.sin(theta) + temp_y*np.cos(theta)
+
                 # Calculate RMS, if necessary
                 if self._settings["rms"]:
-                    plot_data["xRMS"] = np.append(plot_data["xRMS"], self.rms(x_val))
-                    plot_data["yRMS"] = np.append(plot_data["yRMS"], self.rms(y_val))
-                    plot_data["zRMS"] = np.append(plot_data["zRMS"], self.rms(z_val))
+                    plot_data["xRMS"] = np.append(plot_data["xRMS"],
+                                                  1000.0 * self.rms(corrected["Step#{}".format(step)]["x"]))
+                    plot_data["yRMS"] = np.append(plot_data["yRMS"],
+                                                  1000.0 * self.rms(corrected["Step#{}".format(step)]["y"]))
+                    plot_data["zRMS"] = np.append(plot_data["zRMS"],
+                                                  1000.0 * self.rms(corrected["Step#{}".format(step)]["z"]))
 
                 # Calculate halo parameter, if necessary
                 if self._settings["halo"]:
-                    plot_data["xHalo"] = np.append(plot_data["xHalo"], self.halo(x_val))
-                    plot_data["yHalo"] = np.append(plot_data["yHalo"], self.halo(y_val))
-                    plot_data["zHalo"] = np.append(plot_data["zHalo"], self.halo(z_val))
+                    plot_data["xHalo"] = np.append(plot_data["xHalo"],
+                                                   self.halo(corrected["Step#{}".format(step)]["x"]))
+                    plot_data["yHalo"] = np.append(plot_data["yHalo"],
+                                                   self.halo(corrected["Step#{}".format(step)]["y"]))
+                    plot_data["zHalo"] = np.append(plot_data["zHalo"],
+                                                   self.halo(corrected["Step#{}".format(step)]["z"]))
 
         # Save plots as separate images, with appropriate titles
         if self._settings["rms"]:
@@ -85,23 +105,26 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             ax1 = plt.subplot(311)
-            plt.title("RMS Beam Size (m)")
+            plt.title("RMS Beam Size (mm)")
             plt.plot(range(nsteps), plot_data["xRMS"], 'k', lw=0.8)
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
             plt.ylabel("x")
 
             ax2 = plt.subplot(312, sharex=ax1)
             plt.plot(range(nsteps), plot_data["yRMS"], 'k', lw=0.8)
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
             plt.ylabel("y")
 
             ax3 = plt.subplot(313, sharex=ax1)
             plt.plot(range(nsteps), plot_data["zRMS"], 'k', lw=0.8)
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
-            plt.xlabel("Turn")
+            plt.xlabel("Step")
             plt.ylabel("z")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=600)
@@ -129,7 +152,7 @@ class BeamChar(AbstractTool):
             plt.plot(range(nsteps), plot_data["zHalo"], 'k', lw=0.8)
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
-            plt.xlabel("Turn")
+            plt.xlabel("Step")
             plt.ylabel("z")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_haloParameter.png', bbox_inches='tight', dpi=600)
