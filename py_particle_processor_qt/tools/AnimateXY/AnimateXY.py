@@ -60,11 +60,16 @@ class AnimateXY(AbstractTool):
         # x_max = max(np.amin(last_step), np.amax(last_step), key=abs)
         x_max = 40
         fig = plt.figure()
+        plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+        plt.rc('text', usetex=True)
+        plt.rc('grid', linestyle=':')
         ax = plt.axes(xlim=(-x_max, x_max), ylim=(-x_max, x_max))
         line, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
-        plt.xlabel("x (mm)")
-        plt.ylabel("y (mm)")
-        ax.set_title("Beam Cross-Section: Step #0")
+        plt.grid()
+        ax.set_aspect('equal')
+        plt.xlabel("Horizontal (mm)")
+        plt.ylabel("Longitudinal (mm)")
+        ax.set_title("Beam Cross-Section: Step \#0")
 
         def init():
             line.set_data([], [])
@@ -77,14 +82,14 @@ class AnimateXY(AbstractTool):
             completed = int(100*(i/(nsteps-1)))
             self._parent.send_status("Animation progress: {}% complete".format(completed))
             line.set_data(x, y)
-            ax.set_title("Beam Cross-Section: Step #{}".format(i))
+            ax.set_title("Beam Cross-Section: Step \#{}".format(i))
             return line, ax
 
         ani = animation.FuncAnimation(fig, update, frames=nsteps, init_func=init, repeat=False)
 
         # Save animation
         writer1 = animation.writers['ffmpeg']
-        writer2 = writer1(fps=13, bitrate=1800)
+        writer2 = writer1(fps=10, bitrate=1800)
         ani.save(self._filename[0]+".mp4", writer=writer2)
         ani._stop()
         self._parent.send_status("Animation saved successfully!")

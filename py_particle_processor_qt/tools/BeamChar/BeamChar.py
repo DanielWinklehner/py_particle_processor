@@ -36,26 +36,37 @@ class BeamChar(AbstractTool):
 
     def apply_settings(self):
         self._settings["rms"] = self._beamCharGUI.rms.isChecked()
-
         self._settings["halo"] = self._beamCharGUI.halo.isChecked()
+        self._settings["centroid"] = self._beamCharGUI.centroid.isChecked()
+        self._settings["turnsep"] = self._beamCharGUI.turnsep.isChecked()
 
     def callback_apply(self):
         self.apply_settings()
         self._beamCharWindow.close()
         self._parent.send_status("Creating plot(s)...")
-        
+
         for dataset in self._selections:
 
             corrected = {}
             plot_data = {"xRMS": np.array([]), "yRMS": np.array([]), "zRMS": np.array([]),
-                         "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([])}
+                         "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([]),
+                         "xCentroid": np.array([]), "yCentroid": np.array([]), "turnSep": np.array([]),
+                         "R": np.array([])}
 
             datasource = dataset.get_datasource()
 
+            for k, v in datasource["Step#0"].items():
+                print(k)
+
             nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
-            nsteps = 400
+
+            index = 0
 
             for step in range(nsteps):
+
+                completed = int(100*(step/(nsteps-1)))
+                self._parent.send_status("Plotting progress: {}% complete".format(completed))
+
                 corrected["Step#{}".format(step)] = {}
 
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
@@ -97,6 +108,21 @@ class BeamChar(AbstractTool):
                     plot_data["zHalo"] = np.append(plot_data["zHalo"],
                                                    self.halo(corrected["Step#{}".format(step)]["z"]))
 
+                # Add centroid coordinates, if necessary
+                if self._settings["centroid"]:
+                    plot_data["xCentroid"] = np.append(plot_data["xCentroid"], np.mean(x_val))
+                    plot_data["yCentroid"] = np.append(plot_data["yCentroid"], np.mean(y_val))
+
+                if step >= (16 * 95) + 6 and step%16 == 6 and self._settings["turnsep"]:
+                    r = np.sqrt(np.square(np.mean(x_val)) + np.square(np.mean(y_val)))
+                    plot_data["R"] = np.append(plot_data["R"], r)
+                if step > (16 * 95) + 6 and step%16 == 6 and self._settings["turnsep"]:
+                    index += 1
+                    difference = np.abs(plot_data["R"][index-1] - plot_data["R"][index])
+                    plot_data["turnSep"] = np.append(plot_data["turnSep"], difference)
+
+        self._parent.send_status("Saving plots...")
+
         # Save plots as separate images, with appropriate titles
         if self._settings["rms"]:
             fig = plt.figure()
@@ -110,14 +136,14 @@ class BeamChar(AbstractTool):
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
-            plt.ylabel("x")
+            plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             plt.plot(range(nsteps), plot_data["yRMS"], 'k', lw=0.8)
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
-            plt.ylabel("y")
+            plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
             plt.plot(range(nsteps), plot_data["zRMS"], 'k', lw=0.8)
@@ -125,37 +151,66 @@ class BeamChar(AbstractTool):
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
             plt.xlabel("Step")
-            plt.ylabel("z")
+            plt.ylabel("Vertical")
             fig.tight_layout()
-            fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=600)
+            fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=1200)
 
         if self._settings["halo"]:
             fig = plt.figure()
-            ax = plt.axes()
             plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
             plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
 
             ax1 = plt.subplot(311)
             plt.title("Halo Parameter")
             plt.plot(range(nsteps), plot_data["xHalo"], 'k', lw=0.8)
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
-            plt.ylabel("x")
+            plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             plt.plot(range(nsteps), plot_data["yHalo"], 'k', lw=0.8)
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
-            plt.ylabel("y")
+            plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
             plt.plot(range(nsteps), plot_data["zHalo"], 'k', lw=0.8)
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.xlabel("Step")
-            plt.ylabel("z")
+            plt.ylabel("Vertical")
             fig.tight_layout()
-            fig.savefig(self._filename[0] + '_haloParameter.png', bbox_inches='tight', dpi=600)
+            fig.savefig(self._filename[0] + '_haloParameter.png', bbox_inches='tight', dpi=1200)
+
+        if self._settings["centroid"]:
+            fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+
+            plt.title("Top-down view of Centroid Position")
+            plt.plot(plot_data["xCentroid"], plot_data["yCentroid"], 'ko', ms=0.5)
+            ax = plt.gca()
+            ax.set_aspect('equal')
+            plt.grid()
+            plt.xlabel("Horizontal (m)")
+            plt.ylabel("Longitudinal (m)")
+            fig.tight_layout()
+            fig.savefig(self._filename[0] + '_centroidPosition.png', bbox_inches='tight', dpi=1200)
+
+        if self._settings["turnsep"]:
+            fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+
+            plt.title("Turn Separation")
+            plt.plot(range(96,105), 1000.0 * plot_data["turnSep"], 'k', lw=0.8)
+            plt.grid()
+            plt.xlabel("Outer Turn")
+            plt.ylabel("Separation (mm)")
+            fig.savefig(self._filename[0] + '_turnSeparation.png', bbox_inches='tight', dpi=1200)
 
         self._parent.send_status("Plot(s) saved successfully!")
 
