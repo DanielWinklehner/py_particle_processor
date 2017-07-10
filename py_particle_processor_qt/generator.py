@@ -5,7 +5,7 @@ from py_particle_processor_qt.gui.generate_error import Ui_Generate_Error
 from py_particle_processor_qt.gui.generate_envelope import Ui_Generate_Envelope
 from py_particle_processor_qt.gui.generate_twiss import Ui_Generate_Twiss
 from dans_pymodules import IonSpecies
-
+from py_particle_processor_qt.drivers.TraceWinDriver import *
 
 class GenerateDistribution(object):
     """
@@ -127,13 +127,13 @@ class GenerateDistribution(object):
         x = x + self._z * xp
         y = y + self._z * yp
 
-        data = {'Step#0': {'x': 0.001 * np.array(x),
-                           'px': np.array(ion.gamma() * ion.beta() * xp),
-                           'y': 0.001 * np.array(y),
-                           'py': np.array(ion.gamma() * ion.beta() * yp),
-                           'z': 0.001 * np.array(self._z),
-                           'pz': np.array(ion.gamma() * ion.beta() * self._zp),
-                           'id': range(self._numpart + 1),
+        data = {'Step#0': {'x': ArrayWrapper(0.001 * np.array(x)),
+                           'px': ArrayWrapper(np.array(ion.gamma() * ion.beta() * xp)),
+                           'y': ArrayWrapper(0.001 * np.array(y)),
+                           'py': ArrayWrapper(np.array(ion.gamma() * ion.beta() * yp)),
+                           'z': ArrayWrapper(0.001 * np.array(self._z)),
+                           'pz': ArrayWrapper(np.array(ion.gamma() * ion.beta() * self._zp)),
+                           'id': ArrayWrapper(range(self._numpart + 1)),
                            'attrs': 0}}
 
         return data

@@ -31,7 +31,7 @@ class BeamChar(AbstractTool):
         self._has_gui = True
         self._need_selection = True
         self._min_selections = 1
-        self._max_selections = 1
+        self._max_selections = None
         self._redraw_on_exit = False
 
     def apply_settings(self):
@@ -39,11 +39,15 @@ class BeamChar(AbstractTool):
         self._settings["halo"] = self._beamCharGUI.halo.isChecked()
         self._settings["centroid"] = self._beamCharGUI.centroid.isChecked()
         self._settings["turnsep"] = self._beamCharGUI.turnsep.isChecked()
+        self._settings["energyHist"] = self._beamCharGUI.ehist.isChecked()
 
     def callback_apply(self):
         self.apply_settings()
         self._beamCharWindow.close()
         self._parent.send_status("Creating plot(s)...")
+
+        plots = {}
+        num = 0
 
         for dataset in self._selections:
 
@@ -51,21 +55,23 @@ class BeamChar(AbstractTool):
             plot_data = {"xRMS": np.array([]), "yRMS": np.array([]), "zRMS": np.array([]),
                          "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([]),
                          "xCentroid": np.array([]), "yCentroid": np.array([]), "turnSep": np.array([]),
-                         "R": np.array([])}
+                         "R": np.array([]), "energy": np.array([])}
 
             datasource = dataset.get_datasource()
 
-            for k, v in datasource["Step#0"].items():
-                print(k)
-
             nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
+
+            if nsteps > 1:
+                # nsteps = int(nsteps - nsteps*(20/420))
+                nsteps = 400
 
             index = 0
 
             for step in range(nsteps):
 
-                completed = int(100*(step/(nsteps-1)))
-                self._parent.send_status("Plotting progress: {}% complete".format(completed))
+                if nsteps > 1:
+                    completed = int(100*(step/(nsteps-1)))
+                    self._parent.send_status("Plotting progress: {}% complete".format(completed))
 
                 corrected["Step#{}".format(step)] = {}
 
@@ -75,7 +81,7 @@ class BeamChar(AbstractTool):
 
                 px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
                 py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
-                theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
+                theta = np.arccos(py_mean/np.linalg.norm([px_mean, py_mean]))
                 if px_mean < 0:
                     theta = -theta
 
@@ -90,7 +96,7 @@ class BeamChar(AbstractTool):
                 corrected["Step#{}".format(step)]["x"] = temp_x*np.cos(theta) - temp_y*np.sin(theta)
                 corrected["Step#{}".format(step)]["y"] = temp_x*np.sin(theta) + temp_y*np.cos(theta)
 
-                # Calculate RMS, if necessary
+                # Calculate RMS
                 if self._settings["rms"]:
                     plot_data["xRMS"] = np.append(plot_data["xRMS"],
                                                   1000.0 * self.rms(corrected["Step#{}".format(step)]["x"]))
@@ -99,7 +105,7 @@ class BeamChar(AbstractTool):
                     plot_data["zRMS"] = np.append(plot_data["zRMS"],
                                                   1000.0 * self.rms(corrected["Step#{}".format(step)]["z"]))
 
-                # Calculate halo parameter, if necessary
+                # Calculate halo parameter
                 if self._settings["halo"]:
                     plot_data["xHalo"] = np.append(plot_data["xHalo"],
                                                    self.halo(corrected["Step#{}".format(step)]["x"]))
@@ -108,22 +114,37 @@ class BeamChar(AbstractTool):
                     plot_data["zHalo"] = np.append(plot_data["zHalo"],
                                                    self.halo(corrected["Step#{}".format(step)]["z"]))
 
-                # Add centroid coordinates, if necessary
+                # Calculate energy
+                if self._settings["energyHist"]:
+                    m = 1.91e04  # Rest mass of simulation macroparticle, in GeV/c^2
+
+                    px_val = np.array(datasource["Step#{}".format(step)]["px"])
+                    py_val = np.array(datasource["Step#{}".format(step)]["py"])
+                    pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
+                    betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
+                    energy = np.sqrt(np.square(betagamma*m) + np.square(m))/m
+                    plot_data["energy"] = np.append(plot_data["energy"], (energy-1)*1000.0)
+
+                # Add centroid coordinates
                 if self._settings["centroid"]:
                     plot_data["xCentroid"] = np.append(plot_data["xCentroid"], np.mean(x_val))
                     plot_data["yCentroid"] = np.append(plot_data["yCentroid"], np.mean(y_val))
 
-                if step >= (16 * 95) + 6 and step%16 == 6 and self._settings["turnsep"]:
+                if step >= (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
                     r = np.sqrt(np.square(np.mean(x_val)) + np.square(np.mean(y_val)))
                     plot_data["R"] = np.append(plot_data["R"], r)
-                if step > (16 * 95) + 6 and step%16 == 6 and self._settings["turnsep"]:
+                if step > (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
                     index += 1
                     difference = np.abs(plot_data["R"][index-1] - plot_data["R"][index])
                     plot_data["turnSep"] = np.append(plot_data["turnSep"], difference)
+            plots["plot_data{}".format(num)] = plot_data
+            num += 1
 
-        self._parent.send_status("Saving plots...")
+        self._parent.send_status("Saving plot(s)...")
 
         # Save plots as separate images, with appropriate titles
+        linestyles = ['-', '--', '-.']
+
         if self._settings["rms"]:
             fig = plt.figure()
             plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
@@ -132,21 +153,24 @@ class BeamChar(AbstractTool):
 
             ax1 = plt.subplot(311)
             plt.title("RMS Beam Size (mm)")
-            plt.plot(range(nsteps), plot_data["xRMS"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
             plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
-            plt.plot(range(nsteps), plot_data["yRMS"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
             plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
-            plt.plot(range(nsteps), plot_data["zRMS"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
@@ -163,19 +187,22 @@ class BeamChar(AbstractTool):
 
             ax1 = plt.subplot(311)
             plt.title("Halo Parameter")
-            plt.plot(range(nsteps), plot_data["xHalo"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
-            plt.plot(range(nsteps), plot_data["yHalo"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
-            plt.plot(range(nsteps), plot_data["zHalo"], 'k', lw=0.8)
+            for n in range(num):
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.xlabel("Step")
@@ -190,7 +217,9 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Top-down view of Centroid Position")
-            plt.plot(plot_data["xCentroid"], plot_data["yCentroid"], 'ko', ms=0.5)
+            for n in range(num):
+                plt.plot(plots["plot_data{}".format(n)]["xCentroid"], plots["plot_data{}".format(n)]["yCentroid"],
+                         'k', lw=0.8, ls=linestyles[n % 3])
             ax = plt.gca()
             ax.set_aspect('equal')
             plt.grid()
@@ -199,6 +228,7 @@ class BeamChar(AbstractTool):
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_centroidPosition.png', bbox_inches='tight', dpi=1200)
 
+        # TODO: Fix turn separation to allow any number of steps
         if self._settings["turnsep"]:
             fig = plt.figure()
             plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
@@ -206,11 +236,25 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Turn Separation")
-            plt.plot(range(96,105), 1000.0 * plot_data["turnSep"], 'k', lw=0.8)
+            plt.plot(range(96, 105), 1000.0 * plot_data["turnSep"], 'k', lw=0.8)
             plt.grid()
             plt.xlabel("Outer Turn")
             plt.ylabel("Separation (mm)")
             fig.savefig(self._filename[0] + '_turnSeparation.png', bbox_inches='tight', dpi=1200)
+
+        if self._settings["energyHist"]:
+            fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+
+            plt.title("Particle Energy")
+            plt.hist(plots["plot_data0"]["energy"], 1000, color='k', histtype='step')
+            plt.grid()
+            plt.xlabel("Energy per Particle (MeV/amu)")
+            plt.ylabel("Number of $H_2^{+}$ Particles ($\times$6,346)")
+            fig.tight_layout()
+            fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
 
         self._parent.send_status("Plot(s) saved successfully!")
 
@@ -241,6 +285,6 @@ class BeamChar(AbstractTool):
         options |= QFileDialog.DontUseNativeDialog
 
         self._filename = QFileDialog.getSaveFileName(caption="Saving plots...", options=options,
-                                                    filter="Image (*.png)")
+                                                     filter="Image (*.png)")
 
         self.run()

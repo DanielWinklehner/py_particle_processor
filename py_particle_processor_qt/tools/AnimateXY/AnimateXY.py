@@ -39,21 +39,25 @@ class AnimateXY(AbstractTool):
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
 
-                px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
-                py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
-                theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
-                if px_mean < 0:
-                    theta = -theta
+                if nsteps == 1:
+                    animate["Step#{}".format(step)]["x"] = x_val
+                    animate["Step#{}".format(step)]["y"] = y_val
+                else:
+                    px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
+                    py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
+                    theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
+                    if px_mean < 0:
+                        theta = -theta
 
-                # Center the beam
-                animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
-                animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
-                
-                # Rotate the beam
-                temp_x = animate["Step#{}".format(step)]["x"]
-                temp_y = animate["Step#{}".format(step)]["y"]
-                animate["Step#{}".format(step)]["x"] = temp_x * np.cos(theta) - temp_y * np.sin(theta)
-                animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
+                    # Center the beam
+                    animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
+                    animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
+
+                    # Rotate the beam
+                    temp_x = animate["Step#{}".format(step)]["x"]
+                    temp_y = animate["Step#{}".format(step)]["y"]
+                    animate["Step#{}".format(step)]["x"] = temp_x * np.cos(theta) - temp_y * np.sin(theta)
+                    animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
 
         # Handle animations
         # last_step = animate["Step#{}".format(nsteps-1)]["x"]

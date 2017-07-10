@@ -37,7 +37,7 @@ class OPALDriver(AbstractDriver):
                 if self._debug:
                     print("Loading dataset from h5 file in OPAL format.")
 
-                data["steps"] = len(_datasource.keys())
+                data["steps"] = len(_datasource.keys())-1
 
                 if self._debug:
                     print("Found {} steps in the file.".format(data["steps"]))
@@ -46,7 +46,10 @@ class OPALDriver(AbstractDriver):
 
                 # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
                 # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
-                species.calculate_from_energy_mev(_data.attrs["ENERGY"])
+                try:
+                    species.calculate_from_energy_mev(_data.attrs["ENERGY"])
+                except Exception:
+                    pass
                 data["ion"] = species
                 data["mass"] = species.a()
                 data["charge"] = species.q()
