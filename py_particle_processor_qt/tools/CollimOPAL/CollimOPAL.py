@@ -47,8 +47,8 @@ class CollimOPAL(AbstractTool):
         py_avg = np.mean(np.array(datasource["Step#{}".format(self._settings["step"])]["py"]))
 
         # Find angle to rotate collimator according to momentum
-        theta1 = np.arccos(px_avg/np.sqrt(np.square(px_avg) + np.square(py_avg))) + np.pi/2
-        theta2 = np.arccos(px_avg/np.sqrt(np.square(px_avg) + np.square(py_avg))) - np.pi/2
+        theta1 = np.arccos(px_avg/np.sqrt(np.square(px_avg) + np.square(py_avg)))
+        theta2 = np.arccos(px_avg/np.sqrt(np.square(px_avg) + np.square(py_avg))) + np.pi
 
         x1a = self._settings["width"]*np.cos(theta1) + x_avg
         x2a = self._settings["width"]*np.cos(theta2) + x_avg

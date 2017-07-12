@@ -1,11 +1,10 @@
 from ..abstract_tool import AbstractTool
 from PyQt5.QtWidgets import QFileDialog, QMainWindow
 from .beamchargui import Ui_BeamChar
-from matplotlib.ticker import LinearLocator
+from matplotlib.ticker import LinearLocator, FuncFormatter
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
-
 
 """"
 A tool for plotting beam characteristics.
@@ -40,6 +39,8 @@ class BeamChar(AbstractTool):
         self._settings["centroid"] = self._beamCharGUI.centroid.isChecked()
         self._settings["turnsep"] = self._beamCharGUI.turnsep.isChecked()
         self._settings["energyHist"] = self._beamCharGUI.ehist.isChecked()
+        self._settings["intensity"] = self._beamCharGUI.intens.isChecked()
+        self._settings["xz"] = self._beamCharGUI.xz.isChecked()
 
     def callback_apply(self):
         self.apply_settings()
@@ -55,7 +56,7 @@ class BeamChar(AbstractTool):
             plot_data = {"xRMS": np.array([]), "yRMS": np.array([]), "zRMS": np.array([]),
                          "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([]),
                          "xCentroid": np.array([]), "yCentroid": np.array([]), "turnSep": np.array([]),
-                         "R": np.array([]), "energy": np.array([])}
+                         "R": np.array([]), "energy": np.array([]), "intensity": np.array([])}
 
             datasource = dataset.get_datasource()
 
@@ -115,15 +116,22 @@ class BeamChar(AbstractTool):
                                                    self.halo(corrected["Step#{}".format(step)]["z"]))
 
                 # Calculate energy
-                if self._settings["energyHist"]:
-                    m = 1.91e04  # Rest mass of simulation macroparticle, in GeV/c^2
+                if self._settings["energyHist"] or self._settings["intensity"]:
+                    m_amu = 12791.8548 # Rest mass of simulation macroparticle, in amu
+                    m_MeV = 1.19156e07  # Rest mass of simulation macroparticle, in MeV/c^2
 
                     px_val = np.array(datasource["Step#{}".format(step)]["px"])
                     py_val = np.array(datasource["Step#{}".format(step)]["py"])
                     pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
                     betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
-                    energy = np.sqrt(np.square(betagamma*m) + np.square(m))/m
-                    plot_data["energy"] = np.append(plot_data["energy"], (energy-1)*1000.0)
+                    energy = np.sqrt(np.square(betagamma*m_MeV) + np.square(m_MeV))/m_amu
+                    # energy = np.sqrt(np.square((np.sqrt(betagamma**2 +1) - 1.0)*m_MeV) + np.square(m_MeV))/m_amu
+                    plot_data["energy"] = np.append(plot_data["energy"], energy)
+                    # plot_data["energy"] = np.append(plot_data["energy"], energy)
+
+                    if self._settings["intensity"]:
+                        pass
+                    #TODO Figure out intensity
 
                 # Add centroid coordinates
                 if self._settings["centroid"]:
@@ -219,7 +227,7 @@ class BeamChar(AbstractTool):
             plt.title("Top-down view of Centroid Position")
             for n in range(num):
                 plt.plot(plots["plot_data{}".format(n)]["xCentroid"], plots["plot_data{}".format(n)]["yCentroid"],
-                         'k', lw=0.8, ls=linestyles[n % 3])
+                         'ko', ms=0.5)
             ax = plt.gca()
             ax.set_aspect('equal')
             plt.grid()
@@ -252,9 +260,26 @@ class BeamChar(AbstractTool):
             plt.hist(plots["plot_data0"]["energy"], 1000, color='k', histtype='step')
             plt.grid()
             plt.xlabel("Energy per Particle (MeV/amu)")
-            plt.ylabel("Number of $H_2^{+}$ Particles ($\times$6,346)")
+            plt.ylabel(r"Number of $H_2^{+}$ Particles ($\times$6348)")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
+
+        if self._settings["xz"]:
+            fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+
+            plt.title("Probe Scatter Plot")
+            ax = plt.gca()
+            plt.plot(x_val, z_val, 'ko', alpha=0.6,  markersize=0.005)
+            plt.grid()
+            ax.set_aspect('equal')
+            ax.set_xlim(right=1730)
+            plt.xlabel("Horizontal (mm)")
+            plt.ylabel("Vertical (mm)")
+            fig.tight_layout()
+            fig.savefig(self._filename[0] + '_XZ.png', bbox_inches='tight', dpi=1200)
 
         self._parent.send_status("Plot(s) saved successfully!")
 
