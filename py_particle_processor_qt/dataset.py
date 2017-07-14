@@ -218,6 +218,9 @@ class Dataset(object):
     def get_nsteps(self):
         return self._properties["steps"]
 
+    def get_name(self):
+        return self._properties["name"]
+
     # noinspection PyUnresolvedReferences
     def get_q(self):
         if isinstance(self._properties, IonSpecies):
@@ -228,14 +231,15 @@ class Dataset(object):
     def indices(self):
         return self._indices
 
-    def load_from_file(self, filename, driver=None):
+    def load_from_file(self, filename, name, driver=None):
         """
         Load a dataset from file. If the file is h5 already, don't load into memory.
         Users can write their own drivers but they have to be compliant with the 
         internal structure of datasets.
         
         :param filename:
-        :param driver: 
+        :param driver:
+        :param name: dataset label
         :return: 
         """
         self._driver = driver
@@ -257,9 +261,11 @@ class Dataset(object):
                     print(k)
                     self._properties[k] = _data[k]
                     self._native_properties[k] = _data[k]
-                if isinstance(self._properties["ion"], IonSpecies):
-                    self._properties["name"] = self._properties["ion"].name()
-                    self._native_properties["name"] = self._properties["ion"].name()
+                # if isinstance(self._properties["ion"], IonSpecies):
+                #     self._properties["name"] = self._properties["ion"].name()
+                #     self._native_properties["name"] = self._properties["ion"].name()
+                self._properties["name"] = name
+                self._native_properties["name"] = name
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 
@@ -271,6 +277,10 @@ class Dataset(object):
 
     def set_indices(self, parent_index, index):
         self._indices = (parent_index, index)
+
+    # def set_name(self, name):
+    #     self._properties["name"] = name
+    #     self._native_properties["name"] = name
 
     def set_step_view(self, step):
 

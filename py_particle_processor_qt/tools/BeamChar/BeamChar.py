@@ -1,7 +1,7 @@
 from ..abstract_tool import AbstractTool
 from PyQt5.QtWidgets import QFileDialog, QMainWindow
 from .beamchargui import Ui_BeamChar
-from matplotlib.ticker import LinearLocator, FuncFormatter
+from matplotlib.ticker import LinearLocator
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,21 +117,23 @@ class BeamChar(AbstractTool):
 
                 # Calculate energy
                 if self._settings["energyHist"] or self._settings["intensity"]:
-                    m_amu = 12791.8548 # Rest mass of simulation macroparticle, in amu
-                    m_MeV = 1.19156e07  # Rest mass of simulation macroparticle, in MeV/c^2
+                    # m_amu = 12791.8548  #Rest mass of simulation macroparticle, in amu
+                    m_amu = 2.01510  # Rest mass of individual H2+, in amu
+                    # m_MeV = 1.19156e07  # Rest mass of simulation macroparticle, in MeV/c^2
+                    m_MeV = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
 
                     px_val = np.array(datasource["Step#{}".format(step)]["px"])
                     py_val = np.array(datasource["Step#{}".format(step)]["py"])
                     pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
                     betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
-                    energy = np.sqrt(np.square(betagamma*m_MeV) + np.square(m_MeV))/m_amu
-                    # energy = np.sqrt(np.square((np.sqrt(betagamma**2 +1) - 1.0)*m_MeV) + np.square(m_MeV))/m_amu
+                    energy = (np.sqrt(np.square(betagamma*m_MeV) + np.square(m_MeV))-m_MeV )/m_amu
                     plot_data["energy"] = np.append(plot_data["energy"], energy)
-                    # plot_data["energy"] = np.append(plot_data["energy"], energy)
 
                     if self._settings["intensity"]:
-                        pass
-                    #TODO Figure out intensity
+                        intens = plot_data["energy"] * m_amu * 5e-05  # 5e-05 = current per macroparticle
+                        plot_data["intensity"] = np.append(plot_data["intensity"], intens)
+                        r = np.sqrt(np.square(x_val) + np.square(y_val))
+                        plot_data["R"] = np.append(plot_data["R"], r)
 
                 # Add centroid coordinates
                 if self._settings["centroid"]:
@@ -257,12 +259,28 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Particle Energy")
-            plt.hist(plots["plot_data0"]["energy"], 1000, color='k', histtype='step')
+            plt.hist(plots["plot_data0"]["energy"], 1000, color='k', histtype='step',
+                     weights=np.full_like(plots["plot_data0"]["energy"], 6348))
             plt.grid()
             plt.xlabel("Energy per Particle (MeV/amu)")
-            plt.ylabel(r"Number of $H_2^{+}$ Particles ($\times$6348)")
+            plt.ylabel(r"Number of $H_2^{+}$ Particles")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
+
+        if self._settings["intensity"]:
+            fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+
+            plt.title("Particle Beam Intensity")
+            plt.hist(plots["plot_data0"]["R"], 1000, color='k', histtype='step',
+                     weights=1000.0*plots["plot_data0"]["intensity"])
+            plt.grid()
+            plt.xlabel("Radius (mm)")
+            plt.ylabel("Beam Intensity (W)")
+            fig.tight_layout()
+            fig.savefig(self._filename[0] + '_intensity.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["xz"]:
             fig = plt.figure()

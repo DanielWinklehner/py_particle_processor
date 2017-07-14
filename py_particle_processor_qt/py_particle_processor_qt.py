@@ -28,6 +28,7 @@ class ParticleFile(object):
         self._load_type = load_type
         self._parent = kwargs.get("parent")
         self._c_i = kwargs.get("color_index")
+        self._name = ""
 
         self._datasets_to_load = 1  # TODO: Multispecies
 
@@ -81,11 +82,11 @@ class ParticleFile(object):
 
             return 1
 
-    def species_callback(self, prompt, species):
+    def species_callback(self, prompt, species, name):
         prompt.close()
 
         _ds = Dataset(indices=(self._index, len(self._datasets)), debug=self._debug, species=species)
-        _ds.load_from_file(filename=self._filename, driver=self._driver)
+        _ds.load_from_file(filename=self._filename, driver=self._driver, name=name)
         _ds.assign_color(self._c_i)
 
         self._c_i += 1
@@ -149,8 +150,9 @@ class SpeciesPrompt(object):
 
     def apply(self):
         preset_name = self._windowGUI.species_selection.currentText()
+        name = self._windowGUI.species_selection.currentText()
         species = IonSpecies(preset_name, energy_mev=1.0)  # TODO: Energy? -PW
-        self._parent.species_callback(self, species=species)
+        self._parent.species_callback(self, species=species, name=name)
 
     def close(self):
 
@@ -899,7 +901,7 @@ class PyParticleProcessor(object):
 
                 child_item.setText(0, "")  # Selection box
                 child_item.setText(1, "{}-{}".format(parent_index, child_index))
-                child_item.setText(2, "{}".format(dataset.get_ion().name()))
+                child_item.setText(2, "{}".format(dataset.get_name()))
 
                 child_item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
                 child_item.setCheckState(0, QtCore.Qt.Unchecked)
@@ -990,6 +992,7 @@ class PyParticleProcessor(object):
 
         child_item.setText(0, "")  # Selection box
         child_item.setText(1, "{}-{}".format(datafile_id, dataset_id))  # Set the object id
-        child_item.setText(2, "{}".format(dataset.get_ion().name()))  # Set the dataset name (for now, the ion name)
+        # child_item.setText(2, "{}".format(dataset.get_ion().name()))  # Set the dataset name (for now, the ion name)
+        child_item.setText(2, "{}".format(dataset.get_name()))  # Set the dataset name
 
         child_item.setFlags(child_item.flags() | QtCore.Qt.ItemIsUserCheckable)  # Set item flags

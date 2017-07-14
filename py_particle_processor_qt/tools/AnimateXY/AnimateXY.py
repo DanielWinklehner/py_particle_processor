@@ -2,6 +2,7 @@ from ..abstract_tool import AbstractTool
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.ticker import LinearLocator
 from PyQt5.QtWidgets import QFileDialog
 
 
@@ -74,6 +75,8 @@ class AnimateXY(AbstractTool):
         plt.xlabel("Horizontal (mm)")
         plt.ylabel("Longitudinal (mm)")
         ax.set_title("Beam Cross-Section: Step \#0")
+        ax.get_xaxis().set_major_locator(LinearLocator(numticks=17))
+        ax.get_yaxis().set_major_locator(LinearLocator(numticks=17))
 
         def init():
             line.set_data([], [])
