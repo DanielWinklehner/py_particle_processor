@@ -265,7 +265,7 @@ class Dataset(object):
                 #     self._properties["name"] = self._properties["ion"].name()
                 #     self._native_properties["name"] = self._properties["ion"].name()
                 self._properties["name"] = name
-                self._native_properties["name"] = name
+                # self._native_properties["name"] = name
                 self.set_step_view(0)
                 # self.set_step_view(self._nsteps - 1)
 

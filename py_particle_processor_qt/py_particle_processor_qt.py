@@ -150,7 +150,7 @@ class SpeciesPrompt(object):
 
     def apply(self):
         preset_name = self._windowGUI.species_selection.currentText()
-        name = self._windowGUI.species_selection.currentText()
+        name = self._windowGUI.dataset_name.text()
         species = IonSpecies(preset_name, energy_mev=1.0)  # TODO: Energy? -PW
         self._parent.species_callback(self, species=species, name=name)
 
@@ -701,10 +701,14 @@ class PyParticleProcessor(object):
             if idx != 0:
                 value = float(v.text())  # Try to convert the input to a float
                 v.setText(str(value))  # Reset the text of the table item to what was just set
+                data.set_property(self._property_list[idx], value)  # Set the property of the dataset
             else:
+                if self._debug:
+                    print("Changing dataset name")
                 value = v.text()
+                data.set_property(self._property_list[idx], value)  # Set the name of the dataset
+                self.refresh_data(properties=False)
 
-            data.set_property(self._property_list[idx], value)  # Set the property of the dataset
             v.setForeground(QtGui.QBrush(QtGui.QColor("#FFFFFF")))  # If all this worked, then set the text color
             return 0
 
@@ -874,10 +878,12 @@ class PyParticleProcessor(object):
 
         return 0
 
-    def refresh_data(self):
+    def refresh_data(self, properties=True):
         self._treewidget.clear()
-        self._properties_select.clear()
-        self._properties_select.data_objects = []
+
+        if properties:
+            self._properties_select.clear()
+            self._properties_select.data_objects = []
         
         for parent_index, datafile in enumerate(self._datafiles):
             datafile.set_index(parent_index)
@@ -911,7 +917,8 @@ class PyParticleProcessor(object):
             top_level_item.setExpanded(True)  # Expand the tree widget
 
             # --- Refresh the Properties Selection for the Datafile --- #
-            self.add_to_properties_selection(datafile)
+            if properties:
+                self.add_to_properties_selection(datafile)
 
         for i in range(self._treewidget.columnCount()):  # Resize the columns of the tree
             self._treewidget.resizeColumnToContents(i)

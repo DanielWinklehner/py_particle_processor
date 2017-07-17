@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'species_prompt.ui'
+# Form implementation generated from reading ui file 'gui/species_prompt.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_SpeciesPrompt(object):
     def setupUi(self, SpeciesPrompt):
         SpeciesPrompt.setObjectName("SpeciesPrompt")
-        SpeciesPrompt.resize(324, 70)
+        SpeciesPrompt.resize(325, 132)
         SpeciesPrompt.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.centralwidget = QtWidgets.QWidget(SpeciesPrompt)
         self.centralwidget.setObjectName("centralwidget")
@@ -19,7 +19,6 @@ class Ui_SpeciesPrompt(object):
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 321, 122))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
@@ -32,9 +31,9 @@ class Ui_SpeciesPrompt(object):
         self.species_label.setObjectName("species_label")
         self.horizontalLayout.addWidget(self.species_label)
         self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
-        self.lineEdit = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit.setObjectName("lineEdit")
-        self.gridLayout.addWidget(self.lineEdit, 3, 1, 1, 1, QtCore.Qt.AlignHCenter)
+        self.dataset_name = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.dataset_name.setObjectName("dataset_name")
+        self.gridLayout.addWidget(self.dataset_name, 3, 1, 1, 1, QtCore.Qt.AlignHCenter)
         self.species_selection = QtWidgets.QComboBox(self.verticalLayoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
