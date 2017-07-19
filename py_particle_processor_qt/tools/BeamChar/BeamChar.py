@@ -53,10 +53,12 @@ class BeamChar(AbstractTool):
         for dataset in self._selections:
 
             corrected = {}
+            name = dataset.get_name()
             plot_data = {"xRMS": np.array([]), "yRMS": np.array([]), "zRMS": np.array([]),
                          "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([]),
                          "xCentroid": np.array([]), "yCentroid": np.array([]), "turnSep": np.array([]),
-                         "R": np.array([]), "energy": np.array([]), "intensity": np.array([])}
+                         "R": np.array([]), "energy": np.array([]), "intensity": np.array([]),
+                         "coords": [], "name": name}
 
             datasource = dataset.get_datasource()
 
@@ -79,6 +81,11 @@ class BeamChar(AbstractTool):
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
                 z_val = np.array(datasource["Step#{}".format(step)]["z"])
+                if self._settings["xz"]:
+                    # plot_data["coords"].append(x_val)
+                    plot_data["coords"].append(z_val)
+                    r = np.sqrt(np.square(x_val) + np.square(y_val))
+                    plot_data["R"] = np.append(plot_data["R"], r)
 
                 px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
                 py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
@@ -153,7 +160,6 @@ class BeamChar(AbstractTool):
         self._parent.send_status("Saving plot(s)...")
 
         # Save plots as separate images, with appropriate titles
-        linestyles = ['-', '--', '-.']
 
         if self._settings["rms"]:
             fig = plt.figure()
@@ -164,7 +170,8 @@ class BeamChar(AbstractTool):
             ax1 = plt.subplot(311)
             plt.title("RMS Beam Size (mm)")
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xRMS"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
@@ -172,7 +179,9 @@ class BeamChar(AbstractTool):
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yRMS"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
+            plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
@@ -180,7 +189,8 @@ class BeamChar(AbstractTool):
 
             ax3 = plt.subplot(313, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zRMS"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zRMS"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
             plt.grid()
@@ -198,21 +208,25 @@ class BeamChar(AbstractTool):
             ax1 = plt.subplot(311)
             plt.title("Halo Parameter")
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yHalo"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
+            plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zHalo"], 'k', lw=0.8, ls=linestyles[n % 3])
+                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
+                         label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             plt.grid()
             plt.xlabel("Step")
@@ -229,7 +243,8 @@ class BeamChar(AbstractTool):
             plt.title("Top-down view of Centroid Position")
             for n in range(num):
                 plt.plot(plots["plot_data{}".format(n)]["xCentroid"], plots["plot_data{}".format(n)]["yCentroid"],
-                         'ko', ms=0.5)
+                         'o', ms=0.5, label=plots["plot_data{}".format(n)]["name"])
+            plt.legend()
             ax = plt.gca()
             ax.set_aspect('equal')
             plt.grid()
@@ -259,8 +274,14 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Particle Energy")
-            plt.hist(plots["plot_data0"]["energy"], 1000, color='k', histtype='step',
-                     weights=np.full_like(plots["plot_data0"]["energy"], 6348))
+            for n in range(num):
+                plt.hist(plots["plot_data{}".format(n)]["energy"], 1000, histtype='step',
+                         weights=np.full_like(plots["plot_data{}".format(n)]["energy"], 6348),
+                         label=plots["plot_data{}".format(n)]["name"])
+            plt.legend()
+
+            # plt.hist(plots["plot_data0"]["energy"], 1000, color='0.5', histtype='step',
+            #          weights=np.full_like(plots["plot_data0"]["energy"], 6348))
             plt.grid()
             plt.xlabel("Energy per Particle (MeV/amu)")
             plt.ylabel(r"Number of $H_2^{+}$ Particles")
@@ -274,8 +295,16 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Particle Beam Intensity")
-            plt.hist(plots["plot_data0"]["R"], 1000, color='k', histtype='step',
-                     weights=1000.0*plots["plot_data0"]["intensity"])
+            for n in range(num):
+                plt.hist(plots["plot_data{}".format(n)]["R"], 5000,
+                         weights=1000.0 * plots["plot_data{}".format(n)]["intensity"],
+                         label=plots["plot_data{}".format(n)]["name"], alpha=0.5)
+            plt.legend()
+
+            # plt.hist(plots["plot_data0"]["R"], 5000, color='0.5',
+            #          weights=1000.0*plots["plot_data0"]["intensity"])  # histtype='step', lw=0.4
+            ax = plt.gca()
+            ax.get_yaxis().set_major_locator(LinearLocator(numticks=12))
             plt.grid()
             plt.xlabel("Radius (mm)")
             plt.ylabel("Beam Intensity (W)")
@@ -290,10 +319,13 @@ class BeamChar(AbstractTool):
 
             plt.title("Probe Scatter Plot")
             ax = plt.gca()
-            plt.plot(x_val, z_val, 'ko', alpha=0.6,  markersize=0.005)
+            for n in range(num):
+                plt.plot(plots["plot_data{}".format(n)]["R"], plots["plot_data{}".format(n)]["coords"][0],
+                         'o', alpha=0.6, markersize=0.005, label=plots["plot_data{}".format(n)]["name"])
+            # plt.plot(x_val, z_val, 'o', alpha=0.6,  markersize=0.005)
+            plt.legend()
             plt.grid()
             ax.set_aspect('equal')
-            ax.set_xlim(right=1730)
             plt.xlabel("Horizontal (mm)")
             plt.ylabel("Vertical (mm)")
             fig.tight_layout()

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>421</width>
-    <height>303</height>
+    <height>340</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -35,7 +35,7 @@
       <x>10</x>
       <y>3</y>
       <width>401</width>
-      <height>300</height>
+      <height>358</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -66,7 +66,17 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="2" column="0" alignment="Qt::AlignHCenter">
+       <item row="6" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Collimator Width (mm):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="gap"/>
+       </item>
+       <item row="4" column="0" alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label_6">
          <property name="text">
           <string>Gap Half-width (mm):</string>
@@ -74,41 +84,51 @@
         </widget>
        </item>
        <item row="2" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QLineEdit" name="gap"/>
-       </item>
-       <item row="4" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QLineEdit" name="w"/>
-       </item>
-       <item row="4" column="0" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Collimator Width (mm):</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1" alignment="Qt::AlignHCenter">
         <widget class="QLineEdit" name="step"/>
        </item>
-       <item row="0" column="0" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Step Number:</string>
-         </property>
-        </widget>
+       <item row="6" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="w"/>
        </item>
-       <item row="3" column="0" alignment="Qt::AlignHCenter">
+       <item row="5" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="hl"/>
+       </item>
+       <item row="5" column="0" alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label_8">
          <property name="text">
           <string>Collimator Half-length (mm):</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QLineEdit" name="hl"/>
+       <item row="2" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Step Number:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="num"/>
+       </item>
+       <item row="0" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Label Number:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Number of Segments:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="nseg"/>
        </item>
       </layout>
      </item>
-     <item alignment="Qt::AlignVCenter">
+     <item>
       <widget class="QTextBrowser" name="textBrowser">
        <property name="sizeAdjustPolicy">
         <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -118,8 +138,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Collim_1:CCOLLIMATOR, XSTART=_, YSTART=_, XEND=_, YEND=_, WIDTH=_;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Collim_2:CCOLLIMATOR, XSTART=_, YSTART=_, XEND=_, YEND=_, WIDTH=_;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
