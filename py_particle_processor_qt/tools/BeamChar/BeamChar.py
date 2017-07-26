@@ -1,7 +1,7 @@
 from ..abstract_tool import AbstractTool
 from PyQt5.QtWidgets import QFileDialog, QMainWindow
 from .beamchargui import Ui_BeamChar
-from matplotlib.ticker import LinearLocator
+from matplotlib.ticker import LinearLocator, LogLocator
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,13 +64,23 @@ class BeamChar(AbstractTool):
 
             nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
 
-            if nsteps > 1:
-                # nsteps = int(nsteps - nsteps*(20/420))
-                nsteps = 400
-
             index = 0
 
+            if nsteps>400:
+                nsteps = 444
+
             for step in range(nsteps):
+
+                m_amu = 2.01510  # Rest mass of individual H2+, in amu
+                m_MeV = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
+
+                if self._settings["rms"] or self._settings["halo"]:
+                    px_val = np.array(datasource["Step#{}".format(step)]["px"])
+                    py_val = np.array(datasource["Step#{}".format(step)]["py"])
+                    pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
+                    betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
+                    energy = np.mean((np.sqrt(np.square(betagamma * m_MeV) + np.square(m_MeV)) - m_MeV) / m_amu)
+                    plot_data["energy"] = np.append(plot_data["energy"], energy)
 
                 if nsteps > 1:
                     completed = int(100*(step/(nsteps-1)))
@@ -170,31 +180,37 @@ class BeamChar(AbstractTool):
             ax1 = plt.subplot(311)
             plt.title("RMS Beam Size (mm)")
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xRMS"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["xRMS"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
+                # print("Mean x RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["xRMS"][40:])))
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
+            ax1.set_xlim([0,62.25])
             plt.grid()
             plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yRMS"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["yRMS"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
+                # print("Mean y RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["yRMS"][40:])))
             plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
+            ax2.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zRMS"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["zRMS"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
+                # print("Mean z RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["zRMS"][40:])))
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
+            ax3.set_xlim([0, 62.25])
             plt.grid()
-            plt.xlabel("Step")
+            plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=1200)
@@ -208,28 +224,31 @@ class BeamChar(AbstractTool):
             ax1 = plt.subplot(311)
             plt.title("Halo Parameter")
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax1.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Horizontal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["yHalo"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["yHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax2.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Longitudinal")
 
             ax3 = plt.subplot(313, sharex=ax1)
             for n in range(num):
-                plt.plot(range(nsteps), plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
+                plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
+            ax3.set_xlim([0, 62.5])
             plt.grid()
-            plt.xlabel("Step")
+            plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
             fig.tight_layout()
             fig.savefig(self._filename[0] + '_haloParameter.png', bbox_inches='tight', dpi=1200)
@@ -296,15 +315,16 @@ class BeamChar(AbstractTool):
 
             plt.title("Particle Beam Intensity")
             for n in range(num):
-                plt.hist(plots["plot_data{}".format(n)]["R"], 5000,
-                         weights=1000.0 * plots["plot_data{}".format(n)]["intensity"],
-                         label=plots["plot_data{}".format(n)]["name"], alpha=0.5)
-            plt.legend()
+                radii = plots["plot_data{}".format(n)]["R"]
+                bins = np.arange(min(radii), max(radii) + 0.5, 0.5)
+                y, x, _ = plt.hist(radii, bins=bins, weights=1000.0 * plots["plot_data{}".format(n)]["intensity"],
+                         label=plots["plot_data{}".format(n)]["name"], alpha=0.3, log=True)
+                print(min(y))
 
-            # plt.hist(plots["plot_data0"]["R"], 5000, color='0.5',
-            #          weights=1000.0*plots["plot_data0"]["intensity"])  # histtype='step', lw=0.4
-            ax = plt.gca()
-            ax.get_yaxis().set_major_locator(LinearLocator(numticks=12))
+            # ax = plt.gca()
+            # ax.set_ylim([0, 1000])
+            # ax.get_yaxis().set_major_locator(LinearLocator(numticks=12))
+            plt.legend()
             plt.grid()
             plt.xlabel("Radius (mm)")
             plt.ylabel("Beam Intensity (W)")
@@ -323,13 +343,13 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["R"], plots["plot_data{}".format(n)]["coords"][0],
                          'o', alpha=0.6, markersize=0.005, label=plots["plot_data{}".format(n)]["name"])
             # plt.plot(x_val, z_val, 'o', alpha=0.6,  markersize=0.005)
-            plt.legend()
+            # plt.legend()
             plt.grid()
             ax.set_aspect('equal')
-            plt.xlabel("Horizontal (mm)")
+            plt.xlabel("Radius (mm)")
             plt.ylabel("Vertical (mm)")
             fig.tight_layout()
-            fig.savefig(self._filename[0] + '_XZ.png', bbox_inches='tight', dpi=1200)
+            fig.savefig(self._filename[0] + '_RZ.png', bbox_inches='tight', dpi=1200)
 
         self._parent.send_status("Plot(s) saved successfully!")
 

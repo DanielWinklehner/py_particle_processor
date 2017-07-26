@@ -49,25 +49,30 @@ class CollimOPAL(AbstractTool):
         py = self.read('py')
 
         script = ""
+
+        script += self.gen_script(x, y, px, py)
+
+        self._collimOPALGUI.textBrowser.setText(script)
+
+    def gen_script(self, x, y, px, py):
+        script = ""
         letters = list(string.ascii_lowercase)
 
         # Central collimator placement
-        x_cent = x[180 * self._settings["step"]]
-        y_cent = y[180 * self._settings["step"]]
-        px_cent = px[180 * self._settings["step"]]
-        py_cent = py[180 * self._settings["step"]]
-        
+        x_cent = x[10 * self._settings["step"]]
+        y_cent = y[10 * self._settings["step"]]
+
         for n in range(self._settings["nseg"]):
-            i = 180 * self._settings["step"]
+            i = 10 * self._settings["step"]
 
             if n != 0:  # n = 0 indicates the central segment
                 if n % 2 == 1:  # n congruent to 1 mod 2 indicates placement ahead of the central segment
                     while np.sqrt(np.square(x_cent - x[i]) + np.square(y_cent - y[i])) \
-                            < (int(n/2) + (n % 2 > 0)) * self._settings["cwidth"]:
+                            < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i += 1
                 else:  # n > 0 congruent to 0 mod 2 indicates placement behind of the central segment
                     while np.sqrt(np.square(x_cent - x[i]) + np.square(y_cent - y[i])) \
-                            < (int(n/2) + (n % 2 > 0)) * self._settings["cwidth"]:
+                            < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i -= 1
 
             x_new = x[i]
@@ -78,13 +83,12 @@ class CollimOPAL(AbstractTool):
             collim = self.gen_collim(x_new, y_new, px_new, py_new)
 
             script += "Collim_{}{}:CCOLLIMATOR, XSTART={}, YSTART={}, XEND={}, YEND={}, WIDTH={};\n\n" \
-                .format(self._settings["label"], letters[2*n], collim["x1a"], collim["y1a"], collim["x1b"], 
+                .format(self._settings["label"], letters[2 * n], collim["x1a"], collim["y1a"], collim["x1b"],
                         collim["y1b"], self._settings["cwidth"])
             script += "Collim_{}{}:CCOLLIMATOR, XSTART={}, YSTART={}, XEND={}, YEND={}, WIDTH={};\n\n" \
-                .format(self._settings["label"], letters[2*n + 1], collim["x2a"], collim["y2a"], collim["x2b"],
-                        collim["y2b"],self._settings["cwidth"])
-
-        self._collimOPALGUI.textBrowser.setText(script)
+                .format(self._settings["label"], letters[2 * n + 1], collim["x2a"], collim["y2a"], collim["x2b"],
+                        collim["y2b"], self._settings["cwidth"])
+        return script
 
     def gen_collim(self, x, y, px, py):
         # Find angle to rotate collimator according to momentum

@@ -170,7 +170,7 @@
        <item row="8" column="0" alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label_10">
          <property name="text">
-          <string>Scatter Plot</string>
+          <string>R-Z Scatter Plot</string>
          </property>
         </widget>
        </item>

@@ -96,7 +96,7 @@ class AnimateXY(AbstractTool):
 
         # Save animation
         writer1 = animation.writers['ffmpeg']
-        writer2 = writer1(fps=10, bitrate=1800)
+        writer2 = writer1(fps=20, bitrate=1800)
         ani.save(self._filename[0]+".mp4", writer=writer2)
         ani._stop()
         self._parent.send_status("Animation saved successfully!")

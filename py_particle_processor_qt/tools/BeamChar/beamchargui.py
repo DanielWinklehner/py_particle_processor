@@ -115,7 +115,7 @@ class Ui_BeamChar(object):
         _translate = QtCore.QCoreApplication.translate
         BeamChar.setWindowTitle(_translate("BeamChar", "Choosing Plots"))
         self.label.setText(_translate("BeamChar", "<html><head/><body><p>Please select the beam characteristic(s) you would like to plot.</p></body></html>"))
-        self.label_9.setText(_translate("BeamChar", "Probes & Collimators"))
+        self.label_9.setText(_translate("BeamChar", "Probes"))
         self.label_8.setText(_translate("BeamChar", "Full Simulation"))
         self.label_4.setText(_translate("BeamChar", "Centroid Position"))
         self.label_3.setText(_translate("BeamChar", "Halo Parameter"))
@@ -123,5 +123,5 @@ class Ui_BeamChar(object):
         self.label_6.setText(_translate("BeamChar", "Energy Histogram"))
         self.label_5.setText(_translate("BeamChar", "Turn Separation"))
         self.label_7.setText(_translate("BeamChar", "Beam Intensity vs Radius"))
-        self.label_10.setText(_translate("BeamChar", "X-Z Density Plot"))
+        self.label_10.setText(_translate("BeamChar", "R-Z Scatter Plot"))
 
