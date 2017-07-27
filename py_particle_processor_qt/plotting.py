@@ -106,16 +106,48 @@ class PlotObject(object):
                         _grid = False
 
                         # Loop through each particle
-                        for particle_id in range(dataset.get_npart()):
-                            # Get the particle data and color for plotting
-                            particle, _c = dataset.get_particle(particle_id, get_color="random")
-                            # Make an array of the values and transpose it (needed for plotting)
-                            pts = np.array([particle.get(axes[0]), particle.get(axes[1]), particle.get(axes[2])]).T
-                            # Create a line item of all the points corresponding to this particle
-                            plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
-                                                           antialias=True)
-                            # Add the line object to the graphics view
-                            self._graphics_view.addItem(plt)
+
+                        if dataset.get_npart() > 1:
+
+                            for particle_id in range(dataset.get_npart()):
+
+                                # Get the particle data and color for plotting
+                                particle, _c = dataset.get_particle(particle_id, get_color="random")
+                                # Make an array of the values and transpose it (needed for plotting)
+                                pts = np.array([particle.get(axes[0]), particle.get(axes[1]), particle.get(axes[2])]).T
+                                # Create a line item of all the points corresponding to this particle
+                                plt = pg.opengl.GLLinePlotItem(pos=pts, color=pg.glColor(_c), width=1.,
+                                                               antialias=True)
+                                # Add the line object to the graphics view
+                                self._graphics_view.addItem(plt)
+
+                        else:
+
+                            # Source: https://stackoverflow.com/questions/4296249/how-do-i-convert-a-hex-triplet-to-an-rgb-tuple-and-back
+
+                            _NUMERALS = '0123456789abcdefABCDEF'
+                            _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
+
+                            def rgb(triplet):
+                                return [_HEXDEC[triplet[0:2]] / 255.0, _HEXDEC[triplet[2:4]] / 255.0,
+                                        _HEXDEC[triplet[4:6]] / 255.0, 255.0 / 255.0]
+
+                            if dataset.get_nsteps() > 1 and dataset.get_npart() == 1:
+                                _x, _y, _z = [], [], []
+                                for step_i in range(dataset.get_nsteps()):
+                                    dataset.set_step_view(step_i)
+                                    _x.append(float(dataset.get(axes[0])))
+                                    _y.append(float(dataset.get(axes[1])))
+                                    _z.append(float(dataset.get(axes[2])))
+
+                                pts = np.array([_x, _y, _z]).T
+                                dataset_color = dataset.color()
+                                line_color = rgb(dataset_color[1:])
+
+                                plot_curve = pg.opengl.GLLinePlotItem(pos=pts, color=line_color,
+                                                                      width=1., antialias=True)
+                                self._graphics_view.addItem(plot_curve)
+                                self._graphics_view.repaint()
 
                         if _grid:  # If the grid is enabled for this plot
                             # TODO: Make the grid size dynamic -PW
@@ -149,22 +181,36 @@ class PlotObject(object):
                 self._is_shown = True
 
         else:  # If it's not a 3D plot, it's a 2D plot...
+
             if enabled:
 
                 for dataset in self._datasets:  # Loop through each dataset
 
-                    dataset.set_step_view(step)  # Set the step for the current dataset
-                    # Create a scatter plot item using the values and color from the dataset
-                    scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
-                                                 y=dataset.get(axes[1]),
-                                                 pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
-                    # Add the scatter plot item to the graphics view
-                    self._graphics_view.addItem(scatter)
+                    if dataset.get_nsteps() > 1 and dataset.get_npart() == 1:
+                        _x, _y = [], []
+                        for step_i in range(dataset.get_nsteps()):
+                            dataset.set_step_view(step_i)
+                            _x.append(float(dataset.get(axes[0])))
+                            _y.append(float(dataset.get(axes[1])))
 
-                    # Create a title for the graph, which is just the axis labels for now
-                    # title = axes[0].upper() + "-" + axes[1].upper()
-                    # self._graphics_view.setTitle(title)  # Set the title of the graphics view
-                    self._graphics_view.repaint()  # Repaint the view
+                        plot_curve = pg.PlotDataItem(x=np.array(_x),
+                                                      y=np.array(_y),
+                                                      pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+                        self._graphics_view.addItem(plot_curve)
+                        self._graphics_view.repaint()
+                    else:
+                        dataset.set_step_view(step)  # Set the step for the current dataset
+                        # Create a scatter plot item using the values and color from the dataset
+                        scatter = pg.ScatterPlotItem(x=dataset.get(axes[0]),
+                                                     y=dataset.get(axes[1]),
+                                                     pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+                        # Add the scatter plot item to the graphics view
+                        self._graphics_view.addItem(scatter)
+
+                        # Create a title for the graph, which is just the axis labels for now
+                        # title = axes[0].upper() + "-" + axes[1].upper()
+                        # self._graphics_view.setTitle(title)  # Set the title of the graphics view
+                        self._graphics_view.repaint()  # Repaint the view
 
                 self._is_shown = True  # Set the shown flag
 
