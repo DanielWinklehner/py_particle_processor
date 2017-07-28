@@ -119,6 +119,8 @@ class Dataset(object):
 
     def xy_orbit(self, triplet):
         # Uses a triplet of step numbers to find the center of an orbit
+
+        # Source: https://math.stackexchange.com/questions/213658/get-the-equation-of-a-circle-when-given-3-points
         _x, _y = [], []
         for step in triplet:
             self.set_step_view(step)
@@ -176,7 +178,7 @@ class Dataset(object):
         if key not in ["x", "y", "z", "r", "px", "py", "pz", "pr"]:
 
             if self._debug:
-                print("get(key): Key was not one of 'x', 'y', 'z', 'px', 'py', 'pz', 'r'")
+                print("get(key): Key was not one of 'x', 'y', 'z', 'r', 'px', 'py', 'pz', 'pr'")
 
             return 1
 
@@ -190,15 +192,34 @@ class Dataset(object):
         if key is "r":
             data_x = self._data.get("x").value
             data_y = self._data.get("y").value
-            data = np.sqrt(data_x**2.0 + data_y**2.0)
+
+            if self._orbit is not None:
+                data = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
+            else:
+                data = np.sqrt(data_x ** 2.0 + data_y ** 2.0)
 
             return data
+
         elif key is "pr":
-            data_x = self._data.get("px").value
-            data_y = self._data.get("py").value
-            data = np.sqrt(data_x**2.0 + data_y**2.0)
+
+            data_px = self._data.get("px").value
+            data_py = self._data.get("py").value
+            p = np.sqrt(data_px ** 2.0 + data_py ** 2.0)
+
+            data_x = self._data.get("x").value
+            data_y = self._data.get("y").value
+
+            if self._orbit is not None:
+                r = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
+            else:
+                r = np.sqrt(data_x ** 2.0 + data_y ** 2.0)
+
+            factor = (data_px * data_x + data_py * data_y)/(abs(p) * abs(r))
+
+            data = p * factor
 
             return data
+
         else:
             data = self._data.get(key)
             return data.value
