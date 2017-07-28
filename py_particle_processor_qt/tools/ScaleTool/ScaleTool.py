@@ -6,7 +6,7 @@ from PyQt5 import QtGui
 class ScaleTool(AbstractTool):
 
     def __init__(self, parent):
-        super(ScaleTool, self).__init__()
+        super(ScaleTool, self).__init__(parent)
         self._name = "Scale Tool"
         self._parent = parent
 

@@ -1,6 +1,6 @@
 from py_particle_processor_qt.gui.plot_settings import Ui_PlotSettingsWindow
 from py_particle_processor_qt.gui.default_plot_settings import Ui_DefaultPlotSettingsWindow
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 import pyqtgraph as pg
 import numpy as np
 
@@ -68,7 +68,7 @@ class PlotObject(object):
         else:
             t_plot_settings = {}  # Create a new dictionary for the translated plot settings
             en_val = [False, None, True]  # Values for the "enable" settings
-            combo_val = ["x", "y", "z", "px", "py", "pz"]  # Values for the combo boxes
+            combo_val = ["x", "y", "z", "r", "px", "py", "pz", "pr"]  # Values for the combo boxes
 
             for k, v in self._plot_settings.items():  # Get the key and value of each setting
                 if "_en" in k or "is" in k:  # If it's an enable setting...
@@ -134,7 +134,8 @@ class PlotObject(object):
 
                             if dataset.get_nsteps() > 1 and dataset.get_npart() == 1:
                                 _x, _y, _z = [], [], []
-                                for step_i in range(dataset.get_nsteps()):
+
+                                for step_i in range(step):
                                     dataset.set_step_view(step_i)
                                     _x.append(float(dataset.get(axes[0])))
                                     _y.append(float(dataset.get(axes[1])))
@@ -188,16 +189,46 @@ class PlotObject(object):
 
                     if dataset.get_nsteps() > 1 and dataset.get_npart() == 1:
                         _x, _y = [], []
-                        for step_i in range(dataset.get_nsteps()):
+                        for step_i in range(step):
                             dataset.set_step_view(step_i)
                             _x.append(float(dataset.get(axes[0])))
                             _y.append(float(dataset.get(axes[1])))
 
                         plot_curve = pg.PlotDataItem(x=np.array(_x),
-                                                      y=np.array(_y),
-                                                      pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+                                                     y=np.array(_y),
+                                                     pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
                         self._graphics_view.addItem(plot_curve)
+
+                        if axes[0] == "x" and axes[1] == "y":
+                            self._graphics_view.setAspectLocked(lock=True, ratio=1)
+                            if dataset.orbit() is not None:
+                                xc, yc, r = dataset.orbit()
+                                theta = np.linspace(0, 2*np.pi, 180)
+                                xo = r * np.cos(theta) + xc
+                                yo = r * np.sin(theta) + yc
+                                orbit_curve = pg.PlotDataItem(x=xo,
+                                                              y=yo,
+                                                              pen=pg.mkPen(color=dataset.color(), style=QtCore.Qt.DashLine),
+                                                              brush='b',
+                                                              size=1.0,
+                                                              pxMode=True)
+
+                                orbit_center = pg.ScatterPlotItem(x=np.array([xc]),
+                                                                  y=np.array([yc]),
+                                                                  pen=pg.mkPen(color=dataset.color()),
+                                                                  symbol="s",
+                                                                  brush='b',
+                                                                  size=3.0,
+                                                                  pxMode=True)
+
+                                self._graphics_view.addItem(orbit_curve)
+                                self._graphics_view.addItem(orbit_center)
+                            else:
+                                self._graphics_view.setAspectLocked(lock=False)
+
+                        self._graphics_view.showGrid(True, True, 0.5)
                         self._graphics_view.repaint()
+
                     else:
                         dataset.set_step_view(step)  # Set the step for the current dataset
                         # Create a scatter plot item using the values and color from the dataset
@@ -432,6 +463,8 @@ class PlotSettings(object):
         self._default = default  # Default flag
         self._new_plot = new_plot  # New Plot flag
 
+        combo_val = ["x", "y", "z", "r", "px", "py", "pz", "pr"]
+
         # --- Initialize the GUI --- #
         if self._default:
             self._settings = parent.get_default_plot_settings()  # Get the (possibly) previously set settings
@@ -439,12 +472,56 @@ class PlotSettings(object):
             self._plotSettingsWindow = QtGui.QMainWindow()
             self._plotSettingsWindowGUI = Ui_DefaultPlotSettingsWindow()
             self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
+
+            for _ in range(self._plotSettingsWindowGUI.tl_combo_a.count()):
+                self._plotSettingsWindowGUI.tl_combo_a.removeItem(0)
+                self._plotSettingsWindowGUI.tl_combo_b.removeItem(0)
+
+                self._plotSettingsWindowGUI.tr_combo_a.removeItem(0)
+                self._plotSettingsWindowGUI.tr_combo_b.removeItem(0)
+
+                self._plotSettingsWindowGUI.bl_combo_a.removeItem(0)
+                self._plotSettingsWindowGUI.bl_combo_b.removeItem(0)
+
+            for item in combo_val:
+                self._plotSettingsWindowGUI.tl_combo_a.addItem(item.upper())
+                self._plotSettingsWindowGUI.tl_combo_b.addItem(item.upper())
+
+                self._plotSettingsWindowGUI.tr_combo_a.addItem(item.upper())
+                self._plotSettingsWindowGUI.tr_combo_b.addItem(item.upper())
+
+                self._plotSettingsWindowGUI.bl_combo_a.addItem(item.upper())
+                self._plotSettingsWindowGUI.bl_combo_b.addItem(item.upper())
+
+            self._plotSettingsWindowGUI.tl_combo_a.setCurrentIndex(combo_val.index("x"))
+            self._plotSettingsWindowGUI.tl_combo_b.setCurrentIndex(combo_val.index("y"))
+
+            self._plotSettingsWindowGUI.tr_combo_a.setCurrentIndex(combo_val.index("x"))
+            self._plotSettingsWindowGUI.tr_combo_b.setCurrentIndex(combo_val.index("px"))
+
+            self._plotSettingsWindowGUI.bl_combo_a.setCurrentIndex(combo_val.index("y"))
+            self._plotSettingsWindowGUI.bl_combo_b.setCurrentIndex(combo_val.index("py"))
+
         else:
             self._settings = plot_object.get_plot_settings()  # Get the (possibly) previously set settings of the object
 
             self._plotSettingsWindow = QtGui.QMainWindow()
             self._plotSettingsWindowGUI = Ui_PlotSettingsWindow()
             self._plotSettingsWindowGUI.setupUi(self._plotSettingsWindow)
+
+            for _ in range(self._plotSettingsWindowGUI.param_combo_a.count()):
+                self._plotSettingsWindowGUI.param_combo_a.removeItem(0)
+                self._plotSettingsWindowGUI.param_combo_b.removeItem(0)
+                self._plotSettingsWindowGUI.param_combo_c.removeItem(0)
+
+            for item in combo_val:
+                self._plotSettingsWindowGUI.param_combo_a.addItem(item.upper())
+                self._plotSettingsWindowGUI.param_combo_b.addItem(item.upper())
+                self._plotSettingsWindowGUI.param_combo_c.addItem(item.upper())
+
+            self._plotSettingsWindowGUI.param_combo_a.setCurrentIndex(combo_val.index("x"))
+            self._plotSettingsWindowGUI.param_combo_b.setCurrentIndex(combo_val.index("y"))
+            self._plotSettingsWindowGUI.param_combo_c.setCurrentIndex(combo_val.index("z"))
 
         if len(self._settings) > 0:  # If there are settings, then populate the GUI
             self.populate()

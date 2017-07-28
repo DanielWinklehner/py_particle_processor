@@ -59,6 +59,7 @@ class Dataset(object):
         self._data = None
         self._color = (0.0, 0.0, 0.0)
         self._indices = indices
+        self._orbit = None
 
         self._properties = {"name": None,
                             "ion": species,
@@ -116,6 +117,37 @@ class Dataset(object):
     def get_property(self, key):
         return self._properties[key]
 
+    def xy_orbit(self, triplet):
+        # Uses a triplet of step numbers to find the center of an orbit
+        _x, _y = [], []
+        for step in triplet:
+            self.set_step_view(step)
+            _x.append(float(self.get("x")))
+            _y.append(float(self.get("y")))
+
+        matrix = np.matrix([[_x[0] ** 2.0 + _y[0] ** 2.0, _x[0], _y[0], 1],
+                            [_x[1] ** 2.0 + _y[1] ** 2.0, _x[1], _y[1], 1],
+                            [_x[2] ** 2.0 + _y[2] ** 2.0, _x[2], _y[2], 1]])
+
+        m11 = np.linalg.det(np.delete(matrix, 0, 1))
+        m12 = np.linalg.det(np.delete(matrix, 1, 1))
+        m13 = np.linalg.det(np.delete(matrix, 2, 1))
+        m14 = np.linalg.det(np.delete(matrix, 3, 1))
+
+        xc = 0.5 * m12 / m11
+        yc = -0.5 * m13 / m11
+        r = np.sqrt(xc ** 2.0 + yc ** 2.0 + m14 / m11)
+
+        self._orbit = (xc, yc, r)
+
+        if self._debug:
+            print(self._orbit)
+
+        return 0
+
+    def orbit(self):
+        return self._orbit
+
     def set_property(self, key, value):
         self._properties[key] = value
         return 0
@@ -141,10 +173,10 @@ class Dataset(object):
         :return: 
         """
 
-        if key not in ["x", "y", "z", "px", "py", "pz"]:
+        if key not in ["x", "y", "z", "r", "px", "py", "pz", "pr"]:
 
             if self._debug:
-                print("get(key): Key was not one of 'x', 'y', 'z', 'px', 'py', 'pz'")
+                print("get(key): Key was not one of 'x', 'y', 'z', 'px', 'py', 'pz', 'r'")
 
             return 1
 
@@ -155,9 +187,21 @@ class Dataset(object):
 
             return 1
 
-        data = self._data.get(key)
+        if key is "r":
+            data_x = self._data.get("x").value
+            data_y = self._data.get("y").value
+            data = np.sqrt(data_x**2.0 + data_y**2.0)
 
-        return data.value
+            return data
+        elif key is "pr":
+            data_x = self._data.get("px").value
+            data_y = self._data.get("py").value
+            data = np.sqrt(data_x**2.0 + data_y**2.0)
+
+            return data
+        else:
+            data = self._data.get(key)
+            return data.value
 
     def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}

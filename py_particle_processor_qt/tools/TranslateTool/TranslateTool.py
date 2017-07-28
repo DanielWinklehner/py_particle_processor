@@ -5,7 +5,7 @@ from PyQt5 import QtGui
 
 class TranslateTool(AbstractTool):
     def __init__(self, parent):
-        super(TranslateTool, self).__init__()
+        super(TranslateTool, self).__init__(parent)
         self._name = "Translate Tool"
         self._parent = parent
 
