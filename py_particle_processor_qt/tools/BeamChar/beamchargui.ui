@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>421</width>
-    <height>303</height>
+    <height>306</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -63,55 +63,6 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="7" column="0">
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Probes</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="intens">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Full Simulation</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="centroid">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Centroid Position</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="rms">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="halo">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0" alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label_3">
          <property name="text">
@@ -132,6 +83,41 @@
          </property>
         </widget>
        </item>
+       <item row="10" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Beam Intensity vs Radius</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="xz">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="rms">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="turnsep">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>R-Z Scatter Plot</string>
+         </property>
+        </widget>
+       </item>
        <item row="9" column="0" alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label_6">
          <property name="text">
@@ -139,8 +125,29 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="turnsep">
+       <item row="10" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="intens">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="halo">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="ehist">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QCheckBox" name="centroid">
          <property name="text">
           <string/>
          </property>
@@ -153,31 +160,24 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="ehist">
+       <item row="6" column="0" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="label_4">
          <property name="text">
-          <string/>
+          <string>Centroid Position</string>
          </property>
         </widget>
        </item>
-       <item row="10" column="0" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="label_7">
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_9">
          <property name="text">
-          <string>Beam Intensity vs Radius</string>
+          <string>Probes</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="0" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="label_10">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>R-Z Scatter Plot</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QCheckBox" name="xz">
-         <property name="text">
-          <string/>
+          <string>Full Simulation</string>
          </property>
         </widget>
        </item>

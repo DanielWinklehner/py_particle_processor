@@ -1,0 +1,92 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'animateXY.ui'
+#
+# Created by: PyQt5 UI code generator 5.6
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_Animate(object):
+    def setupUi(self, Animate):
+        Animate.setObjectName("Animate")
+        Animate.resize(421, 202)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Animate.sizePolicy().hasHeightForWidth())
+        Animate.setSizePolicy(sizePolicy)
+        self.centralwidget = QtWidgets.QWidget(Animate)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
+        self.centralwidget.setSizePolicy(sizePolicy)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 401, 181))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_3.setSpacing(0)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.label = QtWidgets.QLabel(self.verticalLayoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setMaximumSize(QtCore.QSize(16777215, 200))
+        self.label.setObjectName("label")
+        self.verticalLayout_3.addWidget(self.label)
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.lim = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lim.setObjectName("lim")
+        self.gridLayout.addWidget(self.lim, 6, 1, 1, 1, QtCore.Qt.AlignHCenter)
+        self.label_3 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout.addWidget(self.label_3, 6, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.label_2 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_2.setMaximumSize(QtCore.QSize(16777215, 100))
+        self.label_2.setObjectName("label_2")
+        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.radioButton = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radioButton.setObjectName("radioButton")
+        self.verticalLayout.addWidget(self.radioButton)
+        self.radioButton_2 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radioButton_2.setObjectName("radioButton_2")
+        self.verticalLayout.addWidget(self.radioButton_2)
+        self.gridLayout.addLayout(self.verticalLayout, 1, 1, 1, 1)
+        self.label_4 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout.addWidget(self.label_4, 7, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        self.fps = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.fps.setObjectName("fps")
+        self.gridLayout.addWidget(self.fps, 7, 1, 1, 1, QtCore.Qt.AlignHCenter)
+        self.verticalLayout_3.addLayout(self.gridLayout)
+        spacerItem = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.verticalLayout_3.addItem(spacerItem)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self.verticalLayoutWidget)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.verticalLayout_3.addWidget(self.buttonBox)
+        Animate.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(Animate)
+        QtCore.QMetaObject.connectSlotsByName(Animate)
+
+    def retranslateUi(self, Animate):
+        _translate = QtCore.QCoreApplication.translate
+        Animate.setWindowTitle(_translate("Animate", "Choosing Animation"))
+        self.label.setText(_translate("Animate", "<html><head/><body><p>Please enter your animation parameters.</p></body></html>"))
+        self.label_3.setText(_translate("Animate", "Axes Limit (maximum x or y value, mm):"))
+        self.label_2.setText(_translate("Animate", "Reference Frame:"))
+        self.radioButton.setText(_translate("Animate", "Local"))
+        self.radioButton_2.setText(_translate("Animate", "Global"))
+        self.label_4.setText(_translate("Animate", "FPS:"))
+
