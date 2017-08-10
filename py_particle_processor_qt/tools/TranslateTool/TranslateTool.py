@@ -71,7 +71,7 @@ class TranslateTool(AbstractTool):
                 self._invalid_input = True
 
             try:
-                value = float(translate_txt)  # Try to convert the input to a float
+                float(translate_txt)  # Try to convert the input to a float
                 input_item.setStyleSheet("color: #000000")
 
             except ValueError:

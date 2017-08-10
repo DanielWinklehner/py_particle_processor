@@ -5,6 +5,7 @@ from py_particle_processor_qt.plotting import *
 from py_particle_processor_qt.generator import *
 from py_particle_processor_qt.tools import *
 from PyQt5.QtWidgets import qApp, QFileDialog
+
 # from dans_pymodules import MyColors
 
 __author__ = "Philip Weigel, Daniel Winklehner"
@@ -17,6 +18,7 @@ class ParticleFile(object):
     """
     This object will contain a list of datasets and some attributes for easier handling.
     """
+
     # __slots__ = ("_filename", "_driver", "_debug", "_datasets", "_selected", "_index", "_parent")
 
     def __init__(self, filename, driver, index, load_type, debug=False, **kwargs):
@@ -115,7 +117,6 @@ class ParticleFile(object):
 
 # TODO
 class FieldFile(object):
-
     def __init__(self, filename, driver, index, debug=False):
         self._filename = filename
         self._driver = driver
@@ -155,13 +156,11 @@ class SpeciesPrompt(object):
         self._parent.species_callback(self, species=species, name=name)
 
     def close(self):
-
         self._window.close()
 
         return 0
 
     def run(self):
-
         # --- Calculate the positions to center the window --- #
         screen_size = self._parent.screen_size()
         _x = 0.5 * (screen_size.width() - self._window.width())
@@ -173,7 +172,6 @@ class SpeciesPrompt(object):
 
 
 class PyParticleProcessor(object):
-
     def __init__(self, debug=False):
         """
         Initialize the GUI
@@ -184,7 +182,7 @@ class PyParticleProcessor(object):
         self._debug = debug
         self._ci = 0  # A color index for datasets
         self._datafiles = []  # Container for holding the datasets
-        self._datafile_buffer = [] # Buffer used to hold datafiles in memory while loading
+        self._datafile_buffer = []  # Buffer used to hold datafiles in memory while loading
         self._selections = []  # Temporary dataset selections
         self._last_path = ""  # Stores the last path from loading/saving files
 
@@ -353,7 +351,15 @@ class PyParticleProcessor(object):
     def callback_analyze(self):
 
         print("Not implemented yet!")
-        print(self._gen_data)
+
+        for dataset in self._selections:
+            for i in range(dataset.get_npart()):
+                print(dataset.get("x")[i])
+                print(dataset.get("y")[i])
+                print(dataset.get("r")[i])
+                print(dataset.get("px")[i])
+                print(dataset.get("py")[i])
+
         return 0
 
     def callback_delete_ds(self):
@@ -884,7 +890,7 @@ class PyParticleProcessor(object):
         if properties:
             self._properties_select.clear()
             self._properties_select.data_objects = []
-        
+
         for parent_index, datafile in enumerate(self._datafiles):
             datafile.set_index(parent_index)
 
@@ -899,7 +905,6 @@ class PyParticleProcessor(object):
             top_level_item.setCheckState(0, QtCore.Qt.Unchecked)
 
             for child_index, dataset in enumerate(datafile.datasets()):
-                
                 # --- Refresh Tree Widget for the Dataset --- #
                 dataset.set_indices(parent_index, child_index)
 

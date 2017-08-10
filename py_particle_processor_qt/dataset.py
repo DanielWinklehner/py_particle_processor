@@ -59,7 +59,9 @@ class Dataset(object):
         self._data = None
         self._color = (0.0, 0.0, 0.0)
         self._indices = indices
+
         self._orbit = None
+        self._center_orbit = False
 
         self._properties = {"name": None,
                             "ion": species,
@@ -117,8 +119,9 @@ class Dataset(object):
     def get_property(self, key):
         return self._properties[key]
 
-    def xy_orbit(self, triplet):
+    def xy_orbit(self, triplet, center=False):
         # Uses a triplet of step numbers to find the center of an orbit
+        self._center_orbit = center
 
         # Source: https://math.stackexchange.com/questions/213658/get-the-equation-of-a-circle-when-given-3-points
         _x, _y = [], []
@@ -193,7 +196,7 @@ class Dataset(object):
             data_x = self._data.get("x").value
             data_y = self._data.get("y").value
 
-            if self._orbit is not None:
+            if self._orbit is not None and self._center_orbit is True:
                 data = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
             else:
                 data = np.sqrt(data_x ** 2.0 + data_y ** 2.0)
@@ -209,7 +212,7 @@ class Dataset(object):
             data_x = self._data.get("x").value
             data_y = self._data.get("y").value
 
-            if self._orbit is not None:
+            if self._orbit is not None and self._center_orbit is True:
                 r = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
             else:
                 r = np.sqrt(data_x ** 2.0 + data_y ** 2.0)

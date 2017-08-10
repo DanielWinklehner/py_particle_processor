@@ -197,7 +197,26 @@ class PlotObject(object):
                         plot_curve = pg.PlotDataItem(x=np.array(_x),
                                                      y=np.array(_y),
                                                      pen=pg.mkPen(dataset.color()), brush='b', size=1.0, pxMode=True)
+
+                        plot_start = pg.ScatterPlotItem(x=np.array([_x[0]]),
+                                                        y=np.array([_y[0]]),
+                                                        pen=pg.mkPen(color=(0.0, 255.0, 0.0)),
+                                                        symbol="o",
+                                                        brush='b',
+                                                        size=3.0,
+                                                        pxMode=True)
+
+                        plot_end = pg.ScatterPlotItem(x=np.array([_x[-1]]),
+                                                      y=np.array([_y[-1]]),
+                                                      pen=pg.mkPen(color=(255.0, 0.0, 0.0)),
+                                                      symbol="o",
+                                                      brush='b',
+                                                      size=3.0,
+                                                      pxMode=True)
+
                         self._graphics_view.addItem(plot_curve)
+                        self._graphics_view.addItem(plot_start)
+                        self._graphics_view.addItem(plot_end)
 
                         if axes[0] == "x" and axes[1] == "y":
                             self._graphics_view.setAspectLocked(lock=True, ratio=1)
@@ -206,6 +225,7 @@ class PlotObject(object):
                                 theta = np.linspace(0, 2*np.pi, 180)
                                 xo = r * np.cos(theta) + xc
                                 yo = r * np.sin(theta) + yc
+
                                 orbit_curve = pg.PlotDataItem(x=xo,
                                                               y=yo,
                                                               pen=pg.mkPen(color=dataset.color(), style=QtCore.Qt.DashLine),
@@ -238,10 +258,10 @@ class PlotObject(object):
                         # Add the scatter plot item to the graphics view
                         self._graphics_view.addItem(scatter)
 
-                        # Create a title for the graph, which is just the axis labels for now
-                        # title = axes[0].upper() + "-" + axes[1].upper()
-                        # self._graphics_view.setTitle(title)  # Set the title of the graphics view
-                        self._graphics_view.repaint()  # Repaint the view
+                    # Create a title for the graph, which is just the axis labels for now
+                    title = axes[0].upper() + "-" + axes[1].upper()
+                    self._graphics_view.setTitle(title)  # Set the title of the graphics view
+                    self._graphics_view.repaint()  # Repaint the view
 
                 self._is_shown = True  # Set the shown flag
 
@@ -559,7 +579,7 @@ class PlotSettings(object):
             self._settings["bl_b"] = self._plotSettingsWindowGUI.bl_combo_b.currentIndex()
 
             # Redraw:
-            self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
+            # self._settings["redraw_en"] = self._plotSettingsWindowGUI.redraw_enabled.checkState()
 
         elif isinstance(self._plotSettingsWindowGUI, Ui_PlotSettingsWindow):
             # Parameters:
@@ -628,7 +648,7 @@ class PlotSettings(object):
             self._plotSettingsWindowGUI.bl_combo_b.setCurrentIndex(self._settings["bl_b"])
 
             # Redraw:
-            self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
+            # self._plotSettingsWindowGUI.redraw_enabled.setCheckState(self._settings["redraw_en"])
 
         elif isinstance(self._plotSettingsWindowGUI, Ui_PlotSettingsWindow):
             # Parameters:

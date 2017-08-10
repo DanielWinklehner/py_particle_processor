@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>OrbitToolGUI</class>
- <widget class="QMainWindow" name="OrbitToolGUI">
+ <class>RotateToolGUI</class>
+ <widget class="QMainWindow" name="RotateToolGUI">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>323</width>
-    <height>183</height>
+    <width>257</width>
+    <height>125</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Orbit Tool</string>
+   <string>Scale Tool</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget">
@@ -19,81 +19,50 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>321</width>
-      <height>183</height>
+      <width>254</width>
+      <height>122</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Orbit Tool</string>
+        <string>Rotate Tool</string>
        </property>
       </widget>
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
-        <widget class="QLabel" name="step_1_label">
+        <widget class="QLabel" name="type_label">
          <property name="text">
-          <string>First Step:</string>
+          <string>Type:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="step_2_label">
+        <widget class="QLabel" name="value_label">
          <property name="text">
-          <string>Second Step:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="step_2">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="placeholderText">
-          <string>1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="step_3_label">
-         <property name="text">
-          <string>Third Step:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="step_3">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="placeholderText">
-          <string>2</string>
+          <string>Value</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="step_1">
+        <widget class="QComboBox" name="type_combo">
+         <item>
+          <property name="text">
+           <string>Degrees</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="value">
          <property name="text">
           <string/>
          </property>
          <property name="placeholderText">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QCheckBox" name="center_orbit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Center Orbit (for R and PR)</string>
+          <string>1.0</string>
          </property>
         </widget>
        </item>

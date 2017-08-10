@@ -89,6 +89,6 @@ class OrbitTool(AbstractTool):
             return 1
 
         for dataset in self._selections:
-            dataset.xy_orbit(self.values)
+            dataset.xy_orbit(self.values, center=self._orbitToolGUI.center_orbit.isChecked())
 
         return 0
