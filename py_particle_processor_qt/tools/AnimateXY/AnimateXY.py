@@ -1,9 +1,10 @@
 from ..abstract_tool import AbstractTool
+from .animateXYgui import Ui_Animate
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.ticker import LinearLocator
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMainWindow
 
 
 # Note: This tool requires ffmpeg installation!!!
@@ -14,14 +15,34 @@ class AnimateXY(AbstractTool):
         self._name = "Animate X-Y"
         self._parent = parent
         self._filename = ""
-        
-        self._has_gui = False
+        self._settings = {}
+
+        # --- Initialize the GUI --- #
+        self._animateWindow = QMainWindow()
+        self._animateGUI = Ui_Animate()
+        self._animateGUI.setupUi(self._animateWindow)
+
+        self._animateGUI.buttonBox.accepted.connect(self.callback_apply)
+        self._animateGUI.buttonBox.rejected.connect(self._animateWindow.close)
+
+        self._has_gui = True
         self._need_selection = True
         self._min_selections = 1
         self._max_selections = 1
         self._redraw_on_exit = False
 
-    def run(self):
+    def apply_settings(self):
+        self._settings["local"] = self._animateGUI.radioButton.isChecked()
+        self._settings["global"] = self._animateGUI.radioButton_2.isChecked()
+        self._settings["lim"] = float(self._animateGUI.lim.text())
+        self._settings["fps"] = int(self._animateGUI.fps.text())
+
+    def callback_apply(self):
+        self.apply_settings()
+        self._animateWindow.close()
+        self.run_animation()
+
+    def run_animation(self):
 
         self._parent.send_status("Setting up animation...")
 
@@ -40,10 +61,10 @@ class AnimateXY(AbstractTool):
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
 
-                if nsteps == 1:
-                    animate["Step#{}".format(step)]["x"] = x_val
-                    animate["Step#{}".format(step)]["y"] = y_val
-                else:
+                animate["Step#{}".format(step)]["x"] = x_val
+                animate["Step#{}".format(step)]["y"] = y_val
+
+                if self._settings["local"]:
                     px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
                     py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
                     theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
@@ -61,14 +82,12 @@ class AnimateXY(AbstractTool):
                     animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
 
         # Handle animations
-        # last_step = animate["Step#{}".format(nsteps-1)]["x"]
-        # x_max = max(np.amin(last_step), np.amax(last_step), key=abs)
-        x_max = 40
         fig = plt.figure()
         plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
         plt.rc('text', usetex=True)
         plt.rc('grid', linestyle=':')
-        ax = plt.axes(xlim=(-x_max, x_max), ylim=(-x_max, x_max))
+        ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]), ylim=(-self._settings["lim"],
+                                                                                  self._settings["lim"]))
         line, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
         plt.grid()
         ax.set_aspect('equal')
@@ -96,10 +115,20 @@ class AnimateXY(AbstractTool):
 
         # Save animation
         writer1 = animation.writers['ffmpeg']
-        writer2 = writer1(fps=20, bitrate=1800)
+        writer2 = writer1(fps=self._settings["fps"], bitrate=1800)
         ani.save(self._filename[0]+".mp4", writer=writer2)
         ani._stop()
         self._parent.send_status("Animation saved successfully!")
+
+    def run(self):
+        # --- Calculate the positions to center the window --- #
+        screen_size = self._parent.screen_size()
+        _x = 0.5 * (screen_size.width() - self._animateWindow.width())
+        _y = 0.5 * (screen_size.height() - self._animateWindow.height())
+
+        # --- Show the GUI --- #
+        self._animateWindow.show()
+        self._animateWindow.move(_x, _y)
 
     def open_gui(self):
 

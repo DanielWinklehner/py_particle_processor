@@ -66,9 +66,6 @@ class BeamChar(AbstractTool):
 
             index = 0
 
-            if nsteps>400:
-                nsteps = 444
-
             for step in range(nsteps):
 
                 m_amu = 2.01510  # Rest mass of individual H2+, in amu
@@ -185,7 +182,7 @@ class BeamChar(AbstractTool):
                 # print("Mean x RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["xRMS"][40:])))
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            ax1.set_xlim([0,62.25])
+            # ax1.set_xlim([0,62.25])
             plt.grid()
             plt.ylabel("Horizontal")
 
@@ -197,7 +194,7 @@ class BeamChar(AbstractTool):
             plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            ax2.set_xlim([0, 62.25])
+            # ax2.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Longitudinal")
 
@@ -208,7 +205,7 @@ class BeamChar(AbstractTool):
                 # print("Mean z RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["zRMS"][40:])))
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            ax3.set_xlim([0, 62.25])
+            # ax3.set_xlim([0, 62.25])
             plt.grid()
             plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
@@ -227,7 +224,7 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax1.set_xlim([0, 62.25])
+            # ax1.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Horizontal")
 
@@ -237,7 +234,7 @@ class BeamChar(AbstractTool):
                          label=plots["plot_data{}".format(n)]["name"])
             plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax2.set_xlim([0, 62.25])
+            # ax2.set_xlim([0, 62.25])
             plt.grid()
             plt.ylabel("Longitudinal")
 
@@ -246,7 +243,7 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax3.set_xlim([0, 62.5])
+            # ax3.set_xlim([0, 62.5])
             plt.grid()
             plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
