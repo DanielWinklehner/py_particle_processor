@@ -91,8 +91,12 @@ class AnimateXY(AbstractTool):
         line, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
         plt.grid()
         ax.set_aspect('equal')
-        plt.xlabel("Horizontal (mm)")
-        plt.ylabel("Longitudinal (mm)")
+        if self._settings["local"]:
+            plt.xlabel("Horizontal (mm)")
+            plt.ylabel("Longitudinal (mm)")
+        else:
+            plt.xlabel("X (mm)")
+            plt.ylabel("Y (mm)")
         ax.set_title("Beam Cross-Section: Step \#0")
         ax.get_xaxis().set_major_locator(LinearLocator(numticks=17))
         ax.get_yaxis().set_major_locator(LinearLocator(numticks=17))
