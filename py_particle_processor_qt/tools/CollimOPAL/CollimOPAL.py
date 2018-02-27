@@ -43,6 +43,14 @@ class CollimOPAL(AbstractTool):
     def callback_apply(self):
         self.apply_settings()
 
+        # TODO: This is where the trackOrbit input would go!
+        # data = np.array(self.read_data('TestCycl_trackOrbit.dat'))
+        # x = 1000.0 * data[0]
+        # y = 1000.0 * data[2]
+        # px = data[1]
+        # py = data[3]
+        # Once all the above works, the four lines below can be removed.
+
         x = 1000.0 * self.read('x')
         y = 1000.0 * self.read('y')
         px = self.read('px')
@@ -53,6 +61,17 @@ class CollimOPAL(AbstractTool):
         script += self.gen_script(x, y, px, py)
 
         self._collimOPALGUI.textBrowser.setText(script)
+
+    @staticmethod
+    def read_data(self, filename):
+        data = [[], [], [], [], [], []]  # x, px, y, py, z, pz
+        with open(filename) as f:
+            for line in f:
+                if "ID0" in line:
+                    d = line.strip().split()
+                    for i in range(5):
+                        data[i].append(float(d[i + 1]))
+        return data
 
     def gen_script(self, x, y, px, py):
         script = ""
