@@ -11,9 +11,6 @@ class TraceWinDriver(AbstractDriver):
         self._debug = debug
         self._program_name = "TraceWin"
 
-    def get_program_name(self):
-        return self._program_name
-
     def import_data(self, filename, species=None):
 
         if self._debug:
