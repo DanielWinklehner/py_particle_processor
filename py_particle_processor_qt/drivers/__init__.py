@@ -2,12 +2,13 @@ from py_particle_processor_qt.drivers.OPALDriver import *
 from py_particle_processor_qt.drivers.TraceWinDriver import *
 from py_particle_processor_qt.drivers.COMSOLDriver import *
 from py_particle_processor_qt.drivers.IBSimuDriver import *
+from py_particle_processor_qt.drivers.TrackDriver import *
 
 """
 The driver mapping contains the information needed for the ImportExportDriver class to wrap around the drivers
-Rules: 
+Rules:
 key has to be unique and one continuous 'word'
-several extensions can be specified for one driver 
+several extensions can be specified for one driver
 """
 driver_mapping = {'OPAL': {'driver': OPALDriver,
                            'extensions': ['.h5', '.dat']},
@@ -17,4 +18,6 @@ driver_mapping = {'OPAL': {'driver': OPALDriver,
                              'extensions': ['.txt']},
                   'IBSimu': {'driver': IBSimuDriver,
                              'extensions': ['.txt']}
+                  'Track': {'driver': TrackDriver,
+                             'extensions': ['.out']}
                   }
