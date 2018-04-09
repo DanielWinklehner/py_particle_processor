@@ -326,7 +326,6 @@ class Dataset(object):
                 self._datasource = _data["datasource"]
 
                 for k in _data.keys():
-                    print(k)
                     self._properties[k] = _data[k]
                     self._native_properties[k] = _data[k]
                 # if isinstance(self._properties["ion"], IonSpecies):

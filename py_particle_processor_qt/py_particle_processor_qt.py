@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import qApp, QFileDialog
 # from dans_pymodules import MyColors
 
 __author__ = "Philip Weigel, Daniel Winklehner"
-__doc__ = """A GTK+3 based GUI that allows loading particle data from 
+__doc__ = """A QT5 based GUI that allows loading particle data from 
 various simulation codes and exporting them for various other simulation codes.
 """
 
@@ -152,6 +152,7 @@ class SpeciesPrompt(object):
     def apply(self):
         preset_name = self._windowGUI.species_selection.currentText()
         name = self._windowGUI.dataset_name.text()
+        print("SpeciesPrompt.apply: name = {}".format(name))
         species = IonSpecies(preset_name, energy_mev=1.0)  # TODO: Energy? -PW
         self._parent.species_callback(self, species=species, name=name)
 
@@ -871,13 +872,13 @@ class PyParticleProcessor(object):
             # self._properties_label.setText("Properties (Datafile #{}, Dataset #{})".format(df_i, ds_i))
             for idx, item in enumerate(self._property_list):  # Enumerate through the properties list
                 if ds.get_property(item) is not None:  # If the property is not None
-                    v = QtGui.QTableWidgetItem(str(ds.get_property(item)).title())  # Set the value item
+                    v = QtWidgets.QTableWidgetItem(str(ds.get_property(item)))  # Set the value item
                     if ds.is_native_property(item):  # If it's a native property to the set, it's not editable
                         v.setFlags(QtCore.Qt.ItemIsEnabled)
                     else:  # If it is not a native property, it may be edited
                         v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
                 else:  # IF the property wasn't found
-                    v = QtGui.QTableWidgetItem("Property not found")  # Create a placeholder
+                    v = QtWidgets.QTableWidgetItem("Property not found")  # Create a placeholder
                     v.setForeground(QtGui.QBrush(QtGui.QColor("#FF0000")))  # Set the text color to red
                     v.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)  # Make it editable
                 self._properties_table.setItem(idx, 1, v)  # Put the item in the table

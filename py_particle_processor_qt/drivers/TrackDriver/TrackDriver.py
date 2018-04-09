@@ -24,6 +24,14 @@ class TrackDriver(AbstractDriver):
 
         try:
 
+            # TODO: All of this should be part of the particle_processor, not the loading driver! -DW
+            # Except energy, need that to transform into internal units
+            align_bunches = True
+            z_center = -0.25  # user decides centroid position (m)
+            t_cut = 10.0  # Cut everything above 10 ns away (insufficiently accelerated beam)
+            t_split = -10.0  # Split bunches at -10.0 ns and shift leading bunch back
+            e_mean_total = 0.07  # MeV
+
             with open(filename, 'rb') as infile:
 
                 header1 = infile.readline()
@@ -31,95 +39,128 @@ class TrackDriver(AbstractDriver):
                 if self._debug:
                     print(header1)
 
-                data = {}
-                Emean = 0.07  # MeV
-                current = 0.01 # mA
-                species.calculate_from_energy_mev(Emean)
+                lines = infile.readlines()
 
-                data["steps"] = 1
-                data["ion"] = species
-                data["mass"] = data["ion"].a()
-                data["charge"] = data["ion"].q()
-                data["current"] = current  # (A)
-                data["particles"] = 0
+            data = {}
+            emean = e_mean_total/species.a()  # MeV/amu  (70 keV)
+            # current = 0.01  # mA
+            species.calculate_from_energy_mev(emean)
 
-                _distribution = []
-                mydtype = [('e', float),
-                           ('x', float), ('xp', float),
-                           ('y', float), ('yp', float),
-                           ('z', float), ('zp', float)]
+            data["steps"] = 1
+            data["ion"] = species
+            data["mass"] = data["ion"].a()
+            data["charge"] = data["ion"].q()
+            # data["current"] = current  # (A)
+            data["energy"] = emean * species.a()
+            data["particles"] = 0
 
-                n_cut = 0
-                dt = []
+            npart = len(lines)
 
-                align_bunches = True
-                _z = -0.25  # Shift distribution to _z (m)
+            dt = np.zeros(npart)
+            dw = np.zeros(npart)
+            x = np.zeros(npart)
+            xp = np.zeros(npart)
+            y = np.zeros(npart)
+            yp = np.zeros(npart)
 
+            for i, line in enumerate(lines):
+                # Data: Nseed, iq, dt (ns), dW (MeV/amu), x (cm), x' (mrad), y (cm), y' (mrad)
+                _, _, dt[i], dw[i], x[i], xp[i], y[i], yp[i] = [float(value) for value in line.strip().split()]
 
-                for line in infile.readlines():
-                    values = []
+            # Apply cut:
+            indices = np.where(dt <= t_cut)
 
-                    for v in line.strip().split():
-                        values.append(float(v))
+            dt = dt[indices]  # ns
+            dw = dw[indices]  # MeV/amu
+            x = x[indices] * 1.0e-2  # cm --> m
+            xp = xp[indices] * 1.0e-3  # mrad --> rad
+            y = y[indices] * 1.0e-2  # cm --> m
+            yp = yp[indices] * 1.0e-3  # mrad --> rad
 
-                    values[3] += Emean  # Add 70 keV
+            npart_new = len(x)
 
-                    values.append(0.0) # z (placeholder))
-                    values.append(0.0) # zp (placeholder)
+            gammaz = (dw + emean) * species.a() / species.mass_mev() + 1.0
+            betaz = np.sqrt(1.0 - gammaz**(-2.0))
 
-                    if values[2] > 10.0:
-                        n_cut += 1
-                    else:
-                        _distribution.append(tuple(values[3:10]))
-                        dt.append(values[2])
-                        data["particles"] += 1
+            pz = gammaz * betaz
+            px = pz * np.tan(xp)
+            py = pz * np.tan(yp)
 
-                species.calculate_from_energy_mev(Emean)
+            vz = clight * betaz
+            # vx = vz * np.tan(xp)
+            # vy = vz * np.tan(xp)
 
-                _distribution = np.array(_distribution, dtype=mydtype)
-                print("Cut {} particles out of {}. Remaining particles: {}".format(n_cut,data["particles"], data["particles"]-n_cut))
+            print("Cut {} particles out of {}. Remaining particles: {}".format(npart - npart_new, npart, npart_new))
 
-                gamma = _distribution["e"] / data["ion"].mass_mev() + 1.0
-                beta = np.sqrt(1.0 - gamma**(-2.0))
+            if align_bunches:
 
-                distribution = {'x': ArrayWrapper(_distribution['x'] * 0.01),
-                                'px': ArrayWrapper(gamma * beta * np.sin(_distribution['xp'] * 0.001)),
-                                'y': ArrayWrapper(_distribution['y'] * 0.01),
-                                'py': ArrayWrapper(gamma * beta * np.sin(_distribution['yp'] * 0.001)),
-                                'z': ArrayWrapper(_distribution['z'])}
+                # Split bunches
+                b1_ind = np.where(dt < t_split)
+                b2_ind = np.where(dt >= t_split)
 
-                distribution['pz'] = ArrayWrapper(np.sqrt(beta**2.0 * gamma**2.0
-                                                          - distribution['px'].value**2.0
-                                                          - distribution['py'].value**2.0
-                                                          ))
-                _pz = distribution['pz'].value
-                _vz =  clight * _pz / gamma
+                delta_t_theor = 1.0e9 / 32.8e6  # length of one rf period
+                delta_t_sim = np.abs(np.mean(dt[b1_ind]) - np.mean(dt[b2_ind]))
 
-                distribution['z'] = ArrayWrapper(-_vz * np.array(dt) * 1E-9 +_z)  # Reverse direction
+                print("Splitting bunches at t = {} ns. "
+                      "Time difference between bunch centers = {} ns. "
+                      "One RF period = {} ns.".format(t_split, delta_t_sim, delta_t_theor))
 
-                # Now, align the two bunches, post-cut
-                lam = 1.0 / 32.8E6 # 1 / f (where f = 32.8 MHz)
-                x, px = distribution["x"].value, distribution["px"].value
-                y, py = distribution["y"].value, distribution["py"].value
-                z, pz = distribution["z"].value, distribution["pz"].value
+                from matplotlib import pyplot as plt
 
-                vx, vy, vz = clight * px / gamma, clight * py / gamma, clight * pz / gamma
+                # plt.subplot(231)
+                # plt.scatter(dt[b1_ind], dw[b1_ind], c="red", s=0.5)
+                # plt.scatter(dt[b2_ind], dw[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("dt (ns)")
+                # plt.ylabel("dW (MeV/amu)")
+                # plt.subplot(232)
+                # plt.scatter(x[b1_ind], xp[b1_ind], c="red", s=0.5)
+                # plt.scatter(x[b2_ind], xp[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("x (m)")
+                # plt.ylabel("x' (rad)")
+                # plt.subplot(233)
+                # plt.scatter(y[b1_ind], yp[b1_ind], c="red", s=0.5)
+                # plt.scatter(y[b2_ind], yp[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("y (m)")
+                # plt.ylabel("y' (rad)")
 
-                if align_bunches is True:
-                    for i, t in enumerate(dt):
-                        if t < -10.0:
-                            x[i] -= vx[i] * lam
-                            y[i] -= vy[i] * lam
-                            z[i] -= vz[i] * lam
+                # Shift leading bunch
+                dt[b1_ind] += delta_t_theor
+                # x[b1_ind] += vx[b1_ind] * 1.0e-9 * delta_t_theor
+                # y[b1_ind] += vy[b1_ind] * 1.0e-9 * delta_t_theor
 
-                distribution["x"] = ArrayWrapper(x)
-                distribution["y"] = ArrayWrapper(y)
-                distribution["z"] = ArrayWrapper(z)
+                # plt.subplot(234)
+                # plt.scatter(dt[b1_ind], dw[b1_ind], c="red", s=0.5)
+                # plt.scatter(dt[b2_ind], dw[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("dt (ns)")
+                # plt.ylabel("dW (MeV/amu)")
+                # plt.subplot(235)
+                # plt.scatter(x[b1_ind], xp[b1_ind], c="red", s=0.5)
+                # plt.scatter(x[b2_ind], xp[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("x (m)")
+                # plt.ylabel("x' (rad)")
+                # plt.subplot(236)
+                # plt.scatter(y[b1_ind], yp[b1_ind], c="red", s=0.5)
+                # plt.scatter(y[b2_ind], yp[b2_ind], c="blue", s=0.5)
+                # plt.xlabel("y (m)")
+                # plt.ylabel("y' (rad)")
+                #
+                # plt.tight_layout()
+                # plt.show()
 
-                # For a single timestep, we just define a Step#0 entry in a dictionary (supports .get())
-                data["datasource"] = {"Step#0": distribution}
+            z = z_center - dt * 1e-9 * vz
 
-                return data
+            distribution = {'x': ArrayWrapper(x),
+                            'px': ArrayWrapper(px),
+                            'y': ArrayWrapper(y),
+                            'py': ArrayWrapper(py),
+                            'z': ArrayWrapper(z),
+                            'pz': ArrayWrapper(pz)}
+
+            # For a single timestep, we just define a Step#0 entry in a dictionary (supports .get())
+            data["datasource"] = {"Step#0": distribution}
+            data["particles"] = npart_new
+
+            return data
 
         except Exception as e:
 

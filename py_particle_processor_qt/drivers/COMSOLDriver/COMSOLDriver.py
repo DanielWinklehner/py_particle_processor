@@ -127,7 +127,7 @@ class COMSOLDriver(AbstractDriver):
                                      clight * _pz / np.sqrt(_pz ** 2.0 + 1.0))
 
                     outstring += "{} {} {} {} {} {} {} ".format(datasource.get("Step#{}".format(step)).get("x")[i],
-                                                             datasource.get("Step#{}".format(step)).get("y")[i],
-                                                             datasource.get("Step#{}".format(step)).get("z")[i],
-                                                             _vx, _vy, _vz, ion.energy_mev())
+                                                                datasource.get("Step#{}".format(step)).get("y")[i],
+                                                                datasource.get("Step#{}".format(step)).get("z")[i],
+                                                                _vx, _vy, _vz, ion.energy_mev())
                 outfile.write(outstring + "\n")

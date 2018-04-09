@@ -17,7 +17,7 @@ driver_mapping = {'OPAL': {'driver': OPALDriver,
                   'COMSOL': {'driver': COMSOLDriver,
                              'extensions': ['.txt']},
                   'IBSimu': {'driver': IBSimuDriver,
-                             'extensions': ['.txt']}
+                             'extensions': ['.txt']},
                   'Track': {'driver': TrackDriver,
-                             'extensions': ['.out']}
+                            'extensions': ['.out']}
                   }
