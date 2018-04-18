@@ -22,7 +22,7 @@ class IBSimuDriver(AbstractDriver):
 
     def import_data(self, filename, species):
 
-        # TODO: There is a lot of looping going on, the less instructions the better. -PW
+        # TODO: There is a lot of looping going on, the fewer instructions the better. -PW
 
         if self._debug:
             print("Importing data from program: {}".format(self._program_name))
