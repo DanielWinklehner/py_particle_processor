@@ -39,7 +39,7 @@ For a test you can now run the PyParticleProcessor as a module from the top leve
 
 `python -m py_particle_processor_qt.test`
 
-or you can install the module (also from the toip level directory in the repository):
+or you can install the module (also from the top level directory in the repository):
 
 `pip install .`
 
