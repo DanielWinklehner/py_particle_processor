@@ -22,11 +22,14 @@ PyPI packages:
   * numpy
   * scipy
   * pyqtgraph
-  * PyQt5
+  * PyQt5 (pyqt in Anaconda3)
   * h5py
   * matplotlib
+  * pyopengl
 
-The easiest method is to install [Anaconda3](https://www.anaconda.com/download/), then download all the packages listed under PyPI packages. Install Qt5 for Windows from the link above and install dans_pymodules from github using pip. 
+The easiest method is to install [Anaconda3](https://www.anaconda.com/download/), create a new virtual environment, then download all the packages listed under PyPI packages inside the env. Install Qt5 for Windows from the link above and install dans_pymodules from github using pip: From the Anaconda navigator open a terminal running the virtual environment you created earlier ("Open Terminal" from the green triangle next to the new virtual environment's name). Then run pip install like so:
+
+`pip install git+https://github.com/DanielWinklehner/dans_pymodules.git` 
 
 ### Linux
 TODO
