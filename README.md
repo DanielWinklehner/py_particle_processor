@@ -13,4 +13,23 @@ Cave: These are all limited support and need to be expanded. Many of those softw
   * [IBSimu](http://ibsimu.sourceforge.net/)
   
 ## Installation
+### Windows
+Prerequisites are:
+  * [Qt5 (Open Source)](https://www.qt.io/download)
+  * [dans_pymodules](https://github.com/DanielWinklehner/dans_pymodules)
+  
+PyPI packages:
+  * numpy
+  * scipy
+  * pyqtgraph
+  * PyQt5
+  * h5py
+  * matplotlib
+
+The easiest method is to install [Anaconda3](https://www.anaconda.com/download/), then download all the packages listed under PyPI packages. Install Qt5 for Windows from the link above and install dans_pymodules from github using pip. 
+
+### Linux
 TODO
+
+### MacOS 
+I have no idea :D feel free to let me know how to do it...
