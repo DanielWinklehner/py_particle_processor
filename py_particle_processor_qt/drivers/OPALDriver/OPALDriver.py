@@ -44,6 +44,12 @@ class OPALDriver(AbstractDriver):
 
                 _data = _datasource.get("Step#0")
 
+                # for _key in _data.keys():
+                #     print(_key)
+                #
+                # for _key in _data.attrs.keys():
+                #     print(_key)
+
                 # TODO: OPAL apparently doesn't save the charge per particle, but per macroparticle without frequency,
                 # TODO: we have no way of telling what the species is! Add manual input. And maybe fix OPAL... -DW
                 try:
@@ -125,7 +131,7 @@ class OPALDriver(AbstractDriver):
                 step_grp.create_dataset("q", data=q)
                 step_grp.attrs.__setitem__("ENERGY", dataset.get_ion().energy_mev())
 
-            outfile.attrs.__setitem__("OPAL_version", b"OPAL 1.09.0")
+            outfile.attrs.__setitem__("OPAL_version", b"OPAL 1.9.0")
             outfile.close()
 
             if self._debug:
