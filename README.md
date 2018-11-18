@@ -31,6 +31,20 @@ The easiest method is to install [Anaconda3](https://www.anaconda.com/download/)
 
 `pip install git+https://github.com/DanielWinklehner/dans_pymodules.git` 
 
+Clone the py_particle_processor repositroy:
+
+`git clone https://github.com/DanielWinklehner/py_particle_processor.git`
+
+For a test you can now run the PyParticleProcessor as a module from the top level directory of this repository:
+
+`python -m py_particle_processor_qt.test`
+
+or you can install the module (also from the toip level directory in the repository):
+
+`pip install .`
+
+and write a small test program
+
 ### Linux
 TODO
 
