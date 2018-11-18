@@ -45,6 +45,10 @@ or you can install the module (also from the top level directory in the reposito
 
 and write a small test program
 
+`from py_particle_processor_qt.py_particle_processor_qt import PyParticleProcessor`<br/>
+`ppp = PyParticleProcessor(debug=False)`<br/>
+`ppp.run()`
+
 ### Linux
 TODO
 
