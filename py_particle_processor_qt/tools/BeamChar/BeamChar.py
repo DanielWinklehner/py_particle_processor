@@ -49,22 +49,38 @@ class BeamChar(AbstractTool):
 
         plots = {}
         num = 0
+        largepos = 1.0e36
 
         for dataset in self._selections:
 
             corrected = {}
             name = dataset.get_name()
-            plot_data = {"xRMS": np.array([]), "yRMS": np.array([]), "zRMS": np.array([]),
-                         "xHalo": np.array([]), "yHalo": np.array([]), "zHalo": np.array([]),
-                         "xCentroid": np.array([]), "yCentroid": np.array([]), "turnSep": np.array([]),
-                         "R": np.array([]), "energy": np.array([]), "intensity": np.array([]),
-                         "coords": [], "name": name}
+            nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
+
+            plot_data = {"name": name,
+                         "xRMS": np.array([]),
+                         "yRMS": np.array([]),
+                         "zRMS": np.array([]),
+                         "xHalo": np.array([]),
+                         "yHalo": np.array([]),
+                         "zHalo": np.array([]),
+                         "xCentroid": np.ones(nsteps) * largepos,
+                         "yCentroid": np.ones(nsteps) * largepos,
+                         "turnSep": np.array([]),
+                         "R": np.array([]),
+                         "energy": np.array([]),
+                         "power": np.array([]),
+                         "coords": []}
+
+            azimuths = np.ones(nsteps) * largepos
+            r_temps = np.ones(nsteps) * largepos
 
             datasource = dataset.get_datasource()
 
-            nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
-
             index = 0
+
+            save_r = True
+            r_tsep = []
 
             for step in range(nsteps):
 
@@ -88,15 +104,18 @@ class BeamChar(AbstractTool):
                 x_val = np.array(datasource["Step#{}".format(step)]["x"])
                 y_val = np.array(datasource["Step#{}".format(step)]["y"])
                 z_val = np.array(datasource["Step#{}".format(step)]["z"])
+
                 if self._settings["xz"]:
-                    # plot_data["coords"].append(x_val)
-                    plot_data["coords"].append(z_val)
+
                     r = np.sqrt(np.square(x_val) + np.square(y_val))
+
+                    plot_data["coords"] = np.append(plot_data["coords"], z_val)
                     plot_data["R"] = np.append(plot_data["R"], r)
 
                 px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
                 py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
                 theta = np.arccos(py_mean/np.linalg.norm([px_mean, py_mean]))
+
                 if px_mean < 0:
                     theta = -theta
 
@@ -131,41 +150,65 @@ class BeamChar(AbstractTool):
 
                 # Calculate energy
                 if self._settings["energyHist"] or self._settings["intensity"]:
-                    # m_amu = 12791.8548  #Rest mass of simulation macroparticle, in amu
                     m_amu = 2.01510  # Rest mass of individual H2+, in amu
-                    # m_MeV = 1.19156e07  # Rest mass of simulation macroparticle, in MeV/c^2
-                    m_MeV = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
+                    m_mev = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
 
                     px_val = np.array(datasource["Step#{}".format(step)]["px"])
                     py_val = np.array(datasource["Step#{}".format(step)]["py"])
                     pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
+
                     betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
-                    energy = (np.sqrt(np.square(betagamma*m_MeV) + np.square(m_MeV))-m_MeV )/m_amu
+                    energy = (np.sqrt(np.square(betagamma * m_mev) + np.square(m_mev)) - m_mev) / m_amu  # MeV/amu
+
                     plot_data["energy"] = np.append(plot_data["energy"], energy)
 
                     if self._settings["intensity"]:
-                        intens = plot_data["energy"] * m_amu * 5e-05  # 5e-05 = current per macroparticle
-                        plot_data["intensity"] = np.append(plot_data["intensity"], intens)
+
+                        q_macro = 1.017 * 1e-15  # fC  --> C
+                        f_cyclo = 49.16 * 1.0e6  # MHz --> Hz
+                        duty_factor = 0.9  # assumed IsoDAR has 90% duty factor
+
+                        # Power deposition of a single h2+ particle (need to use full energy here!) (W)
+                        power = q_macro * f_cyclo * energy * 1e6 * m_amu * duty_factor
+                        plot_data["power"] = np.append(plot_data["power"], power)
+
+                        # Radii (m)
                         r = np.sqrt(np.square(x_val) + np.square(y_val))
                         plot_data["R"] = np.append(plot_data["R"], r)
 
                 # Add centroid coordinates
-                if self._settings["centroid"]:
-                    plot_data["xCentroid"] = np.append(plot_data["xCentroid"], np.mean(x_val))
-                    plot_data["yCentroid"] = np.append(plot_data["yCentroid"], np.mean(y_val))
+                if self._settings["centroid"] or self._settings["turnsep"]:
 
-                if step >= (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
-                    r = np.sqrt(np.square(np.mean(x_val)) + np.square(np.mean(y_val)))
-                    plot_data["R"] = np.append(plot_data["R"], r)
-                if step > (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
-                    index += 1
-                    difference = np.abs(plot_data["R"][index-1] - plot_data["R"][index])
-                    plot_data["turnSep"] = np.append(plot_data["turnSep"], difference)
+                    plot_data["xCentroid"][step] = np.mean(x_val)
+                    plot_data["yCentroid"][step] = np.mean(y_val)
+
+                    # Calculate turn separation (along pos x-axis for now, arbitrary angle later? -DW)
+                    if self._settings["turnsep"]:
+                        azimuth = np.rad2deg(np.arctan2(plot_data["yCentroid"][step], plot_data["xCentroid"][step]))
+                        azimuths[step] = azimuth
+                        r_temp = np.sqrt(np.square(plot_data["xCentroid"][step]) +
+                                         np.square(plot_data["yCentroid"][step]))
+                        r_temps[step] = r_temp
+
+                        if azimuth > 0 and save_r:
+                            save_r = False
+                            r_tsep.append(r_temp)
+                        if azimuth < 0:
+                            save_r = True
+
+                # if step >= (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
+                #     r = np.sqrt(np.square(np.mean(x_val)) + np.square(np.mean(y_val)))
+                #     plot_data["R"] = np.append(plot_data["R"], r)
+                # if step > (16 * 95) + 6 and step % 16 == 6 and self._settings["turnsep"]:
+                #     index += 1
+                #     difference = np.abs(plot_data["R"][index-1] - plot_data["R"][index])
+                #     plot_data["turnSep"] = np.append(plot_data["turnSep"], difference)
+
             plots["plot_data{}".format(num)] = plot_data
+
             num += 1
 
         self._parent.send_status("Saving plot(s)...")
-
         # Save plots as separate images, with appropriate titles
 
         if self._settings["rms"]:
@@ -277,7 +320,10 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Turn Separation")
-            plt.plot(range(96, 105), 1000.0 * plot_data["turnSep"], 'k', lw=0.8)
+
+            plt.plot(1000.0 * np.diff(r_tsep))
+
+            # plt.plot(range(96, 105), 1000.0 * plot_data["turnSep"], 'k', lw=0.8)
             plt.grid()
             plt.xlabel("Outer Turn")
             plt.ylabel("Separation (mm)")
@@ -302,7 +348,8 @@ class BeamChar(AbstractTool):
             plt.xlabel("Energy per Particle (MeV/amu)")
             plt.ylabel(r"Number of $H_2^{+}$ Particles")
             fig.tight_layout()
-            fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
+            plt.show()
+            # fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["intensity"]:
             fig = plt.figure()
@@ -310,23 +357,42 @@ class BeamChar(AbstractTool):
             plt.rc('text', usetex=True)
             plt.rc('grid', linestyle=':')
 
-            plt.title("Particle Beam Intensity")
-            for n in range(num):
-                radii = plots["plot_data{}".format(n)]["R"]
-                bins = np.arange(min(radii), max(radii) + 0.5, 0.5)
-                y, x, _ = plt.hist(radii, bins=bins, weights=1000.0 * plots["plot_data{}".format(n)]["intensity"],
-                         label=plots["plot_data{}".format(n)]["name"], alpha=0.3, log=True)
-                print(min(y))
+            plt.title("Histogram of the Beam Power (0.5 mm Bins)")
 
-            # ax = plt.gca()
-            # ax.set_ylim([0, 1000])
-            # ax.get_yaxis().set_major_locator(LinearLocator(numticks=12))
-            plt.legend()
+            bin_width = 0.5  # mm
+
+            for n in range(num):
+
+                radii = plots["plot_data{}".format(n)]["R"] * 1.0e3  # m --> mm
+
+                r_len = radii.max() - radii.min()
+                n_bins = int(np.round(r_len / bin_width, 0))
+
+                print("Numerical bin width = {:.4f} mm".format(r_len/n_bins))
+
+                power, bins = np.histogram(radii, bins=n_bins, weights=plots["plot_data{}".format(n)]["power"])
+
+                temp_bins = bins[200:-1]
+                temp_power = power[200:]
+
+                idx = np.where(temp_bins <= 1910)  # 1940 for Probe25
+
+                temp_bins = temp_bins[idx]
+                temp_power = temp_power[idx]
+
+                print("Min R =", temp_bins[np.where(temp_power == np.min(temp_power))], "mm\n")
+                print("Min P =", temp_power[np.where(temp_power == np.min(temp_power))], "W\n")
+
+                plt.hist(bins[:-1], bins, weights=power,
+                         label=plots["plot_data{}".format(n)]["name"], alpha=0.3, log=True)
+
+            plt.gca().axhline(200.0, linestyle="--", color="black", linewidth=1.0, label="200 W Limit")
+            plt.legend(loc=2)
             plt.grid()
             plt.xlabel("Radius (mm)")
-            plt.ylabel("Beam Intensity (W)")
+            plt.ylabel("Beam Power (W)")
             fig.tight_layout()
-            fig.savefig(self._filename[0] + '_intensity.png', bbox_inches='tight', dpi=1200)
+            fig.savefig(self._filename[0] + '_power.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["xz"]:
             fig = plt.figure()
@@ -336,9 +402,13 @@ class BeamChar(AbstractTool):
 
             plt.title("Probe Scatter Plot")
             ax = plt.gca()
+
             for n in range(num):
-                plt.plot(plots["plot_data{}".format(n)]["R"], plots["plot_data{}".format(n)]["coords"][0],
+
+                plt.plot(plots["plot_data{}".format(n)]["R"] * 1000.0,  # m --> mm
+                         plots["plot_data{}".format(n)]["coords"] * 1000.0,  # m --> mm
                          'o', alpha=0.6, markersize=0.005, label=plots["plot_data{}".format(n)]["name"])
+
             # plt.plot(x_val, z_val, 'o', alpha=0.6,  markersize=0.005)
             # plt.legend()
             plt.grid()

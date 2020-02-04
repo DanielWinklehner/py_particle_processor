@@ -193,8 +193,8 @@ class Dataset(object):
             return 1
 
         if key is "r":
-            data_x = self._data.get("x").value
-            data_y = self._data.get("y").value
+            data_x = self._data.get("x")[()]
+            data_y = self._data.get("y")[()]
 
             if self._orbit is not None and self._center_orbit is True:
                 data = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
@@ -205,12 +205,12 @@ class Dataset(object):
 
         elif key is "pr":
 
-            data_px = self._data.get("px").value
-            data_py = self._data.get("py").value
+            data_px = self._data.get("px")[()]
+            data_py = self._data.get("py")[()]
             p = np.sqrt(data_px ** 2.0 + data_py ** 2.0)
 
-            data_x = self._data.get("x").value
-            data_y = self._data.get("y").value
+            data_x = self._data.get("x")[()]
+            data_y = self._data.get("y")[()]
 
             if self._orbit is not None and self._center_orbit is True:
                 r = np.sqrt((data_x - self._orbit[0]) ** 2.0 + (data_y - self._orbit[1]) ** 2.0)
@@ -225,7 +225,7 @@ class Dataset(object):
 
         else:
             data = self._data.get(key)
-            return data.value
+            return data[()]
 
     def get_particle(self, particle_id, get_color=False):
         particle = {"x": [], "y": [], "z": []}
@@ -236,7 +236,7 @@ class Dataset(object):
             self.set_step_view(step)
 
             for key in ["x", "y", "z"]:
-                dat = self._data.get(key).value[particle_id]
+                dat = self._data.get(key)[()][particle_id]
 
                 if np.isnan(dat) or dat == 0.0:  # TODO: A better way to figure out when a particle terminates
                     if get_color == "step":

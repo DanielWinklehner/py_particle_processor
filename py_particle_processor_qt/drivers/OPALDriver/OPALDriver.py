@@ -60,7 +60,7 @@ class OPALDriver(AbstractDriver):
                 data["mass"] = species.a()
                 data["charge"] = species.q()
                 data["current"] = None  # TODO: Get actual current! -DW
-                data["particles"] = len(_data.get("x").value)
+                data["particles"] = len(_data.get("x")[()])
 
                 return data
 
