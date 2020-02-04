@@ -50,7 +50,10 @@ and write a small test program
 `ppp.run()`
 
 ### Linux
-TODO
+##Latex
+Some of the Tools require LaTeX rendering (matplotlib). In Ubuntu, install texlive and fonts
+
+`sudo apt-get install texlive-latex-extra texlive-fonts-recommended dvipng`
 
 ### MacOS 
 I have no idea :D feel free to let me know how to do it...
