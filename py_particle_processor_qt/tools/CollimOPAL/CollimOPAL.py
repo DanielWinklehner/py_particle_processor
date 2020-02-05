@@ -67,7 +67,7 @@ class CollimOPAL(AbstractTool):
                     for i in range(5):
                         data[i].append(float(d[i + 1]))
 
-        data = np.array(data)
+        data = np.array(data, dtype=float)
         data[0] *= 1000.0  # m --> mm
         data[2] *= 1000.0  # m --> mm
 
