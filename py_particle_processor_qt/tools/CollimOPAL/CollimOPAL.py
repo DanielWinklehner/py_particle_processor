@@ -17,6 +17,7 @@ class CollimOPAL(AbstractTool):
         self._parent = parent
         self._filename = ""
         self._settings = {}
+        self._orbit_data = None
 
         # --- Initialize the GUI --- #
         self._collimOPALWindow = QMainWindow()
@@ -41,36 +42,35 @@ class CollimOPAL(AbstractTool):
         self._settings["nseg"] = int(self._collimOPALGUI.nseg.text())
 
     def callback_apply(self):
+
+        if self._orbit_data is None:
+            self._parent.send_status("No trackOrbit data loaded! Exiting.")
+            self._collimOPALWindow.close()
+
         self.apply_settings()
 
-        # TODO: This is where the trackOrbit input would go!
-        # data = np.array(self.read_data('TestCycl_trackOrbit.dat'))
-        # x = 1000.0 * data[0]
-        # y = 1000.0 * data[2]
-        # px = data[1]
-        # py = data[3]
-        # Once all the above works, the four lines below can be removed.
-
-        x = 1000.0 * self.read('x')
-        y = 1000.0 * self.read('y')
-        px = self.read('px')
-        py = self.read('py')
-
         script = ""
-
-        script += self.gen_script(x, y, px, py)
+        script += self.gen_script(x=self._orbit_data[0], y=self._orbit_data[2],
+                                  px=self._orbit_data[1], py=self._orbit_data[3])
 
         self._collimOPALGUI.textBrowser.setText(script)
 
     @staticmethod
-    def read_data(self, filename):
+    def read_data(filename):
+
         data = [[], [], [], [], [], []]  # x, px, y, py, z, pz
+
         with open(filename) as f:
             for line in f:
                 if "ID0" in line:
                     d = line.strip().split()
                     for i in range(5):
                         data[i].append(float(d[i + 1]))
+
+        data = np.array(data)
+        data[0] *= 1000.0  # m --> mm
+        data[2] *= 1000.0  # m --> mm
+
         return data
 
     def gen_script(self, x, y, px, py):
@@ -130,13 +130,14 @@ class CollimOPAL(AbstractTool):
 
         return {"x1a": x1a, "x2a": x2a, "x1b": x1b, "x2b": x2b, "y1a": y1a, "y2a": y2a, "y1b": y1b, "y2b": y2b}
 
-    @staticmethod
-    def read(filename):
-        text_file = open("C:/Users/Maria/PycharmProjects/py_particle_processor/py_particle_processor_qt/tools/CollimOPAL/{}.txt".format(filename), "r")
-        lines = text_file.read().split(',')
-        data = np.array(lines).astype(np.float)
-        text_file.close()
-        return data
+    # @staticmethod
+    # def read(filename):
+    #     text_file = open("C:/Users/Maria/PycharmProjects/py_particle_processor"
+    #                      "/py_particle_processor_qt/tools/CollimOPAL/{}.txt".format(filename), "r")
+    #     lines = text_file.read().split(',')
+    #     data = np.array(lines).astype(np.float)
+    #     text_file.close()
+    #     return data
 
     def run(self):
         # --- Calculate the positions to center the window --- #
@@ -149,5 +150,10 @@ class CollimOPAL(AbstractTool):
         self._collimOPALWindow.move(_x, _y)
 
     def open_gui(self):
+
+        self._parent.send_status("Please specify a trackOrbit file to get beam centroid information from!")
+
+        self._filename, _ = self._parent.get_filename(action="open")
+        self._orbit_data = self.read_data(self._filename)
 
         self.run()
