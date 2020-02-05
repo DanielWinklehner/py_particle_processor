@@ -4,6 +4,7 @@ from .collimOPALgui import Ui_CollimOPAL
 import numpy as np
 import string
 import matplotlib.pyplot as plt
+import os
 DEBUG = True
 
 """"
@@ -61,7 +62,7 @@ class CollimOPAL(AbstractTool):
 
         self._collimOPALGUI.textBrowser.setText(script)
 
-        with open("~/collim.txt", 'w') as outfile:
+        with open(os.path.join(os.environ.get("HOME", ""), "collim.txt"), 'w') as outfile:
             outfile.write(script)
 
         if DEBUG:
@@ -148,6 +149,7 @@ class CollimOPAL(AbstractTool):
                 y_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
 
                 plt.plot(x_plot, y_plot, 'o', alpha=0.8, markersize=0.01)
+                self._ax.set_aspect('equal')
 
         return script
 
