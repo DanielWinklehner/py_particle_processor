@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QMainWindow
 from .collimOPALgui import Ui_CollimOPAL
 import numpy as np
 import string
-
+import matplotlib.pyplot as plt
+DEBUG = True
 
 """"
 A tool for generating collimator code for OPAL.
@@ -33,6 +34,16 @@ class CollimOPAL(AbstractTool):
         self._max_selections = 1
         self._redraw_on_exit = False
 
+        # Debug plotting:
+        if DEBUG:
+            self._fig = plt.figure()
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            plt.rc('text', usetex=True)
+            plt.rc('grid', linestyle=':')
+            self._ax = plt.gca()
+            self._ax.set_xlabel("x (mm)")
+            self._ax.set_ylabel("y (mm)")
+
     def apply_settings(self):
         self._settings["step"] = int(self._collimOPALGUI.step.text())
         self._settings["width"] = float(self._collimOPALGUI.gap.text())
@@ -49,6 +60,8 @@ class CollimOPAL(AbstractTool):
         script += self.gen_script()
 
         self._collimOPALGUI.textBrowser.setText(script)
+        if DEBUG:
+            plt.show()
 
     # @staticmethod
     # def read_data(fn):
@@ -118,6 +131,15 @@ class CollimOPAL(AbstractTool):
             script += "Collim_{}{}:CCOLLIMATOR, XSTART={}, YSTART={}, XEND={}, YEND={}, WIDTH={};\n\n" \
                 .format(self._settings["label"], letters[2 * n + 1], collim["x2a"], collim["y2a"], collim["x2b"],
                         collim["y2b"], self._settings["cwidth"])
+
+            if DEBUG:
+                self._ax.set_title("Collimator at step #{} in global frame".format(self._settings["step"]))
+                plt.plot([collim["x1a"], collim["x1b"]], [collim["y1a"], collim["y1b"]])
+                plt.plot([collim["x2a"], collim["x2b"]], [collim["y2a"], collim["y2b"]])
+                plt.scatter(np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"]),
+                            np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"]),
+                            'o', alpha=0.6, markersize=0.005)
+
         return script
 
     def gen_collim(self, x, y, px, py):
@@ -129,15 +151,15 @@ class CollimOPAL(AbstractTool):
         theta2 = theta - np.pi/2
 
         # Calculate coordinates
-        x1a = self._settings["width"]*np.cos(theta1) + x
-        x2a = self._settings["width"]*np.cos(theta2) + x
-        x1b = (self._settings["width"] + self._settings["length"])*np.cos(theta1) + x
-        x2b = (self._settings["width"] + self._settings["length"])*np.cos(theta2) + x
+        x1a = self._settings["width"] * np.cos(theta1) + x
+        x2a = self._settings["width"] * np.cos(theta2) + x
+        x1b = (self._settings["width"] + self._settings["length"]) * np.cos(theta1) + x
+        x2b = (self._settings["width"] + self._settings["length"]) * np.cos(theta2) + x
 
-        y1a = self._settings["width"]*np.sin(theta1) + y
-        y2a = self._settings["width"]*np.sin(theta2) + y
-        y1b = (self._settings["width"] + self._settings["length"])*np.sin(theta1) + y
-        y2b = (self._settings["width"] + self._settings["length"])*np.sin(theta2) + y
+        y1a = self._settings["width"] * np.sin(theta1) + y
+        y2a = self._settings["width"] * np.sin(theta2) + y
+        y1b = (self._settings["width"] + self._settings["length"]) * np.sin(theta1) + y
+        y2b = (self._settings["width"] + self._settings["length"]) * np.sin(theta2) + y
 
         return {"x1a": x1a, "x2a": x2a, "x1b": x1b, "x2b": x2b, "y1a": y1a, "y2a": y2a, "y1b": y1b, "y2b": y2b}
 
