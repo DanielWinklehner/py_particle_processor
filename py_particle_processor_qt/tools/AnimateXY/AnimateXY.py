@@ -98,8 +98,8 @@ class AnimateXY(AbstractTool):
             plt.xlabel("X (mm)")
             plt.ylabel("Y (mm)")
         ax.set_title("Beam Cross-Section: Step \#0")
-        ax.get_xaxis().set_major_locator(LinearLocator(numticks=17))
-        ax.get_yaxis().set_major_locator(LinearLocator(numticks=17))
+        ax.get_xaxis().set_major_locator(LinearLocator(numticks=11))
+        ax.get_yaxis().set_major_locator(LinearLocator(numticks=11))
 
         def init():
             line.set_data([], [])
