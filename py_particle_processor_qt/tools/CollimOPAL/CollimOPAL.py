@@ -140,16 +140,15 @@ class CollimOPAL(AbstractTool):
                         collim["y2b"], self._settings["cwidth"])
 
             if DEBUG:
-                self._ax.set_title("Collimator at step {} in global frame".format(self._settings["step"]))
-
                 plt.plot([collim["x1a"], collim["x1b"]], [collim["y1a"], collim["y1b"]])
                 plt.plot([collim["x2a"], collim["x2b"]], [collim["y2a"], collim["y2b"]])
 
-                x_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
-                y_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
-
-                plt.plot(x_plot, y_plot, 'o', alpha=0.8, markersize=0.01)
-                self._ax.set_aspect('equal')
+        if DEBUG:
+            self._ax.set_title("Collimator at step {} in global frame".format(self._settings["step"]))
+            self._ax.set_aspect('equal')
+            x_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
+            y_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
+            plt.plot(x_plot, y_plot, 'o', alpha=0.8, markersize=0.01)
 
         return script
 
