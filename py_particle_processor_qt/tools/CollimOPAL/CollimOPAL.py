@@ -58,20 +58,30 @@ class CollimOPAL(AbstractTool):
     @staticmethod
     def read_data(filename):
 
-        data = [[], [], [], [], [], []]  # x, px, y, py, z, pz
+        with open(fn, 'r') as infile:
+            lines = infile.readlines()
 
-        with open(filename) as f:
-            for line in f:
-                if "ID0" in line:
-                    d = line.strip().split()
-                    for i in range(5):
-                        data[i].append(float(d[i + 1]))
+        design_particle_lines = []
 
-        data = np.array(data, dtype=float)
-        data[0] *= 1000.0  # m --> mm
-        data[2] *= 1000.0  # m --> mm
+        for line in lines:
+            if "ID0" in line:
+                design_particle_lines.append(line.strip())
 
-        return data
+        npts = len(design_particle_lines)
+
+        x = np.zeros(npts)
+        y = np.zeros(npts)
+        px = np.zeros(npts)
+        py = np.zeros(npts)
+
+        for i, line in enumerate(design_particle_lines):
+            _, _x, _px, _y, _py, _, _ = line.split()
+            x[i] = float(_x) * 1000.0
+            y[i] = float(_y) * 1000.0
+            px[i] = float(_px)
+            py[i] = float(_py)
+
+        return np.array([x, px, y, py])
 
     def gen_script(self, x, y, px, py):
         script = ""
