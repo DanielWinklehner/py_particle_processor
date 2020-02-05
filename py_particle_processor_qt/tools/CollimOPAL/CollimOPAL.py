@@ -45,75 +45,70 @@ class CollimOPAL(AbstractTool):
 
         self.apply_settings()
 
-        x = np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
-        y = np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
-        px = np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
-        py = np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
-
-        x_mean = np.mean(x)
-        y_mean = np.mean(y)
-        px_mean = np.mean(px)
-        py_mean = np.mean(py)
-
         script = ""
-        script += self.gen_script(x=x_mean, y=y_mean,
-                                  px=px_mean, py=py_mean)
+        script += self.gen_script()
 
         self._collimOPALGUI.textBrowser.setText(script)
 
-    @staticmethod
-    def read_data(fn):
+    # @staticmethod
+    # def read_data(fn):
+    #
+    #     with open(fn, 'r') as infile:
+    #         lines = infile.readlines()
+    #
+    #     design_particle_lines = []
+    #
+    #     for line in lines:
+    #         if "ID0" in line:
+    #             design_particle_lines.append(line.strip())
+    #
+    #     npts = len(design_particle_lines)
+    #
+    #     x = np.zeros(npts)
+    #     y = np.zeros(npts)
+    #     px = np.zeros(npts)
+    #     py = np.zeros(npts)
+    #
+    #     for i, line in enumerate(design_particle_lines):
+    #         _, _x, _px, _y, _py, _, _ = line.split()
+    #         x[i] = float(_x) * 1000.0
+    #         y[i] = float(_y) * 1000.0
+    #         px[i] = float(_px)
+    #         py[i] = float(_py)
+    #
+    #     return np.array([x, px, y, py])
 
-        with open(fn, 'r') as infile:
-            lines = infile.readlines()
-
-        design_particle_lines = []
-
-        for line in lines:
-            if "ID0" in line:
-                design_particle_lines.append(line.strip())
-
-        npts = len(design_particle_lines)
-
-        x = np.zeros(npts)
-        y = np.zeros(npts)
-        px = np.zeros(npts)
-        py = np.zeros(npts)
-
-        for i, line in enumerate(design_particle_lines):
-            _, _x, _px, _y, _py, _, _ = line.split()
-            x[i] = float(_x) * 1000.0
-            y[i] = float(_y) * 1000.0
-            px[i] = float(_px)
-            py[i] = float(_py)
-
-        return np.array([x, px, y, py])
-
-    def gen_script(self, x, y, px, py):
+    def gen_script(self):
         script = ""
         letters = list(string.ascii_lowercase)
 
         # Central collimator placement
-        x_cent = x[10 * self._settings["step"]]
-        y_cent = y[10 * self._settings["step"]]
+        x_cent = np.mean(np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"]))
+        y_cent = np.mean(np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"]))
 
         for n in range(self._settings["nseg"]):
-            i = 10 * self._settings["step"]
+            i = self._settings["step"]
 
             if n != 0:  # n = 0 indicates the central segment
+                x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
+                y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
                 if n % 2 == 1:  # n congruent to 1 mod 2 indicates placement ahead of the central segment
-                    while np.sqrt(np.square(x_cent - x[i]) + np.square(y_cent - y[i])) \
+                    while np.sqrt(np.square(x_cent - x_temp) + np.square(y_cent - y_temp)) \
                             < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i += 1
+                        x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
+                        y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
                 else:  # n > 0 congruent to 0 mod 2 indicates placement behind of the central segment
-                    while np.sqrt(np.square(x_cent - x[i]) + np.square(y_cent - y[i])) \
+                    while np.sqrt(np.square(x_cent - x_temp) + np.square(y_cent - y_temp)) \
                             < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i -= 1
+                        x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
+                        y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
 
-            x_new = x[i]
-            y_new = y[i]
-            px_new = px[i]
-            py_new = py[i]
+            x_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
+            y_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
+            px_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["px"]))
+            py_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["py"]))
 
             collim = self.gen_collim(x_new, y_new, px_new, py_new)
 
