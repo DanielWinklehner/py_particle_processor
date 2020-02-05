@@ -91,35 +91,37 @@ class CollimOPAL(AbstractTool):
     #
     #     return np.array([x, px, y, py])
 
+    def get_xy_mean_at_step_mm(self, step):
+
+        x = 1e3 * np.mean(np.array(self._datasource["Step#{}".format(step)]["x"]))
+        y = 1e3 * np.mean(np.array(self._datasource["Step#{}".format(step)]["y"]))
+
+        return x, y
+
     def gen_script(self):
         script = ""
         letters = list(string.ascii_lowercase)
 
         # Central collimator placement
-        x_cent = np.mean(np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"]))
-        y_cent = np.mean(np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"]))
+        x_cent, y_cent = self.get_xy_mean_at_step_mm(self._settings["step"])
 
         for n in range(self._settings["nseg"]):
             i = self._settings["step"]
 
             if n != 0:  # n = 0 indicates the central segment
-                x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
-                y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
+                x_temp, y_temp = self.get_xy_mean_at_step_mm(i)
                 if n % 2 == 1:  # n congruent to 1 mod 2 indicates placement ahead of the central segment
                     while np.sqrt(np.square(x_cent - x_temp) + np.square(y_cent - y_temp)) \
                             < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i += 1
-                        x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
-                        y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
+                        x_temp, y_temp = self.get_xy_mean_at_step_mm(i)
                 else:  # n > 0 congruent to 0 mod 2 indicates placement behind of the central segment
                     while np.sqrt(np.square(x_cent - x_temp) + np.square(y_cent - y_temp)) \
                             < (int(n / 2) + (n % 2 > 0)) * self._settings["cwidth"]:
                         i -= 1
-                        x_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
-                        y_temp = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
+                        x_temp, y_temp = self.get_xy_mean_at_step_mm(i)
 
-            x_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["x"]))
-            y_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["y"]))
+            x_new, y_new = self.get_xy_mean_at_step_mm(i)
             px_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["px"]))
             py_new = np.mean(np.array(self._datasource["Step#{}".format(i)]["py"]))
 
@@ -133,12 +135,15 @@ class CollimOPAL(AbstractTool):
                         collim["y2b"], self._settings["cwidth"])
 
             if DEBUG:
-                self._ax.set_title("Collimator at step #{} in global frame".format(self._settings["step"]))
+                self._ax.set_title("Collimator at step {} in global frame".format(self._settings["step"]))
+
                 plt.plot([collim["x1a"], collim["x1b"]], [collim["y1a"], collim["y1b"]])
                 plt.plot([collim["x2a"], collim["x2b"]], [collim["y2a"], collim["y2b"]])
-                plt.scatter(np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"]),
-                            np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"]),
-                            'o', alpha=0.6, markersize=0.005)
+
+                x_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
+                y_plot = 1e3 * np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
+
+                plt.plot(x_plot, y_plot, 'o', alpha=0.6, markersize=0.005)
 
         return script
 
