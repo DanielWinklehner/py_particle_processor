@@ -348,8 +348,7 @@ class BeamChar(AbstractTool):
             plt.xlabel("Energy per Particle (MeV/amu)")
             plt.ylabel(r"Number of $H_2^{+}$ Particles")
             fig.tight_layout()
-            plt.show()
-            # fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
+            fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["intensity"]:
             fig = plt.figure()
