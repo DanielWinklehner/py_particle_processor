@@ -182,7 +182,7 @@ class BeamChar(AbstractTool):
                     plot_data["xCentroid"][step] = np.mean(x_val)
                     plot_data["yCentroid"][step] = np.mean(y_val)
 
-                    # Calculate turn separation (along pos x-axis for now, arbitrary angle later? -DW)
+                    # Calculate turn separation (as close as possible to pos x-axis for now, arbitrary angle later? -DW)
                     if self._settings["turnsep"]:
                         azimuth = np.rad2deg(np.arctan2(plot_data["yCentroid"][step], plot_data["xCentroid"][step]))
                         azimuths[step] = azimuth
@@ -408,8 +408,6 @@ class BeamChar(AbstractTool):
                          plots["plot_data{}".format(n)]["coords"] * 1000.0,  # m --> mm
                          'o', alpha=0.6, markersize=0.005, label=plots["plot_data{}".format(n)]["name"])
 
-            # plt.plot(x_val, z_val, 'o', alpha=0.6,  markersize=0.005)
-            # plt.legend()
             plt.grid()
             ax.set_aspect('equal')
             plt.xlabel("Radius (mm)")

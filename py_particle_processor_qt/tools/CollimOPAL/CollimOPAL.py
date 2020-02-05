@@ -17,7 +17,7 @@ class CollimOPAL(AbstractTool):
         self._parent = parent
         self._filename = ""
         self._settings = {}
-        self._orbit_data = None
+        self._datasource = None  # h5py datasource for orbit data
 
         # --- Initialize the GUI --- #
         self._collimOPALWindow = QMainWindow()
@@ -43,15 +43,21 @@ class CollimOPAL(AbstractTool):
 
     def callback_apply(self):
 
-        if self._orbit_data is None:
-            self._parent.send_status("No trackOrbit data loaded! Exiting.")
-            self._collimOPALWindow.close()
-
         self.apply_settings()
 
+        x = np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
+        y = np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
+        px = np.array(self._datasource["Step#{}".format(self._settings["step"])]["x"])
+        py = np.array(self._datasource["Step#{}".format(self._settings["step"])]["y"])
+
+        x_mean = np.mean(x)
+        y_mean = np.mean(y)
+        px_mean = np.mean(px)
+        py_mean = np.mean(py)
+
         script = ""
-        script += self.gen_script(x=self._orbit_data[0], y=self._orbit_data[2],
-                                  px=self._orbit_data[1], py=self._orbit_data[3])
+        script += self.gen_script(x=x_mean, y=y_mean,
+                                  px=px_mean, py=py_mean)
 
         self._collimOPALGUI.textBrowser.setText(script)
 
@@ -161,9 +167,8 @@ class CollimOPAL(AbstractTool):
 
     def open_gui(self):
 
-        self._parent.send_status("Please specify a trackOrbit file to get beam centroid information from!")
-
-        self._filename, _ = self._parent.get_filename(action="open")
-        self._orbit_data = self.read_data(self._filename)
+        # Get parent dataset/source for orbit data
+        dataset = self._selections[0]
+        self._datasource = dataset.get_datasource()
 
         self.run()
