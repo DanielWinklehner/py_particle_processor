@@ -56,7 +56,7 @@ class CollimOPAL(AbstractTool):
         self._collimOPALGUI.textBrowser.setText(script)
 
     @staticmethod
-    def read_data(filename):
+    def read_data(fn):
 
         with open(fn, 'r') as infile:
             lines = infile.readlines()
