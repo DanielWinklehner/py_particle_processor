@@ -37,6 +37,31 @@ class AnimateXY(AbstractTool):
         self._settings["lim"] = float(self._animateGUI.lim.text())
         self._settings["fps"] = int(self._animateGUI.fps.text())
 
+    @staticmethod
+    def get_bunch_in_local_frame(datasource, step):
+        x = np.array(datasource["Step#{}".format(step)]["x"])
+        y = np.array(datasource["Step#{}".format(step)]["y"])
+        x_mean = np.mean(x)
+        y_mean = np.mean(y)
+
+        px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
+        py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
+
+        theta = np.arccos(py_mean / np.sqrt(np.square(px_mean) + np.square(py_mean)))
+
+        if px_mean < 0:
+            theta = -theta
+
+        # Center the beam
+        x -= x_mean
+        y -= y_mean
+
+        # Rotate the beam and return
+        temp_x = x
+        temp_y = y
+
+        return temp_x * np.cos(theta) - temp_y * np.sin(theta),  temp_x * np.sin(theta) + temp_y * np.cos(theta)
+
     def callback_apply(self):
         self.apply_settings()
         self._animateWindow.close()
@@ -46,49 +71,57 @@ class AnimateXY(AbstractTool):
 
         self._parent.send_status("Setting up animation...")
 
-        for dataset in self._selections:
+        dataset = self._selections[0]
 
-            animate = {}
+        animate = {}
 
-            datasource = dataset.get_datasource()
+        datasource = dataset.get_datasource()
 
-            nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
+        nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
 
-            for step in range(nsteps):
+        # TODO: Total hack, but I want to tag certain particles RIGHT NOW -DW
+        tag_step = 568
+        tag_y_lim = 5.0 * 1.0e-3  # m
+        _x, _y = self.get_bunch_in_local_frame(datasource, tag_step)
+        tag_idx = np.where(_y >= tag_y_lim)
+        pids = np.array(datasource["Step#{}".format(tag_step)]["id"][tag_idx])
 
-                animate["Step#{}".format(step)] = {}
+        for step in range(nsteps):
 
-                x_val = np.array(datasource["Step#{}".format(step)]["x"])
-                y_val = np.array(datasource["Step#{}".format(step)]["y"])
+            animate["Step#{}".format(step)] = {"x": np.array(datasource["Step#{}".format(step)]["x"]),
+                                               "y": np.array(datasource["Step#{}".format(step)]["y"]),
+                                               "id": np.array(datasource["Step#{}".format(step)]["id"])}
 
-                animate["Step#{}".format(step)]["x"] = x_val
-                animate["Step#{}".format(step)]["y"] = y_val
+            if self._settings["local"]:
 
-                if self._settings["local"]:
-                    px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
-                    py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
-                    theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
-                    if px_mean < 0:
-                        theta = -theta
+                animate["Step#{}".format(step)]["x"], animate["Step#{}".format(step)]["y"] = \
+                    self.get_bunch_in_local_frame(datasource, step)
 
-                    # Center the beam
-                    animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
-                    animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
-
-                    # Rotate the beam
-                    temp_x = animate["Step#{}".format(step)]["x"]
-                    temp_y = animate["Step#{}".format(step)]["y"]
-                    animate["Step#{}".format(step)]["x"] = temp_x * np.cos(theta) - temp_y * np.sin(theta)
-                    animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
+                # px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
+                # py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
+                # theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
+                # if px_mean < 0:
+                #     theta = -theta
+                #
+                # # Center the beam
+                # animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
+                # animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
+                #
+                # # Rotate the beam
+                # temp_x = animate["Step#{}".format(step)]["x"]
+                # temp_y = animate["Step#{}".format(step)]["y"]
+                # animate["Step#{}".format(step)]["x"] = temp_x * np.cos(theta) - temp_y * np.sin(theta)
+                # animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
 
         # Handle animations
         fig = plt.figure()
         plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
         plt.rc('text', usetex=True)
         plt.rc('grid', linestyle=':')
-        ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]), ylim=(-self._settings["lim"],
-                                                                                  self._settings["lim"]))
-        line, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
+        ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]),
+                      ylim=(-self._settings["lim"], self._settings["lim"]))
+        line1, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
+        line2, = ax.plot([], [], 'ko', ms=.1, alpha=0.8, color='red')
         plt.grid()
         ax.set_aspect('equal')
         if self._settings["local"]:
@@ -97,23 +130,33 @@ class AnimateXY(AbstractTool):
         else:
             plt.xlabel("X (mm)")
             plt.ylabel("Y (mm)")
-        ax.set_title("Beam Cross-Section: Step \#0")
+        ax.set_title(r"Beam Cross-Section: Step \#0")
         ax.get_xaxis().set_major_locator(LinearLocator(numticks=13))
         ax.get_yaxis().set_major_locator(LinearLocator(numticks=13))
 
         def init():
-            line.set_data([], [])
-            return line,
+            line1.set_data([], [])
+            line2.set_data([], [])
+            return line1, line2,
 
         def update(i):
-            x = 1000.0 * animate["Step#{}".format(i)]["x"]
-            y = 1000.0 * animate["Step#{}".format(i)]["y"]
+
+            tags = np.isin(animate["Step#{}".format(i)]["id"], tag_idx)
+
+            # Regular Data
+            x = 1000.0 * animate["Step#{}".format(i)]["x"][not tags.astype(bool)]
+            y = 1000.0 * animate["Step#{}".format(i)]["y"][not tags.astype(bool)]
+
+            # Tagged Data
+            xt = 1000.0 * animate["Step#{}".format(i)]["x"][tags.astype(bool)]
+            yt = 1000.0 * animate["Step#{}".format(i)]["y"][tags.astype(bool)]
 
             completed = int(100*(i/(nsteps-1)))
             self._parent.send_status("Animation progress: {}% complete".format(completed))
-            line.set_data(x, y)
-            ax.set_title("Beam Cross-Section: Step \#{}".format(i))
-            return line, ax
+            line1.set_data(x, y)
+            line2.set_data(xt, yt)
+            ax.set_title(r"Beam Cross-Section: Step \#{}".format(i))
+            return line1, line2, ax
 
         ani = animation.FuncAnimation(fig, update, frames=nsteps, init_func=init, repeat=False)
 

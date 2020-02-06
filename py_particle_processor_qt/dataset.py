@@ -174,14 +174,14 @@ class Dataset(object):
 
     def get(self, key):
         """
-        Returns the values for the currently set step and given key ("x", "y", "z", "px", "py", "pz")
+        Returns the values for the currently set step and given key ("id", "x", "y", "z", "r", "px", "py", "pz")
         :return: 
         """
 
-        if key not in ["x", "y", "z", "r", "px", "py", "pz", "pr"]:
+        if key not in ["id", "x", "y", "z", "r", "px", "py", "pz", "pr"]:
 
             if self._debug:
-                print("get(key): Key was not one of 'x', 'y', 'z', 'r', 'px', 'py', 'pz', 'pr'")
+                print("get(key): Key was not one of 'id', 'x', 'y', 'z', 'r', 'px', 'py', 'pz', 'pr'")
 
             return 1
 
