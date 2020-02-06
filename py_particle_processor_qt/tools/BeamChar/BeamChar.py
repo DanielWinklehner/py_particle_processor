@@ -5,6 +5,8 @@ from matplotlib.ticker import LinearLocator, LogLocator
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import re
 
 """"
 A tool for plotting beam characteristics.
@@ -81,6 +83,48 @@ class BeamChar(AbstractTool):
 
             save_r = True
             r_tsep = []
+
+            # Try to find the .o file corresponding to the dataset
+            self._parent.send_status("Attempting to read frequency and macro-charge from .o file...")
+            _fn = dataset.get_filename()
+            print(_fn)
+
+            path = os.path.split(_fn)[0]
+            # Let's be lazy and find the .o file automatically using regex
+            template = re.compile('[.]o[0-9]{8,8}')
+            _fns = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and template.search(f)]
+            if len(_fns) > 0:
+                _fn = _fns[0]
+                with open(os.path.join(path, _fn), 'r') as infile:
+                    lines = infile.readlines()
+                have_charge = False
+                have_freq = False
+                for line in lines:
+                    if "Qi" in line:
+                        _, _, _, _, _, _, _, _, qi, unit = line.strip().split()
+                        q_macro = float(qi) * 1.0e-15  # fC  --> C
+                        # TODO Check for unit, if exception is thrown, need to allow for different units -DW
+                        assert unit == "[fC]", "Expected units of fC, got {}. Aborting!".format(unit)
+                        have_charge = True
+
+                    if "FREQUENCY" in line:
+                        _, _, _, freq, unit = line.strip().split()
+                        f_cyclo = float(freq) * 1.0e6  # MHz --> Hz
+                        # TODO Check for unit, if exception is thrown, need to allow for different units -DW
+                        assert unit == "MHz", "Expected units of MHz, got {}. Aborting!".format(unit)
+                        have_freq = True
+
+                    if have_charge and have_freq:
+                        break
+
+                assert have_charge and have_freq, "Found .o file, but couldn't determine frequency and/or macrocharge!"
+
+            else:
+                self._parent.send_status("Couldn't find .o file in dataset folder! Falling back to hardcoded values.")
+                q_macro = 1.017 * 1.0e-15  # fC  --> C
+                f_cyclo = 49.16 * 1.0e6  # MHz --> Hz
+
+            duty_factor = 0.9  # assumed IsoDAR has 90% duty factor
 
             for step in range(nsteps):
 
@@ -163,10 +207,6 @@ class BeamChar(AbstractTool):
                     plot_data["energy"] = np.append(plot_data["energy"], energy)
 
                     if self._settings["intensity"]:
-
-                        q_macro = 1.017 * 1e-15  # fC  --> C
-                        f_cyclo = 49.16 * 1.0e6  # MHz --> Hz
-                        duty_factor = 0.9  # assumed IsoDAR has 90% duty factor
 
                         # Power deposition of a single h2+ particle (need to use full energy here!) (W)
                         power = q_macro * f_cyclo * energy * 1e6 * m_amu * duty_factor
