@@ -84,14 +84,20 @@ class BeamChar(AbstractTool):
             save_r = True
             r_tsep = []
 
-            # Try to find the .o file corresponding to the dataset
+            # --- Try to find the .o file corresponding to the dataset
+
+            # Hardcoded defaults
+            q_macro = 1.353 * 1.0e-15  # fC  --> C (1e5 particles @ 6.65 mA and f_cyclo below)
+            f_cyclo = 49.16 * 1.0e6  # MHz --> Hz
+            duty_factor = 0.9  # assumed IsoDAR has 90% duty factor
+
             self._parent.send_status("Attempting to read frequency and macro-charge from .o file...")
             _fn = dataset.get_filename()
             print(_fn)
 
             path = os.path.split(_fn)[0]
             # Let's be lazy and find the .o file automatically using regex
-            template = re.compile('[.]o[0-9]{8,8}')
+            template = re.compile('[.]o[0-9]{8}')
             _fns = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and template.search(f)]
             if len(_fns) > 0:
                 _fn = _fns[0]
@@ -119,12 +125,12 @@ class BeamChar(AbstractTool):
 
                 assert have_charge and have_freq, "Found .o file, but couldn't determine frequency and/or macrocharge!"
 
+                self._parent.send_status("Found f = {:.4f} MHz and Qi = {:.4f} fC in file {}".format(f_cyclo * 1e-6,
+                                                                                                     q_macro * 1e15,
+                                                                                                     _fn))
+
             else:
                 self._parent.send_status("Couldn't find .o file in dataset folder! Falling back to hardcoded values.")
-                q_macro = 1.017 * 1.0e-15  # fC  --> C
-                f_cyclo = 49.16 * 1.0e6  # MHz --> Hz
-
-            duty_factor = 0.9  # assumed IsoDAR has 90% duty factor
 
             for step in range(nsteps):
 
