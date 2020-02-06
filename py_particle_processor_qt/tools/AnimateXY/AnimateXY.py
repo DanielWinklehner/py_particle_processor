@@ -141,11 +141,11 @@ class AnimateXY(AbstractTool):
 
         def update(i):
 
-            tags = np.isin(animate["Step#{}".format(i)]["id"], tag_idx)
+            tags = np.isin(animate["Step#{}".format(i)]["id"], pids)
 
             # Regular Data
-            x = 1000.0 * animate["Step#{}".format(i)]["x"][not tags.astype(bool)]
-            y = 1000.0 * animate["Step#{}".format(i)]["y"][not tags.astype(bool)]
+            x = 1000.0 * animate["Step#{}".format(i)]["x"][np.invert(tags.astype(bool))]
+            y = 1000.0 * animate["Step#{}".format(i)]["y"][np.invert(tags.astype(bool))]
 
             # Tagged Data
             xt = 1000.0 * animate["Step#{}".format(i)]["x"][tags.astype(bool)]
