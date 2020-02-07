@@ -389,18 +389,20 @@ class BeamChar(AbstractTool):
             plt.rc('grid', linestyle=':')
 
             plt.title("Particle Energy")
-            for n in range(num):
-                plt.hist(plots["plot_data{}".format(n)]["energy"], 1000, histtype='step',
-                         weights=np.full_like(plots["plot_data{}".format(n)]["energy"], 6348),
-                         label=plots["plot_data{}".format(n)]["name"])
-            plt.legend()
 
-            # plt.hist(plots["plot_data0"]["energy"], 1000, color='0.5', histtype='step',
-            #          weights=np.full_like(plots["plot_data0"]["energy"], 6348))
+            for n in range(num):
+
+                plt.hist(plots["plot_data{}".format(n)]["energy"], bins=100, histtype='step',
+                         # weights=np.full_like(plots["plot_data{}".format(n)]["energy"], 6348),
+                         label="{}, total particles = {}".format(plots["plot_data{}".format(n)]["name"],
+                                                                 len(plots["plot_data{}".format(n)]["energy"])))
+            plt.legend()
             plt.grid()
-            plt.xlabel("Energy per Particle (MeV/amu)")
-            plt.ylabel(r"Number of $H_2^{+}$ Particles")
+            plt.xlabel("Energy (MeV/amu)")
+            plt.ylabel(r"Particle Density (a.u.)")
+
             fig.tight_layout()
+
             fig.savefig(self._filename[0] + '_energy.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["intensity"]:
