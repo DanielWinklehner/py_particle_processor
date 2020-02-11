@@ -320,7 +320,7 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax1.set_xlim([0, 100.0])
+            ax1.set_ylim([0, 100.0])
             plt.grid()
             plt.ylabel("Horizontal")
 
@@ -330,7 +330,7 @@ class BeamChar(AbstractTool):
                          label=plots["plot_data{}".format(n)]["name"])
             plt.legend()
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax2.set_xlim([0, 100.0])
+            ax2.set_ylim([0, 100.0])
             plt.grid()
             plt.ylabel("Longitudinal")
 
@@ -339,7 +339,7 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax3.set_xlim([0, 100.0])
+            ax3.set_ylim([0, 100.0])
             plt.grid()
             plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
