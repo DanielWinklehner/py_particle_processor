@@ -431,7 +431,7 @@ class BeamChar(AbstractTool):
                 temp_bins = bins[200:-1]
                 temp_power = power[200:]
 
-                idx = np.where(temp_bins <= 1910)  # 1940 for Probe25
+                idx = np.where(temp_bins <= 1935)  # 1940 for Probe25
 
                 temp_bins = temp_bins[idx]
                 temp_power = temp_power[idx]
