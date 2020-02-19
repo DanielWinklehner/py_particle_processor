@@ -28,7 +28,7 @@ class AnimateXY(AbstractTool):
         self._has_gui = True
         self._need_selection = True
         self._min_selections = 1
-        self._max_selections = 1
+        self._max_selections = 3
         self._redraw_on_exit = False
 
     def apply_settings(self):
@@ -71,92 +71,114 @@ class AnimateXY(AbstractTool):
 
         self._parent.send_status("Setting up animation...")
 
-        dataset = self._selections[0]
+        animate_all = []
 
-        animate = {}
+        for dataset in self._selections:
 
-        datasource = dataset.get_datasource()
+            # dataset = self._selections[0]
+            datasource = dataset.get_datasource()
+            nsteps = dataset.get_nsteps()
 
-        nsteps, npart = dataset.get_nsteps(), dataset.get_npart()
+            # TODO: Total hack, but I want to tag certain particles RIGHT NOW -DW
+            # tag_step = 568
+            # tag_y_lim = 5.0 * 1.0e-3  # m
+            # _x, _y = self.get_bunch_in_local_frame(datasource, tag_step)
+            # tag_idx = np.where(_y >= tag_y_lim)
+            # pids = np.array(datasource["Step#{}".format(tag_step)]["id"][tag_idx])
 
-        # TODO: Total hack, but I want to tag certain particles RIGHT NOW -DW
-        tag_step = 568
-        tag_y_lim = 5.0 * 1.0e-3  # m
-        _x, _y = self.get_bunch_in_local_frame(datasource, tag_step)
-        tag_idx = np.where(_y >= tag_y_lim)
-        pids = np.array(datasource["Step#{}".format(tag_step)]["id"][tag_idx])
+            animate = {}
 
-        for step in range(nsteps):
+            for step in range(nsteps):
 
-            animate["Step#{}".format(step)] = {"x": np.array(datasource["Step#{}".format(step)]["x"]),
-                                               "y": np.array(datasource["Step#{}".format(step)]["y"]),
-                                               "id": np.array(datasource["Step#{}".format(step)]["id"])}
+                animate["Step#{}".format(step)] = {"x": np.array(datasource["Step#{}".format(step)]["x"]),
+                                                   "y": np.array(datasource["Step#{}".format(step)]["y"]),
+                                                   "id": np.array(datasource["Step#{}".format(step)]["id"])}
 
-            if self._settings["local"]:
+                if self._settings["local"]:
 
-                animate["Step#{}".format(step)]["x"], animate["Step#{}".format(step)]["y"] = \
-                    self.get_bunch_in_local_frame(datasource, step)
+                    animate["Step#{}".format(step)]["x"], animate["Step#{}".format(step)]["y"] = \
+                        self.get_bunch_in_local_frame(datasource, step)
 
-                # px_mean = np.mean(np.array(datasource["Step#{}".format(step)]["px"]))
-                # py_mean = np.mean(np.array(datasource["Step#{}".format(step)]["py"]))
-                # theta = np.arccos(py_mean/np.sqrt(np.square(px_mean) + np.square(py_mean)))
-                # if px_mean < 0:
-                #     theta = -theta
-                #
-                # # Center the beam
-                # animate["Step#{}".format(step)]["x"] = x_val - np.mean(x_val)
-                # animate["Step#{}".format(step)]["y"] = y_val - np.mean(y_val)
-                #
-                # # Rotate the beam
-                # temp_x = animate["Step#{}".format(step)]["x"]
-                # temp_y = animate["Step#{}".format(step)]["y"]
-                # animate["Step#{}".format(step)]["x"] = temp_x * np.cos(theta) - temp_y * np.sin(theta)
-                # animate["Step#{}".format(step)]["y"] = temp_x * np.sin(theta) + temp_y * np.cos(theta)
+            animate_all.append(animate)
+
+        n_ds = len(animate_all)
 
         # Handle animations
-        fig = plt.figure()
+        # fig = plt.figure()
+        fig, ax = plt.subplots(1, n_ds)
+        if n_ds == 1:
+            ax = [ax]
+
         plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
         plt.rc('text', usetex=True)
         plt.rc('grid', linestyle=':')
-        ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]),
-                      ylim=(-self._settings["lim"], self._settings["lim"]))
-        line1, = ax.plot([], [], 'ko', ms=.1, alpha=0.6)
-        line2, = ax.plot([], [], 'ko', ms=.1, alpha=0.8, color='red')
-        plt.grid()
-        ax.set_aspect('equal')
-        if self._settings["local"]:
-            plt.xlabel("Horizontal (mm)")
-            plt.ylabel("Longitudinal (mm)")
-        else:
-            plt.xlabel("X (mm)")
-            plt.ylabel("Y (mm)")
-        ax.set_title(r"Beam Cross-Section: Step \#0")
-        ax.get_xaxis().set_major_locator(LinearLocator(numticks=13))
-        ax.get_yaxis().set_major_locator(LinearLocator(numticks=13))
+
+        lines = []
+
+        j = 0
+        for _ax in ax:
+            _ax.set_xlim(-self._settings["lim"], self._settings["lim"])
+            _ax.set_ylim(-self._settings["lim"], self._settings["lim"])
+
+            # ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]),
+            #               ylim=(-self._settings["lim"], self._settings["lim"]))
+
+            line1, = _ax.plot([], [], 'ko', ms=.1, alpha=0.6)
+            # line2, = ax.plot([], [], 'ko', ms=.1, alpha=0.8, color='red')  # Tagging
+
+            lines.append(line1)
+
+            # plt.grid()
+            _ax.grid()
+
+            _ax.set_aspect('equal')
+
+            if self._settings["local"]:
+                _ax.set_xlabel("Horizontal (mm)")
+                _ax.set_ylabel("Longitudinal (mm)")
+            else:
+                _ax.set_xlabel("X (mm)")
+                _ax.set_ylabel("Y (mm)")
+
+            _ax.set_title(r"{}: Step \#0".format(self._selections[j].get_name()))
+            _ax.get_xaxis().set_major_locator(LinearLocator(numticks=13))
+            _ax.get_yaxis().set_major_locator(LinearLocator(numticks=13))
+
+            j += 1
 
         def init():
-            line1.set_data([], [])
-            line2.set_data([], [])
-            return line1, line2,
+            for _line in lines:
+                _line.set_data([], [])
+            # line2.set_data([], [])
+            return lines,  # line2,
 
         def update(i):
 
-            tags = np.isin(animate["Step#{}".format(i)]["id"], pids)
+            j = 0
+            for _animate, _line in zip(animate_all, lines):
 
-            # Regular Data
-            x = 1000.0 * animate["Step#{}".format(i)]["x"][np.invert(tags.astype(bool))]
-            y = 1000.0 * animate["Step#{}".format(i)]["y"][np.invert(tags.astype(bool))]
+                # tags = np.isin(animate["Step#{}".format(i)]["id"], pids)
+                tags = np.zeros(len(_animate["Step#{}".format(i)]["x"]), dtype=bool)
 
-            # Tagged Data
-            xt = 1000.0 * animate["Step#{}".format(i)]["x"][tags.astype(bool)]
-            yt = 1000.0 * animate["Step#{}".format(i)]["y"][tags.astype(bool)]
+                # Regular Data
+                x = 1000.0 * _animate["Step#{}".format(i)]["x"][np.invert(tags.astype(bool))]
+                y = 1000.0 * _animate["Step#{}".format(i)]["y"][np.invert(tags.astype(bool))]
 
-            completed = int(100*(i/(nsteps-1)))
-            self._parent.send_status("Animation progress: {}% complete".format(completed))
-            line1.set_data(x, y)
-            line2.set_data(xt, yt)
-            ax.set_title(r"Beam Cross-Section: Step \#{}".format(i))
-            return line1, line2, ax
+                # Tagged Data
+                xt = 1000.0 * _animate["Step#{}".format(i)]["x"][tags.astype(bool)]
+                yt = 1000.0 * _animate["Step#{}".format(i)]["y"][tags.astype(bool)]
+
+                completed = int(100*(i/(nsteps-1)))
+                self._parent.send_status("Animation progress: {}% complete".format(completed))
+
+                _line.set_data(x, y)
+                # line2.set_data(xt, yt)
+
+                ax[j].set_title(r"{}: Step \#{}".format(self._selections[j].get_name(), i))
+                j += 1
+
+            # return line1, line2, ax
+            return lines,  ax
 
         ani = animation.FuncAnimation(fig, update, frames=nsteps, init_func=init, repeat=False)
 
