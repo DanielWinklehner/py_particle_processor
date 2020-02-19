@@ -71,6 +71,10 @@ class AnimateXY(AbstractTool):
 
         self._parent.send_status("Setting up animation...")
 
+        plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+        plt.rc('text', usetex=True)
+        plt.rc('grid', linestyle=':')
+
         animate_all = []
 
         for dataset in self._selections:
@@ -109,10 +113,6 @@ class AnimateXY(AbstractTool):
         if n_ds == 1:
             ax = [ax]
 
-        plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-        plt.rc('text', usetex=True)
-        plt.rc('grid', linestyle=':')
-
         lines = []
 
         j = 0
@@ -123,8 +123,8 @@ class AnimateXY(AbstractTool):
             # ax = plt.axes(xlim=(-self._settings["lim"], self._settings["lim"]),
             #               ylim=(-self._settings["lim"], self._settings["lim"]))
 
-            line1, = _ax.plot([], [], 'ko', ms=.1, alpha=0.6)
-            # line2, = ax.plot([], [], 'ko', ms=.1, alpha=0.8, color='red')  # Tagging
+            line1, = _ax.plot([], [], 'ko', ms=0.1, alpha=0.8)
+            # line2, = ax.plot([], [], 'ko', ms=0.1, alpha=0.8, color='red')  # Tagging
 
             lines.append(line1)
 
@@ -144,6 +144,8 @@ class AnimateXY(AbstractTool):
             _ax.get_xaxis().set_major_locator(LinearLocator(numticks=13))
             _ax.get_yaxis().set_major_locator(LinearLocator(numticks=13))
 
+            plt.tight_layout()
+
             j += 1
 
         def init():
@@ -154,7 +156,7 @@ class AnimateXY(AbstractTool):
 
         def update(i):
 
-            j = 0
+            k = 0
             for _animate, _line in zip(animate_all, lines):
 
                 # tags = np.isin(animate["Step#{}".format(i)]["id"], pids)
@@ -168,14 +170,14 @@ class AnimateXY(AbstractTool):
                 xt = 1000.0 * _animate["Step#{}".format(i)]["x"][tags.astype(bool)]
                 yt = 1000.0 * _animate["Step#{}".format(i)]["y"][tags.astype(bool)]
 
-                completed = int(100*(i/(nsteps-1)))
-                self._parent.send_status("Animation progress: {}% complete".format(completed))
-
                 _line.set_data(x, y)
                 # line2.set_data(xt, yt)
 
-                ax[j].set_title(r"{}: Step \#{}".format(self._selections[j].get_name(), i))
-                j += 1
+                ax[j].set_title(r"{}: Step \#{}".format(self._selections[k].get_name(), i))
+                k += 1
+
+            completed = int(100*(i/(nsteps-1)))
+            self._parent.send_status("Animation progress: {}% complete".format(completed))
 
             # return line1, line2, ax
             return lines,  ax
