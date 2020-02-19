@@ -173,7 +173,7 @@ class AnimateXY(AbstractTool):
                 _line.set_data(x, y)
                 # line2.set_data(xt, yt)
 
-                ax[j].set_title(r"{}: Step \#{}".format(self._selections[k].get_name(), i))
+                ax[k].set_title(r"{}: Step \#{}".format(self._selections[k].get_name(), i))
                 k += 1
 
             completed = int(100*(i/(nsteps-1)))
