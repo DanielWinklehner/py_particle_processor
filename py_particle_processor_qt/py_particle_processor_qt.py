@@ -456,25 +456,28 @@ class PyParticleProcessor(object):
         if self._debug:
             print("DEBUG: load_add_ds_callback was called with widget {}".format(widget))
 
-        filename, driver = self.get_filename(action="open")  # Get a filename and driver
+        filenames, driver = self.get_filename(action="open")  # Get a filename and driver
 
-        if filename is None:  # Return if no file was selected
+        if filenames is None:  # Return if no file was selected
             return 1
 
         self.send_status("Loading file with driver: {}".format(driver))
 
         # Create a new datafile with the supplied parameters
-        new_df = ParticleFile(filename=filename,
-                              driver=driver,
-                              index=len(self._datafiles),
-                              load_type="add",
-                              debug=self._debug,
-                              parent=self,
-                              color_index=self._ci)
+        for filename in filenames:
 
-        new_df.load()
+            # Create a new datafile with the supplied parameters
+            new_df = ParticleFile(filename=filename,
+                                  driver=driver,
+                                  index=0,
+                                  load_type="add",
+                                  debug=self._debug,
+                                  parent=self,
+                                  color_index=self._ci)
 
-        self._datafile_buffer.append(new_df)
+            new_df.load()
+
+            self._datafile_buffer.append(new_df)
 
         return 0
 
@@ -540,25 +543,27 @@ class PyParticleProcessor(object):
         if self._debug:
             print("DEBUG: load_new_ds_callback was called.")
 
-        filename, driver = self.get_filename(action="open")  # Get a filename and driver
+        filenames, driver = self.get_filename(action="open")  # Get a filename and driver
 
-        if filename is None:  # Return if no file was selected
+        if filenames is None:  # Return if no file was selected
             return 1
 
         self.send_status("Loading file with driver: {}".format(driver))
 
-        # Create a new datafile with the supplied parameters
-        new_df = ParticleFile(filename=filename,
-                              driver=driver,
-                              index=0,
-                              load_type="new",
-                              debug=self._debug,
-                              parent=self,
-                              color_index=self._ci)
+        for i, filename in enumerate(filenames):
 
-        new_df.load()
+            # Create a new datafile with the supplied parameters
+            new_df = ParticleFile(filename=filename,
+                                  driver=driver,
+                                  index=0,
+                                  load_type="new" if i == 0 else "add",
+                                  debug=self._debug,
+                                  parent=self,
+                                  color_index=self._ci)
 
-        self._datafile_buffer.append(new_df)
+            new_df.load()
+
+            self._datafile_buffer.append(new_df)
 
         return 0
 
@@ -799,13 +804,22 @@ class PyParticleProcessor(object):
         options |= QFileDialog.DontUseNativeDialog
 
         if action == "open":  # For opening a file
-            filename, filetype = QFileDialog.getOpenFileNames(self._mainWindow,
-                                                              caption="Import dataset...",
-                                                              directory=self._last_path,
-                                                              filter=filetypes_text,
-                                                              options=options)
-            print(filename)
-            exit()
+            filenames, filetype = QFileDialog.getOpenFileNames(self._mainWindow,
+                                                               caption="Import dataset...",
+                                                               directory=self._last_path,
+                                                               filter=filetypes_text,
+                                                               options=options)
+
+            if len(filenames) == 0 or filetype == "":
+                filenames, driver = None, None
+                return filenames, driver
+
+            assert len(np.unique(np.array([os.path.splitext(_fn)[1] for _fn in filename]))) == 1, \
+                "For batch selection, all filenames have to have the same extension!"
+
+            driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
+
+            return filenames, driver
 
         elif action == "save":  # For saving a file
             filename, filetype = QFileDialog.getSaveFileName(self._mainWindow,
@@ -814,13 +828,13 @@ class PyParticleProcessor(object):
                                                              filter=filetypes_text,
                                                              options=options)
 
-        if filename == "" or filetype == "":
-            filename, driver = None, None
+            if filename == "" or filetype == "":
+                filename, driver = None, None
+                return filename, driver
+
+            driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
+
             return filename, driver
-
-        driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
-
-        return filename, driver
 
     @staticmethod
     def get_selection(selection_string):
