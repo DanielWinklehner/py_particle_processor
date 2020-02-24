@@ -54,7 +54,7 @@ class ParticleFile(object):
     def index(self):
         return self._index
 
-    def load(self, load_index=0):
+    def load(self, load_index=0, species=None, name=None):
 
         # datasets_to_load = 1
         # for i in range(datasets_to_load):
@@ -75,8 +75,11 @@ class ParticleFile(object):
 
         elif load_index < self._datasets_to_load:
 
-            self._prompt = SpeciesPrompt(parent=self)
-            self._prompt.run()
+            if species is None:
+                self._prompt = SpeciesPrompt(parent=self)
+                self._prompt.run()
+            else:
+                self.species_callback(None, species, name)
 
             return 0
 
@@ -84,8 +87,9 @@ class ParticleFile(object):
 
             return 1
 
-    def species_callback(self, prompt, species, name):
-        prompt.close()
+    def species_callback(self, prompt, species, name="batch"):
+        if prompt is not None:
+            prompt.close()
 
         _ds = Dataset(indices=(self._index, len(self._datasets)), debug=self._debug, species=species)
         _ds.load_from_file(filename=self._filename, driver=self._driver, name=name)
@@ -453,6 +457,8 @@ class PyParticleProcessor(object):
         :return: 
         """
 
+        batch = False
+
         if self._debug:
             print("DEBUG: load_add_ds_callback was called with widget {}".format(widget))
 
@@ -460,6 +466,9 @@ class PyParticleProcessor(object):
 
         if filenames is None:  # Return if no file was selected
             return 1
+
+        if len(filenames) > 1:
+            batch = True
 
         self.send_status("Loading file with driver: {}".format(driver))
 
@@ -475,7 +484,12 @@ class PyParticleProcessor(object):
                                   parent=self,
                                   color_index=self._ci)
 
-            new_df.load()
+            if not batch:
+                new_df.load()
+            else:
+                species = self._datafile_buffer[-1].get_property("ion")
+                name = os.path.splitext(os.path.split(filename)[1])[0]
+                new_df.load(species=species, name=name)
 
             self._datafile_buffer.append(new_df)
 
@@ -540,6 +554,7 @@ class PyParticleProcessor(object):
         :return: 
         """
 
+
         if self._debug:
             print("DEBUG: load_new_ds_callback was called.")
 
@@ -561,7 +576,12 @@ class PyParticleProcessor(object):
                                   parent=self,
                                   color_index=self._ci)
 
-            new_df.load()
+            if i == 0:
+                new_df.load()
+            else:
+                species = self._datafile_buffer[-1].get_property("ion")
+                name = os.path.splitext(os.path.split(filename)[1])[0]
+                new_df.load(species=species, name=name)
 
             self._datafile_buffer.append(new_df)
 
@@ -814,7 +834,7 @@ class PyParticleProcessor(object):
                 filenames, driver = None, None
                 return filenames, driver
 
-            assert len(np.unique(np.array([os.path.splitext(_fn)[1] for _fn in filename]))) == 1, \
+            assert len(np.unique(np.array([os.path.splitext(_fn)[1] for _fn in filenames]))) == 1, \
                 "For batch selection, all filenames have to have the same extension!"
 
             driver = filetype.split("Files")[0].strip()  # Get the driver from the filetype
