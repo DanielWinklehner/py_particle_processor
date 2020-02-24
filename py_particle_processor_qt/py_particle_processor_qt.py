@@ -487,7 +487,7 @@ class PyParticleProcessor(object):
             if not batch:
                 new_df.load()
             else:
-                species = self._datafile_buffer[-1].get_property("ion")
+                species = self._datafile_buffer[-1].datasets()[0].get_property("ion")
                 name = os.path.splitext(os.path.split(filename)[1])[0]
                 new_df.load(species=species, name=name)
 
@@ -554,7 +554,6 @@ class PyParticleProcessor(object):
         :return: 
         """
 
-
         if self._debug:
             print("DEBUG: load_new_ds_callback was called.")
 
@@ -579,7 +578,7 @@ class PyParticleProcessor(object):
             if i == 0:
                 new_df.load()
             else:
-                species = self._datafile_buffer[-1].get_property("ion")
+                species = self._datafile_buffer[-1].datasets()[0].get_property("ion")
                 name = os.path.splitext(os.path.split(filename)[1])[0]
                 new_df.load(species=species, name=name)
 
