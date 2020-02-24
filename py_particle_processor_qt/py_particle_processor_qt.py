@@ -799,11 +799,14 @@ class PyParticleProcessor(object):
         options |= QFileDialog.DontUseNativeDialog
 
         if action == "open":  # For opening a file
-            filename, filetype = QFileDialog.getOpenFileName(self._mainWindow,
-                                                             caption="Import dataset...",
-                                                             directory=self._last_path,
-                                                             filter=filetypes_text,
-                                                             options=options)
+            filename, filetype = QFileDialog.getOpenFileNames(self._mainWindow,
+                                                              caption="Import dataset...",
+                                                              directory=self._last_path,
+                                                              filter=filetypes_text,
+                                                              options=options)
+            print(filename)
+            exit()
+
         elif action == "save":  # For saving a file
             filename, filetype = QFileDialog.getSaveFileName(self._mainWindow,
                                                              caption="Export dataset...",
