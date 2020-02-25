@@ -78,6 +78,7 @@ class ParticleFile(object):
             if species is None:
                 self._prompt = SpeciesPrompt(parent=self)
                 self._prompt.run()
+                self._prompt.exec_()
             else:
                 self.species_callback(None, species, name)
 
@@ -487,7 +488,7 @@ class PyParticleProcessor(object):
             if not batch:
                 new_df.load()
             else:
-                species = self._datafile_buffer[-1].datasets()[0].get_property("ion")
+                species = self._datafile_buffer[0].datasets()[0].get_property("ion")
                 name = os.path.splitext(os.path.split(filename)[1])[0]
                 new_df.load(species=species, name=name)
 
