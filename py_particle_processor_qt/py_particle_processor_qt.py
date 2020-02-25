@@ -487,9 +487,7 @@ class PyParticleProcessor(object):
             if not batch:
                 new_df.load()
             else:
-                print(self._datafile_buffer[0])
-                print(self._datafile_buffer[0].datasets())
-                species = self._datafile_buffer[0].datasets()[0].get_property("ion")
+                species = self._datafiles[0].datasets()[0].get_property("ion")
                 name = os.path.splitext(os.path.split(filename)[1])[0]
                 new_df.load(species=species, name=name)
 
