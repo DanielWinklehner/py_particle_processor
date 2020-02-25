@@ -78,7 +78,6 @@ class ParticleFile(object):
             if species is None:
                 self._prompt = SpeciesPrompt(parent=self)
                 self._prompt.run()
-                self._prompt.exec_()
             else:
                 self.species_callback(None, species, name)
 
