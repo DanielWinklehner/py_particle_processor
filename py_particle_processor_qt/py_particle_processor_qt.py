@@ -88,6 +88,7 @@ class ParticleFile(object):
             return 1
 
     def species_callback(self, prompt, species, name="batch"):
+
         if prompt is not None:
             prompt.close()
 

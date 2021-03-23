@@ -139,17 +139,21 @@ class BeamChar(AbstractTool):
                 self._parent.send_status("Couldn't find .o file in dataset folder! Falling back to hardcoded values.")
                 print("Couldn't find .o file in dataset folder! Falling back to hardcoded values.")
 
-            for step in range(nsteps):
+            spt = 1
+
+            for step in range(int(nsteps / spt)):
+
+                step *= spt
 
                 m_amu = 2.01510  # Rest mass of individual H2+, in amu
-                m_MeV = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
+                m_mev = 1876.9729554  # Rest mass of individual H2+, in MeV/c^2
 
                 if self._settings["rms"] or self._settings["halo"]:
                     px_val = np.array(datasource["Step#{}".format(step)]["px"])
                     py_val = np.array(datasource["Step#{}".format(step)]["py"])
                     pz_val = np.array(datasource["Step#{}".format(step)]["pz"])
                     betagamma = np.sqrt(np.square(px_val) + np.square(py_val) + np.square(pz_val))
-                    energy = np.mean((np.sqrt(np.square(betagamma * m_MeV) + np.square(m_MeV)) - m_MeV) / m_amu)
+                    energy = np.mean((np.sqrt(np.square(betagamma * m_mev) + np.square(m_mev)) - m_mev) / m_amu)
                     plot_data["energy"] = np.append(plot_data["energy"], energy)
 
                 if nsteps > 1:
@@ -265,10 +269,17 @@ class BeamChar(AbstractTool):
         # Save plots as separate images, with appropriate titles
 
         if self._settings["rms"]:
-            fig = plt.figure()
-            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            _xlim = 62.2
+            _ylim = 6.0
+            _figsize = (7, 5)
+            _fs = 12
+
+            fig = plt.figure(figsize=_figsize)
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern'], 'weight': 100, 'size': _fs})
             plt.rc('text', usetex=True)
             plt.rc('grid', linestyle=':')
+            plt.rc('ytick', labelsize=_fs)
+            plt.rc('xtick', labelsize=_fs)
 
             ax1 = plt.subplot(311)
             plt.title("RMS Beam Size (mm)")
@@ -278,19 +289,24 @@ class BeamChar(AbstractTool):
                 # print("Mean x RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["xRMS"][40:])))
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax1.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            # ax1.set_xlim([0,62.25])
+            ax1.tick_params(labelbottom=False)
+            ax1.set_xlim([0, _xlim])
+            # ax1.set_ylim([0, _ylim])
+            ax1.set_ylim([0, 4.0])
             plt.grid()
-            plt.ylabel("Horizontal")
+            plt.ylabel("Transversal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["yRMS"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
                 # print("Mean y RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["yRMS"][40:])))
-            plt.legend()
+            plt.legend(loc=9)
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax2.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            # ax2.set_xlim([0, 62.25])
+            ax2.tick_params(labelbottom=False)
+            ax2.set_xlim([0, _xlim])
+            ax2.set_ylim([0, _ylim])
             plt.grid()
             plt.ylabel("Longitudinal")
 
@@ -301,20 +317,26 @@ class BeamChar(AbstractTool):
                 # print("Mean z RMS: {}".format(np.mean(plots["plot_data{}".format(n)]["zRMS"][40:])))
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
             ax3.get_yaxis().set_major_formatter(FormatStrFormatter('%.1f'))
-            # ax3.set_xlim([0, 62.25])
+            ax3.set_xlim([0, _xlim])
+            ax3.set_ylim([0, _ylim])
             plt.grid()
             plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
-            fig.tight_layout()
-            fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=1200)
+            # fig.tight_layout()
+            fig.savefig(self._filename[0] + '_rmsBeamSize.png', dpi=1200, bbox_inches='tight')
 
         if self._settings["halo"]:
-            fig = plt.figure()
-            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+            _xlim = 62.2
+            _ylim = 7.0
+            _figsize = (7, 5)
+            _fs = 12
+
+            fig = plt.figure(figsize=_figsize)
+            plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern'], 'weight': 100, 'size': _fs})
             plt.rc('text', usetex=True)
             plt.rc('grid', linestyle=':')
-
-            ylim = 25.0
+            plt.rc('ytick', labelsize=_fs)
+            plt.rc('xtick', labelsize=_fs)
 
             ax1 = plt.subplot(311)
             plt.title("Halo Parameter")
@@ -322,17 +344,21 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["xHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax1.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax1.set_ylim([0, ylim])
+            ax1.tick_params(labelbottom=False)
+            ax1.set_ylim([0, _ylim])
+            ax1.set_xlim([0, _xlim])
             plt.grid()
-            plt.ylabel("Horizontal")
+            plt.ylabel("Transversal")
 
             ax2 = plt.subplot(312, sharex=ax1)
             for n in range(num):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["yHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
-            plt.legend()
+            plt.legend(loc=9)
             ax2.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax2.set_ylim([0, ylim])
+            ax2.tick_params(labelbottom=False)
+            ax2.set_ylim([0, _ylim])
+            ax2.set_xlim([0, _xlim])
             plt.grid()
             plt.ylabel("Longitudinal")
 
@@ -341,11 +367,12 @@ class BeamChar(AbstractTool):
                 plt.plot(plots["plot_data{}".format(n)]["energy"], plots["plot_data{}".format(n)]["zHalo"], lw=0.8,
                          label=plots["plot_data{}".format(n)]["name"])
             ax3.get_yaxis().set_major_locator(LinearLocator(numticks=5))
-            ax3.set_ylim([0, ylim])
+            ax3.set_ylim([0, _ylim])
+            ax3.set_xlim([0, _xlim])
             plt.grid()
             plt.xlabel("Energy (MeV/amu)")
             plt.ylabel("Vertical")
-            fig.tight_layout()
+            # fig.tight_layout()
             fig.savefig(self._filename[0] + '_haloParameter.png', bbox_inches='tight', dpi=1200)
 
         if self._settings["centroid"]:
@@ -428,16 +455,16 @@ class BeamChar(AbstractTool):
 
                 power, bins = np.histogram(radii, bins=n_bins, weights=plots["plot_data{}".format(n)]["power"])
 
-                temp_bins = bins[200:-1]
-                temp_power = power[200:]
-
-                idx = np.where(temp_bins <= 1935)  # 1940 for Probe25
-
-                temp_bins = temp_bins[idx]
-                temp_power = temp_power[idx]
-
-                print("Min R =", temp_bins[np.where(temp_power == np.min(temp_power))], "mm\n")
-                print("Min P =", temp_power[np.where(temp_power == np.min(temp_power))], "W\n")
+                # temp_bins = bins[200:-1]
+                # temp_power = power[200:]
+                #
+                # idx = np.where(temp_bins <= 1935)  # 1940 for Probe25
+                #
+                # temp_bins = temp_bins[idx]
+                # temp_power = temp_power[idx]
+                #
+                # print("Min R =", temp_bins[np.where(temp_power == np.min(temp_power))], "mm\n")
+                # print("Min P =", temp_power[np.where(temp_power == np.min(temp_power))], "W\n")
 
                 plt.hist(bins[:-1], bins, weights=power,
                          label=plots["plot_data{}".format(n)]["name"], alpha=0.3, log=True)
